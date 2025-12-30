@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Search, User, ShoppingBag, House, Store, Mail, X } from "lucide-react";
+import { Search, ShoppingBag, House, Store, Mail, X, LogIn } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
@@ -112,9 +112,14 @@ export default function Navbar() {
                             >
                                 <Search size={20} />
                             </button>
-                            <button aria-label="User Profile" className="text-gray-300 hover:text-white transition-colors hover:scale-110 active:scale-95 duration-200">
-                                <User size={20} />
-                            </button>
+                            <div className="flex items-center gap-4">
+                                <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                                    Login
+                                </Link>
+                                <Link href="/register" className="text-sm font-medium px-4 py-2 rounded-full bg-white text-black hover:bg-gray-200 transition-colors">
+                                    Register
+                                </Link>
+                            </div>
                             <button aria-label="Cart" className="text-gray-300 hover:text-white transition-colors hover:scale-110 active:scale-95 duration-200 relative">
                                 <ShoppingBag size={20} />
                             </button>
@@ -160,9 +165,9 @@ export default function Navbar() {
                 <Link href="/contact" className="flex flex-col items-center gap-1 text-gray-300 hover:text-white transition-colors">
                     <Mail size={22} />
                 </Link>
-                <button aria-label="Profile" className="flex flex-col items-center gap-1 text-gray-300 hover:text-white transition-colors">
-                    <User size={22} />
-                </button>
+                <Link href="/login" className="flex flex-col items-center gap-1 text-gray-300 hover:text-white transition-colors">
+                    <LogIn size={22} />
+                </Link>
             </nav>
         </>
     );
