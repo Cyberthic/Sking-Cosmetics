@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import logger from "./utils/logger";
+import userAuthRoutes from "./routes/userRoutes/userAuth.routes";
 
 const app: Application = express();
 
@@ -38,5 +39,8 @@ app.get("/health", (_req, res) => {
   });
 });
 
+
+
+app.use("/api/users", userAuthRoutes);
 
 export default app;

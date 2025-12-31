@@ -8,7 +8,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": ["node", "reflect-metadata"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
