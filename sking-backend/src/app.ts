@@ -3,11 +3,10 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import logger from "./utils/logger";
-import userAuthRoutes from "./routes/userRoutes/userAuth.routes";
+import userRouter from "./routes/userRouter";
 
 const app: Application = express();
 
-/* -------------------- Security & Core -------------------- */
 app.use(helmet());
 
 app.use(
@@ -41,6 +40,6 @@ app.get("/health", (_req, res) => {
 
 
 
-app.use("/api/users", userAuthRoutes);
+app.use("/api/users", userRouter);
 
 export default app;

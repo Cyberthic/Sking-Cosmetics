@@ -1,0 +1,45 @@
+export enum SuccessMessages {
+    REGISTRATION_INITIATED = "Registration initiated. Please verify OTP.",
+    OTP_SENT = "OTP sent successfully.",
+    USER_REGISTERED = "User registered successfully.",
+    OTP_VERIFIED = "OTP verified successfully.",
+    PASSWORD_RESET_OTP_SENT = "Password reset OTP sent.",
+    PASSWORD_RESET = "Password reset successfully.",
+    USER_LOGGED_IN = "User logged in successfully.",
+    OTP_RESENT = "OTP resent successfully.",
+    GOOGLE_LOGIN_SUCCESS = "Google login successful.",
+    USER_LOGGED_OUT = "User logged out successfully.",
+}
+
+export enum ErrorMessages {
+    VALIDATION_ERROR = "Validation Error.",
+    FAILED_RESEND_OTP = "Failed to resend OTP.",
+    FAILED_OTP_VERIFICATION = "OTP verification failed.",
+    FAILED_CHECK_USERNAME = "Failed to check username availability.",
+    FAILED_GENERATE_USERNAME = "Failed to generate username.",
+    FAILED_RESET_CODE = "Failed to send reset code.",
+    INVALID_OTP = "Invalid or expired OTP.",
+    FAILED_RESET_PASSWORD = "Failed to reset password.",
+    FAILED_LOGIN = "Login failed.",
+    REFRESH_TOKEN_REQUIRED = "Refresh token is required.",
+    INVALID_REFRESH_TOKEN = "Invalid refresh token.",
+    GOOGLE_ID_TOKEN_REQUIRED = "Google ID token is required.",
+    GOOGLE_LOGIN_FAILED = "Google login failed.",
+    FAILED_LOGOUT = "Logout failed.",
+}
+
+export enum LoggerMessages {
+    REGISTER_ERROR = "Error during registration:",
+    REQUEST_OTP_ERROR = "Error requesting OTP:",
+    VERIFY_OTP_ERROR = "Error verifying OTP:",
+    CHECK_USERNAME_AVAILABILITY_ERROR = "Error checking username:",
+    GENERATE_USERNAME_ERROR = "Error generating username:",
+    FORGOT_PASSWORD_OTP_ERROR = "Error requesting forgot password OTP:",
+    VERIFY_FORGOT_PASSWORD_OTP_ERROR = "Error verifying forgot password OTP:",
+    RESET_PASSWORD_ERROR = "Error resetting password:",
+    LOGIN_ERROR = "Error during login:",
+    RESEND_OTP_ERROR = "Error resending OTP:",
+    REFRESH_TOKEN_ERROR = "Error refreshing token:",
+    GOOGLE_LOGIN_ERROR = "Error during Google login:",
+    LOGOUT_ERROR = "Error during logout:",
+}
