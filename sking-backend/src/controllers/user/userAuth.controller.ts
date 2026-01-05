@@ -45,8 +45,15 @@ export class UserAuthController implements IUserAuthController {
 
             logger.info(`Starting registration for email: ${email}, username: ${username}`);
 
-            await this._userAuthService.registerUser(username!, email!, password!, name!, referralCode);
-            await this._otpService.requestOtp(email!, "user");
+            const isNewUser = await this._userAuthService.registerUser(username!, email!, password!, name!, referralCode);
+
+            if (isNewUser) {
+                await this._otpService.requestOtp(email!, "user");
+            } else {
+                // Security: Don't reveal user exists, but don't send OTP either.
+                // Ideally trigger a "You're already registered" email via service.
+                logger.info(`Existing user registration attempt for ${email} - suppressing OTP`);
+            }
 
             const response = new RegisterResponseDto(SuccessMessages.REGISTRATION_INITIATED);
             res.status(StatusCode.OK).json(response);
@@ -305,10 +312,13 @@ export class UserAuthController implements IUserAuthController {
             // Fetch user data to return with refresh
             const user = await this._userAuthService.getUserById(decoded.id);
 
+            // Token Version Validation (Revocation Check)
+            if (user.tokenVersion !== decoded.tokenVersion) {
+                throw new CustomError("Session expired", StatusCode.UNAUTHORIZED);
+            }
+
             res.status(StatusCode.OK).json({
                 success: true,
-                accessToken,
-                refreshToken: newRefreshToken,
                 user // Return user data
             });
         } catch (error) {
@@ -357,6 +367,30 @@ export class UserAuthController implements IUserAuthController {
             res.status(StatusCode.OK).json({
                 success: true,
                 message: SuccessMessages.USER_LOGGED_OUT
+            });
+        } catch (error) {
+            logger.error(LoggerMessages.LOGOUT_ERROR, error);
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: ErrorMessages.FAILED_LOGOUT
+            });
+        }
+    };
+
+    logoutAll = async (req: Request, res: Response) => {
+        try {
+            // @ts-ignore
+            const userId = req.user?.id || (this._jwtService.verifyRefreshToken(req.cookies.refreshToken) as any)?.id;
+
+            if (userId) {
+                await this._userAuthService.logoutFromAllDevices(userId);
+            }
+
+            this._jwtService.clearTokens(res);
+            logger.info("User logged out from all devices");
+            res.status(StatusCode.OK).json({
+                success: true,
+                message: "Logged out from all devices"
             });
         } catch (error) {
             logger.error(LoggerMessages.LOGOUT_ERROR, error);

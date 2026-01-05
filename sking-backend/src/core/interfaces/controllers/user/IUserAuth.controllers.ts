@@ -15,5 +15,6 @@ export interface IUserAuthController {
     refreshAccessToken(req: Request, res: Response): Promise<void>;
     googleLogin(req: Request, res: Response): Promise<void>;
     logout(req: Request, res: Response): Promise<void>;
+    logoutAll(req: Request, res: Response): Promise<void>;
     getMe(req: Request, res: Response): Promise<void>;
 }

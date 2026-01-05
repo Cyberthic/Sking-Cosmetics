@@ -8,6 +8,7 @@ export interface IUser extends Document {
   password?: string;
   name: string;
   isActive: boolean;
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,7 +19,8 @@ const UserSchema: Schema<IUser> = new Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: false },
     name: { type: String, required: true },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    tokenVersion: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

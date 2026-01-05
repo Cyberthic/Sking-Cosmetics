@@ -95,8 +95,8 @@ export default function VerifyOtpPage() {
             });
 
             if (response.success) {
-                dispatch(loginSuccess({ user: response.user, accessToken: response.accessToken }));
-                toast.success('Email verified successfully! Welcome to Sking Cosmetics!');
+                dispatch(loginSuccess({ user: response.user }));
+                toast.success('Email verified successfully!');
                 router.push('/');
             }
         } catch (err: any) {

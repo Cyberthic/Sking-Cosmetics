@@ -73,4 +73,9 @@ export const userAuthService = {
         const response = await axiosInstance.post(`${API_URL}/logout`);
         return response.data;
     },
+
+    logoutAll: async () => {
+        const response = await axiosInstance.post(`${API_URL}/logout-all`);
+        return response.data;
+    },
 };

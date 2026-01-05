@@ -7,7 +7,7 @@ export interface IUserAuthService {
         password?: string,
         name?: string,
         referralCode?: string
-    ): Promise<void>;
+    ): Promise<boolean>;
     verifyAndRegisterUser(
         username: string,
         email: string,
@@ -23,4 +23,5 @@ export interface IUserAuthService {
     resetPassword(email: string, newPassword?: string): Promise<void>;
     loginWithGoogle(payload: { token?: string, code?: string, referralCode?: string }): Promise<{ user: IUser; accessToken: string; refreshToken: string }>;
     getUserById(userId: string): Promise<IUser>;
+    logoutFromAllDevices(userId: string): Promise<void>;
 }

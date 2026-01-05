@@ -34,16 +34,20 @@ export class UserAuthService implements IUserAuthService {
         password?: string,
         name?: string,
         referralCode?: string
-    ): Promise<void> {
+    ): Promise<boolean> {
         const existingUserByEmail = await this._userAuthRepository.findByEmail(email);
         if (existingUserByEmail) {
-            throw new CustomError("Email already registered", StatusCode.CONFLICT);
+            // Anti-enumeration: Don't throw, just return false so controller skips OTP
+            // Optionally trigger an email here saying "You have an account"
+            return false;
         }
 
         const existingUserByUsername = await this._userAuthRepository.findByUsername(username);
         if (existingUserByUsername) {
             throw new CustomError("Username already taken", StatusCode.CONFLICT);
         }
+
+        return true;
     }
 
     async verifyAndRegisterUser(
@@ -53,7 +57,11 @@ export class UserAuthService implements IUserAuthService {
         name?: string,
         referralCode?: string
     ): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
-        await this.registerUser(username, email, password, name, referralCode);
+        // We re-check here, but usually verifyOtp handles the flow
+        const isNewUser = await this.registerUser(username, email, password, name, referralCode);
+        if (!isNewUser) {
+            throw new CustomError("Email already registered", StatusCode.CONFLICT);
+        }
 
         let hashedPassword = "";
         if (password) {
@@ -66,6 +74,7 @@ export class UserAuthService implements IUserAuthService {
             password: hashedPassword,
             name: name || username,
             isActive: true,
+            tokenVersion: 0 // Explicitly set
         });
 
         // Send welcome email
@@ -75,8 +84,8 @@ export class UserAuthService implements IUserAuthService {
             logger.warn("Failed to send welcome email:", error);
         }
 
-        const accessToken = this._jwtService.generateAccessToken(newUser._id.toString(), "user", 0);
-        const refreshToken = this._jwtService.generateRefreshToken(newUser._id.toString(), "user", 0);
+        const accessToken = this._jwtService.generateAccessToken(newUser._id.toString(), "user", newUser.tokenVersion);
+        const refreshToken = this._jwtService.generateRefreshToken(newUser._id.toString(), "user", newUser.tokenVersion);
 
         return { user: newUser, accessToken, refreshToken };
     }
@@ -133,8 +142,8 @@ export class UserAuthService implements IUserAuthService {
             throw new CustomError("Account is deactivated", StatusCode.FORBIDDEN);
         }
 
-        const accessToken = this._jwtService.generateAccessToken(user._id.toString(), "user", 0);
-        const refreshToken = this._jwtService.generateRefreshToken(user._id.toString(), "user", 0);
+        const accessToken = this._jwtService.generateAccessToken(user._id.toString(), "user", user.tokenVersion);
+        const refreshToken = this._jwtService.generateRefreshToken(user._id.toString(), "user", user.tokenVersion);
 
         return { user, accessToken, refreshToken };
     }
@@ -155,7 +164,11 @@ export class UserAuthService implements IUserAuthService {
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 12);
-        await this._userAuthRepository.update(user._id.toString(), { password: hashedPassword });
+        // Invalidate all existing tokens by incrementing version
+        await this._userAuthRepository.update(user._id.toString(), {
+            password: hashedPassword,
+            tokenVersion: (user.tokenVersion || 0) + 1
+        });
 
         // Send password reset success email
         try {
@@ -216,8 +229,8 @@ export class UserAuthService implements IUserAuthService {
                 }
             }
 
-            const accessToken = this._jwtService.generateAccessToken(user._id.toString(), "user", 0);
-            const refreshToken = this._jwtService.generateRefreshToken(user._id.toString(), "user", 0);
+            const accessToken = this._jwtService.generateAccessToken(user._id.toString(), "user", user.tokenVersion);
+            const refreshToken = this._jwtService.generateRefreshToken(user._id.toString(), "user", user.tokenVersion);
 
             return { user, accessToken, refreshToken };
 
@@ -233,5 +246,14 @@ export class UserAuthService implements IUserAuthService {
             throw new CustomError("User not found", StatusCode.NOT_FOUND);
         }
         return user;
+    }
+
+    async logoutFromAllDevices(userId: string): Promise<void> {
+        const user = await this._userAuthRepository.findById(userId);
+        if (!user) return;
+
+        await this._userAuthRepository.update(userId, {
+            tokenVersion: (user.tokenVersion || 0) + 1
+        });
     }
 }

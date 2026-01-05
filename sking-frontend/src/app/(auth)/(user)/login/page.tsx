@@ -35,7 +35,7 @@ export default function LoginPage() {
         try {
             const response = await userAuthService.login(data);
             if (response.success) {
-                dispatch(loginSuccess({ user: response.user, accessToken: response.accessToken }));
+                dispatch(loginSuccess({ user: response.user }));
                 toast.success('Login successful! Welcome back.');
                 router.push('/');
             } else {
