@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { useForm } from 'react-hook-form';
 import { updateUser } from '@/redux/features/authSlice';
 import { userProfileService } from '@/services/user/userProfileApiService';
 import { toast } from 'sonner';
-import { Loader2, Camera, User, Mail, Phone, FileText, Save, ArrowLeft } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Loader2, Camera, User, Mail, Phone, FileText, Save, ArrowLeft, X, Check, ZoomIn, ZoomOut } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '@/utils/cropImage';
 
 interface ProfileFormData {
     name: string;
@@ -22,6 +24,13 @@ export default function ProfilePage() {
     const { user } = useSelector((state: RootState) => state.auth);
     const [isUploading, setIsUploading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Cropper State
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+    const [isCropping, setIsCropping] = useState(false);
+    const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { register, handleSubmit, setValue } = useForm<ProfileFormData>();
@@ -36,22 +45,58 @@ export default function ProfilePage() {
         }
     }, [user, setValue]);
 
-    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
+    const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    }, []);
+
+    const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files.length > 0) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.addEventListener('load', () => {
+                setTempImageSrc(reader.result as string);
+                setIsCropping(true);
+            });
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSaveCrop = async () => {
+        if (!tempImageSrc || !croppedAreaPixels) return;
 
         setIsUploading(true);
         try {
+            const croppedImageBlob = await getCroppedImg(tempImageSrc, croppedAreaPixels);
+
+            if (!croppedImageBlob) {
+                toast.error('Something went wrong with cropping.');
+                return;
+            }
+
+            // Create a File from the Blob
+            const file = new File([croppedImageBlob], "profile_pic.jpg", { type: "image/jpeg" });
+
             const response = await userProfileService.uploadProfilePicture(file);
             if (response.success && user) {
                 const updatedUser = { ...user, profilePicture: response.imageUrl };
-                dispatch(updateUser(updatedUser)); // We might need to fetch fresh profile to be safe
+                dispatch(updateUser(updatedUser));
                 toast.success('Profile picture updated successfully');
+                setIsCropping(false);
+                setTempImageSrc(null);
             }
         } catch (error) {
             toast.error('Failed to upload image');
+            console.error(error);
         } finally {
             setIsUploading(false);
+        }
+    };
+
+    const handleCancelCrop = () => {
+        setIsCropping(false);
+        setTempImageSrc(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
         }
     };
 
@@ -82,7 +127,80 @@ export default function ProfilePage() {
     const profilePic = user.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white p-6 md:p-12">
+        <div className="min-h-screen bg-[#0a0a0a] text-white p-6 md:p-12 relative">
+            {/* Cropper Modal */}
+            <AnimatePresence>
+                {isCropping && tempImageSrc && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    >
+                        <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden w-full max-w-lg shadow-2xl">
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                                <h3 className="font-semibold text-lg">Adjust Profile Picture</h3>
+                                <button onClick={handleCancelCrop} className="text-gray-400 hover:text-white transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="relative h-[400px] w-full bg-black">
+                                <Cropper
+                                    image={tempImageSrc}
+                                    crop={crop}
+                                    zoom={zoom}
+                                    aspect={1}
+                                    onCropChange={setCrop}
+                                    onCropComplete={onCropComplete}
+                                    onZoomChange={setZoom}
+                                    cropShape="round"
+                                    showGrid={false}
+                                />
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <ZoomOut className="w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="range"
+                                        value={zoom}
+                                        min={1}
+                                        max={3}
+                                        step={0.1}
+                                        aria-labelledby="Zoom"
+                                        onChange={(e) => setZoom(Number(e.target.value))}
+                                        className="w-full accent-purple-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <ZoomIn className="w-4 h-4 text-gray-400" />
+                                </div>
+
+                                <div className="flex gap-3 justify-end">
+                                    <button
+                                        onClick={handleCancelCrop}
+                                        className="px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/5 transition-colors text-gray-300"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSaveCrop}
+                                        disabled={isUploading}
+                                        className="px-6 py-2 bg-purple-600 hover:bg-purple-500 rounded-xl text-sm font-medium text-white transition-colors flex items-center gap-2"
+                                    >
+                                        {isUploading ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Check className="w-4 h-4" />
+                                        )}
+                                        Save Picture
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="max-w-4xl mx-auto">
                 <Link href="/" className="inline-flex items-center text-gray-400 hover:text-white mb-8 transition-colors">
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -104,11 +222,6 @@ export default function ProfilePage() {
                                         alt={user.name}
                                         className="w-full h-full object-cover"
                                     />
-                                    {isUploading && (
-                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                            <Loader2 className="w-8 h-8 animate-spin text-white" />
-                                        </div>
-                                    )}
                                 </div>
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
@@ -121,7 +234,7 @@ export default function ProfilePage() {
                                     ref={fileInputRef}
                                     className="hidden"
                                     accept="image/*"
-                                    onChange={handleImageUpload}
+                                    onChange={handleFileSelect}
                                 />
                             </div>
                             <h2 className="text-xl font-bold mb-1">{user.name}</h2>
