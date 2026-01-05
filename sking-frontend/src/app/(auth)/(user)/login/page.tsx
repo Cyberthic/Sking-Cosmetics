@@ -13,12 +13,14 @@ import type { RootState } from '@/redux/store';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { useGoogleLogin } from '@/hooks/useGoogleLogin';
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const dispatch = useDispatch();
     const router = useRouter();
     const { loading, error } = useSelector((state: RootState) => state.auth);
+    const { initiateGoogleLogin } = useGoogleLogin();
 
     const {
         register,
@@ -171,16 +173,7 @@ export default function LoginPage() {
 
                         <button
                             type="button"
-                            onClick={() => {
-                                const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-                                const redirectUri = 'http://localhost:3000/auth/google/callback';
-                                const scope = 'email profile openid';
-                                if (!clientId) {
-                                    toast.error("Google Client ID not configured");
-                                    return;
-                                }
-                                window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-                            }}
+                            onClick={initiateGoogleLogin}
                             className="w-full bg-white text-black font-semibold py-3.5 rounded-xl transition-all hover:bg-gray-200 flex items-center justify-center gap-2"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">

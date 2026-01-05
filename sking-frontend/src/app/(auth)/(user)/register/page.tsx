@@ -23,6 +23,7 @@ import {
     AlertCircle,
     Sparkles
 } from 'lucide-react';
+import { useGoogleLogin } from '@/hooks/useGoogleLogin';
 
 export default function RegisterPage() {
     const [loading, setLoading] = useState(false);
@@ -30,6 +31,7 @@ export default function RegisterPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [acceptTerms, setAcceptTerms] = useState(false);
     const router = useRouter();
+    const { initiateGoogleLogin } = useGoogleLogin();
 
     const {
         register,
@@ -435,16 +437,7 @@ export default function RegisterPage() {
 
                         <button
                             type="button"
-                            onClick={() => {
-                                const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-                                const redirectUri = 'http://localhost:3000/auth/google/callback';
-                                const scope = 'email profile openid';
-                                if (!clientId) {
-                                    toast.error("Google Client ID not configured");
-                                    return;
-                                }
-                                window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-                            }}
+                            onClick={initiateGoogleLogin}
                             className="w-full bg-white text-black font-semibold py-3.5 rounded-xl transition-all hover:bg-gray-200 flex items-center justify-center gap-2"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">

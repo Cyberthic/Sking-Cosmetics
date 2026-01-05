@@ -20,22 +20,29 @@ export default function GoogleCallbackPage() {
 
         if (code) {
             processedRef.current = true;
-            const toastId = toast.loading("Verifying Google login...");
 
-            dispatch(googleLogin({ code }))
-                .unwrap()
-                .then(() => {
-                    toast.dismiss(toastId);
-                    toast.success("Successfully logged in with Google!");
-                    router.push("/");
-                })
-                .catch((err: any) => {
-                    toast.dismiss(toastId);
-                    toast.error(typeof err === 'string' ? err : "Google login failed");
-                    router.push("/login");
-                });
+            // If opened in a popup/new window by the main app
+            if (window.opener) {
+                window.opener.postMessage({ type: 'GOOGLE_LOGIN_CODE', code }, window.location.origin);
+                window.close();
+            } else {
+                // Fallback: If opened directly (not as popup), verify normally
+                const toastId = toast.loading("Verifying Google login...");
+
+                dispatch(googleLogin({ code }))
+                    .unwrap()
+                    .then(() => {
+                        toast.dismiss(toastId);
+                        toast.success("Successfully logged in with Google!");
+                        router.push("/");
+                    })
+                    .catch((err: any) => {
+                        toast.dismiss(toastId);
+                        toast.error(typeof err === 'string' ? err : "Google login failed");
+                        router.push("/login");
+                    });
+            }
         } else {
-            // If no code, maybe just redirect
             if (!processedRef.current) {
                 router.push("/login");
             }
