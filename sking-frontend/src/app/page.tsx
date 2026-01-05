@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import Link from "next/link";
-import Navbar from "../components/Navbar";
+import Navbar from "@/components/user/Navbar";
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
