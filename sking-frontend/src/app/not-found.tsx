@@ -5,9 +5,9 @@ import Link from "next/link";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Sking Cosmetics Error 404 | Sking Cosmetics - Next.js Dashboard",
+  title: "Error 404 | Sking Cosmetics - Admin Dashboard",
   description:
-    "This is Sking Cosmetics Error 404 page for Sking Cosmetics - Next.js Tailwind CSS Admin Dashboard Template",
+    "This is Error 404 page for Sking Cosmetics - Admin Dashboard",
 };
 
 export default function Error404() {

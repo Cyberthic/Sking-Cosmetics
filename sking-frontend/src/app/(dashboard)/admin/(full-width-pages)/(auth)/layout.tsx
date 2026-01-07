@@ -30,7 +30,7 @@ export default function AuthLayout({
                   />
                 </Link>
                 <p className="text-center text-gray-400 dark:text-white/60">
-                  Free and Open-Source Tailwind CSS Admin Dashboard Template
+                  Sking Cosmetics - Premium Admin Dashboard
                 </p>
               </div>
             </div>
@@ -39,7 +39,7 @@ export default function AuthLayout({
             <ThemeTogglerTwo />
           </div>
         </div>
-      </ThemeProvider>
-    </div>
+      </ThemeProvider >
+    </div >
   );
 }
