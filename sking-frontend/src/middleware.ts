@@ -63,7 +63,7 @@ export function middleware(request: NextRequest) {
     const response = NextResponse.next();
 
     // Prevent caching of auth pages to handle back-button navigation security
-    if (isGuestRoute) {
+    if (isGuestRoute || isAdminGuestRoute) {
         response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         response.headers.set('Pragma', 'no-cache');
         response.headers.set('Expires', '0');

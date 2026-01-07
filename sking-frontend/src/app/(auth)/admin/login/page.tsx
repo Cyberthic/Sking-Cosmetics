@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -17,7 +17,13 @@ export default function AdminLoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const dispatch = useDispatch();
     const router = useRouter();
-    const { loading, error } = useSelector((state: RootState) => state.adminAuth);
+    const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.adminAuth);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            router.replace('/admin');
+        }
+    }, [isAuthenticated, router]);
 
     const {
         register,
