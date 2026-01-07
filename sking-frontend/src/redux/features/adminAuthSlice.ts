@@ -10,6 +10,7 @@ interface AdminUser {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+    profilePicture?: string;
 }
 
 interface AdminAuthState {
