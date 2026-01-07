@@ -2,7 +2,6 @@ import GridShape from "@/components/admin/common/GridShape";
 import ThemeTogglerTwo from "@/components/admin/common/ThemeTogglerTwo";
 
 import { ThemeProvider } from "@/context/admin/ThemeContext";
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
@@ -22,12 +21,7 @@ export default function AuthLayout({
               <GridShape />
               <div className="flex flex-col items-center max-w-xs">
                 <Link href="/" className="block mb-4">
-                  <Image
-                    width={231}
-                    height={48}
-                    src="./images/logo/auth-logo.svg"
-                    alt="Logo"
-                  />
+                  <span className="text-4xl font-bold text-white">SKING Cosmetics</span>
                 </Link>
                 <p className="text-center text-gray-400 dark:text-white/60">
                   Sking Cosmetics - Premium Admin Dashboard
