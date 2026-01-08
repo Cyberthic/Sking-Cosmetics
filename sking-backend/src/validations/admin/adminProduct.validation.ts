@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 const variantSchema = z.object({
     name: z.string().min(1, "Variant name is required"),
     stock: z.number().int().min(0, "Stock cannot be negative"),
+    price: z.number().positive("Variant price must be positive"),
 });
 
 export const createProductSchema = z.object({

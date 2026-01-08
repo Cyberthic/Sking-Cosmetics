@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model, Types } from "mongoose";
 export interface IVariant {
     name: string;
     stock: number;
+    price: number;
 }
 
 export interface IProduct extends Document {
@@ -30,6 +31,7 @@ const ProductSchema: Schema<IProduct> = new Schema(
             {
                 name: { type: String, required: true },
                 stock: { type: Number, required: true, default: 0 },
+                price: { type: Number, required: true, default: 0 },
             },
         ],
         isActive: { type: Boolean, default: true },

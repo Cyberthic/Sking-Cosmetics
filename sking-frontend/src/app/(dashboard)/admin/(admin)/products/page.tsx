@@ -167,15 +167,17 @@ export default function ProductsPage() {
                                     <TableRow key={product._id}>
                                         <TableCell className="px-5 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 flex-shrink-0 overflow-hidden rounded bg-gray-200 relative">
-                                                    {product.images?.[0] && (
-                                                        <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-800 dark:text-white line-clamp-1">{product.name}</p>
-                                                    <p className="text-xs text-gray-500">ID: {product._id.slice(-6)}</p>
-                                                </div>
+                                                <Link href={`./products/${product._id}`} className="flex items-center gap-3 group">
+                                                    <div className="w-12 h-12 flex-shrink-0 overflow-hidden rounded bg-gray-200 relative group-hover:opacity-80 transition-opacity">
+                                                        {product.images?.[0] && (
+                                                            <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-gray-800 dark:text-white line-clamp-1 group-hover:text-brand-500 transition-colors">{product.name}</p>
+                                                        <p className="text-xs text-gray-500">ID: {product._id.slice(-6)}</p>
+                                                    </div>
+                                                </Link>
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400">

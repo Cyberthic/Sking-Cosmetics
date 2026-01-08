@@ -25,12 +25,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
     const [price, setPrice] = useState<number>(0);
     const [offer, setOffer] = useState<number>(0);
     const [images, setImages] = useState<string[]>([]);
-    const [variants, setVariants] = useState<{ name: string; stock: number }[]>([{ name: "", stock: 0 }]);
+    const [variants, setVariants] = useState<{ name: string; stock: number; price: number }[]>([{ name: "", stock: 0, price: 0 }]);
     const [isActive, setIsActive] = useState(true);
 
     // Loading
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [cropping, setCropping] = useState(false);
 
     // Cropper State
     const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -48,7 +49,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
             setPrice(initialData.price);
             setOffer(initialData.offer || 0);
             setImages(initialData.images || []);
-            setVariants(initialData.variants.length > 0 ? initialData.variants : [{ name: "", stock: 0 }]);
+            setVariants(initialData.variants.length > 0 ? initialData.variants : [{ name: "", stock: 0, price: 0 }]);
             setIsActive(initialData.isActive);
         }
     }, [initialData]);
@@ -83,9 +84,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
 
     const handleCropSave = async () => {
         if (!cropImageSrc || !croppedAreaPixels) return;
+        setCropping(true);
         try {
             const croppedImageBlob = await getCroppedImg(cropImageSrc, croppedAreaPixels);
-            if (!croppedImageBlob) return;
+            if (!croppedImageBlob) {
+                setCropping(false);
+                return;
+            }
 
             const file = new File([croppedImageBlob], "product-image.jpeg", { type: "image/jpeg" });
 
@@ -101,6 +106,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
         } catch (e) {
             console.error(e);
             alert("Error cropping/uploading image");
+        } finally {
+            setCropping(false);
         }
     };
 
@@ -108,14 +115,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
         setImages(images.filter((_, i) => i !== index));
     };
 
-    const handleVariantChange = (index: number, field: "name" | "stock", value: string | number) => {
+    const handleVariantChange = (index: number, field: "name" | "stock" | "price", value: string | number) => {
         const newVariants = [...variants];
         newVariants[index] = { ...newVariants[index], [field]: value };
         setVariants(newVariants);
     };
 
     const addVariant = () => {
-        setVariants([...variants, { name: "", stock: 0 }]);
+        setVariants([...variants, { name: "", stock: 0, price: 0 }]);
     };
 
     const removeVariant = (index: number) => {
@@ -140,7 +147,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
                 price: isNaN(price) ? 0 : price,
                 offer: isNaN(offer) ? 0 : offer,
                 images,
-                variants: variants.map(v => ({ ...v, stock: isNaN(v.stock) ? 0 : v.stock })),
+                variants: variants.map(v => ({
+                    ...v,
+                    stock: isNaN(v.stock) ? 0 : v.stock,
+                    price: isNaN(v.price) ? 0 : v.price
+                })),
                 isActive
             };
 
@@ -150,7 +161,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
                 await adminProductService.createProduct(payload);
             }
 
-            router.push("/admin/categories"); // Or products list if we had one. Redirect to category list is safer for now.
+            router.push("/admin/products"); // Redirect to products list
         } catch (error) {
             console.error("Submit error", error);
             alert("Failed to save product");
@@ -186,14 +197,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price (₹)</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Base Price (₹)</label>
                         <input type="number" required min="0" step="0.01" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={isNaN(price) ? "" : price} onChange={e => setPrice(parseFloat(e.target.value))} />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Offer (%)</label>
-                        <input type="number" min="0" max="99" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={isNaN(offer) ? "" : offer} onChange={e => setOffer(parseInt(e.target.value))} />
-                    </div>
+                    {isEdit && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Offer (%)</label>
+                            <input type="number" min="0" max="99" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={isNaN(offer) ? "" : offer} onChange={e => setOffer(parseInt(e.target.value))} />
+                        </div>
+                    )}
 
                     <div className="flex items-center">
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -228,16 +241,20 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
                 {/* Variants */}
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Variants</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Variants (e.g. 100ml, 200ml)</label>
                         <Button type="button" variant="outline" size="sm" onClick={addVariant}>Add Variant</Button>
                     </div>
                     {variants.map((variant, idx) => (
-                        <div key={idx} className="flex gap-4 items-end">
-                            <div className="flex-1">
-                                <label className="block text-xs text-gray-500 mb-1">Variant Name (e.g. Size, Color)</label>
+                        <div key={idx} className="flex gap-4 items-end flex-wrap md:flex-nowrap">
+                            <div className="w-full md:flex-1">
+                                <label className="block text-xs text-gray-500 mb-1">Volume (e.g. 100ml)</label>
                                 <input type="text" required className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={variant.name} onChange={e => handleVariantChange(idx, "name", e.target.value)} />
                             </div>
-                            <div className="w-32">
+                            <div className="w-1/2 md:w-32">
+                                <label className="block text-xs text-gray-500 mb-1">Price (₹)</label>
+                                <input type="number" required min="0" step="0.01" className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={isNaN(variant.price) ? "" : variant.price} onChange={e => handleVariantChange(idx, "price", parseFloat(e.target.value))} />
+                            </div>
+                            <div className="w-1/2 md:w-32">
                                 <label className="block text-xs text-gray-500 mb-1">Stock</label>
                                 <input type="number" required min="0" className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={isNaN(variant.stock) ? "" : variant.stock} onChange={e => handleVariantChange(idx, "stock", parseInt(e.target.value))} />
                             </div>
@@ -273,8 +290,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
                     )}
                 </div>
                 <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setCropModalOpen(false)}>Cancel</Button>
-                    <Button onClick={handleCropSave}>Crop & Upload</Button>
+                    <Button variant="outline" onClick={() => setCropModalOpen(false)} disabled={cropping}>Cancel</Button>
+                    <Button onClick={handleCropSave} disabled={cropping}>
+                        {cropping ? "Cropping..." : "Crop & Upload"}
+                    </Button>
                 </div>
             </Modal>
         </>
