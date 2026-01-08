@@ -93,6 +93,9 @@ export default function StatisticsChart() {
       x: {
         format: "dd MMM yyyy", // Format for x-axis tooltip
       },
+      y: {
+        formatter: (val: number) => `₹ ${val}`,
+      },
     },
     xaxis: {
       type: "category", // Category-based x-axis

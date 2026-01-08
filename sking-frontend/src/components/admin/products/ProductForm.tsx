@@ -186,7 +186,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price ($)</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price (₹)</label>
                         <input type="number" required min="0" step="0.01" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={isNaN(price) ? "" : price} onChange={e => setPrice(parseFloat(e.target.value))} />
                     </div>
 

@@ -133,8 +133,8 @@ export default function ProductsPage() {
                         ))}
                     </select>
 
-                    <Button asChild>
-                        <Link href="/admin/products/add">Add New Product</Link>
+                    <Button href="/admin/products/add">
+                        Add New Product
                     </Button>
                 </div>
             </div>
@@ -186,11 +186,11 @@ export default function ProductsPage() {
                                         </TableCell>
                                         <TableCell className="px-5 py-4">
                                             <div className="flex flex-col">
-                                                <span className="font-medium text-gray-800 dark:text-white">${product.finalPrice}</span>
+                                                <span className="font-medium text-gray-800 dark:text-white">₹{product.finalPrice}</span>
                                                 {product.appliedOffer > 0 ? (
                                                     <span className="text-xs text-green-500">-{product.appliedOffer}% applied</span>
                                                 ) : product.price !== product.finalPrice && (
-                                                    <span className="text-xs text-gray-400 line-through">${product.price}</span>
+                                                    <span className="text-xs text-gray-400 line-through">₹{product.price}</span>
                                                 )}
                                             </div>
                                         </TableCell>

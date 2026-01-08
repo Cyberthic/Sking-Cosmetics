@@ -87,7 +87,7 @@ export default function MonthlySalesChart() {
         show: false,
       },
       y: {
-        formatter: (val: number) => `${val}`,
+        formatter: (val: number) => `₹ ${val}`,
       },
     },
   };
