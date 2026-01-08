@@ -1,6 +1,6 @@
 import axiosInstance from '../../lib/axios';
 
-const API_URL = '/admin/products';
+const API_URL = '/api/admin/products';
 
 interface Variant {
     name: string;

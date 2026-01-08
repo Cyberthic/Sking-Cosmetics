@@ -1,6 +1,6 @@
 import axiosInstance from '../../lib/axios';
 
-const API_URL = '/admin/categories'; // Matches backend mounting
+const API_URL = '/api/admin/categories'; // Matches backend mounting
 
 interface CategoryData {
     name: string;

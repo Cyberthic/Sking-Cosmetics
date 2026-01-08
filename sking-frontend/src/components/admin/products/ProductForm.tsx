@@ -137,10 +137,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
                 name,
                 description,
                 category: categoryId,
-                price,
-                offer,
+                price: isNaN(price) ? 0 : price,
+                offer: isNaN(offer) ? 0 : offer,
                 images,
-                variants,
+                variants: variants.map(v => ({ ...v, stock: isNaN(v.stock) ? 0 : v.stock })),
                 isActive
             };
 
@@ -187,12 +187,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price ($)</label>
-                        <input type="number" required min="0" step="0.01" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={price} onChange={e => setPrice(parseFloat(e.target.value))} />
+                        <input type="number" required min="0" step="0.01" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={isNaN(price) ? "" : price} onChange={e => setPrice(parseFloat(e.target.value))} />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Offer (%)</label>
-                        <input type="number" min="0" max="99" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={offer} onChange={e => setOffer(parseInt(e.target.value))} />
+                        <input type="number" min="0" max="99" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={isNaN(offer) ? "" : offer} onChange={e => setOffer(parseInt(e.target.value))} />
                     </div>
 
                     <div className="flex items-center">
@@ -239,7 +239,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
                             </div>
                             <div className="w-32">
                                 <label className="block text-xs text-gray-500 mb-1">Stock</label>
-                                <input type="number" required min="0" className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={variant.stock} onChange={e => handleVariantChange(idx, "stock", parseInt(e.target.value))} />
+                                <input type="number" required min="0" className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" value={isNaN(variant.stock) ? "" : variant.stock} onChange={e => handleVariantChange(idx, "stock", parseInt(e.target.value))} />
                             </div>
                             {variants.length > 1 && (
                                 <Button type="button" variant="outline" className="text-red-500 border-red-200 hover:bg-red-50" onClick={() => removeVariant(idx)}>
