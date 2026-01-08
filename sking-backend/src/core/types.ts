@@ -14,6 +14,12 @@ const TYPES = {
     IAdminCustomerRepository: Symbol.for("IAdminCustomerRepository"),
     IAdminCustomerService: Symbol.for("IAdminCustomerService"),
     IAdminCustomerController: Symbol.for("IAdminCustomerController"),
+    IAdminCategoryController: Symbol.for("IAdminCategoryController"),
+    IAdminCategoryService: Symbol.for("IAdminCategoryService"),
+    IAdminCategoryRepository: Symbol.for("IAdminCategoryRepository"),
+    IAdminProductController: Symbol.for("IAdminProductController"),
+    IAdminProductService: Symbol.for("IAdminProductService"),
+    IAdminProductRepository: Symbol.for("IAdminProductRepository"),
 };
 
 export { TYPES };

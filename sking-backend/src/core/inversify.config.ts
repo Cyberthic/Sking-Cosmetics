@@ -38,6 +38,19 @@ import { AdminAuthRepository } from "../repositories/admin/adminAuth.repository"
 import { AdminCustomerController } from "../controllers/admin/adminCustomer.controller";
 import { AdminCustomerService } from "../services/admin/adminCustomer.service";
 import { AdminCustomerRepository } from "../repositories/admin/adminCustomer.repository";
+import { IAdminCategoryController } from "./interfaces/controllers/admin/IAdminCategory.controller";
+import { IAdminCategoryService } from "./interfaces/services/admin/IAdminCategory.service";
+import { IAdminCategoryRepository } from "./interfaces/repositories/admin/IAdminCategory.repository";
+import { AdminCategoryController } from "../controllers/admin/adminCategory.controller";
+import { AdminCategoryService } from "../services/admin/adminCategory.service";
+import { AdminCategoryRepository } from "../repositories/admin/adminCategory.repository";
+
+import { IAdminProductController } from "./interfaces/controllers/admin/IAdminProduct.controller";
+import { IAdminProductService } from "./interfaces/services/admin/IAdminProduct.service";
+import { IAdminProductRepository } from "./interfaces/repositories/admin/IAdminProduct.repository";
+import { AdminProductController } from "../controllers/admin/adminProduct.controller";
+import { AdminProductService } from "../services/admin/adminProduct.service";
+import { AdminProductRepository } from "../repositories/admin/adminProduct.repository";
 
 const container = new Container();
 
@@ -61,6 +74,16 @@ container.bind<IUserAuthService>(TYPES.IUserAuthService).to(UserAuthService);
 container.bind<IUserProfileService>(TYPES.IUserProfileService).to(UserProfileService);
 container.bind<IAdminAuthService>(TYPES.IAdminAuthService).to(AdminAuthService);
 container.bind<IAdminCustomerService>(TYPES.IAdminCustomerService).to(AdminCustomerService);
+
+// Category
+container.bind<IAdminCategoryRepository>(TYPES.IAdminCategoryRepository).to(AdminCategoryRepository);
+container.bind<IAdminCategoryService>(TYPES.IAdminCategoryService).to(AdminCategoryService);
+container.bind<IAdminCategoryController>(TYPES.IAdminCategoryController).to(AdminCategoryController);
+
+// Product
+container.bind<IAdminProductRepository>(TYPES.IAdminProductRepository).to(AdminProductRepository);
+container.bind<IAdminProductService>(TYPES.IAdminProductService).to(AdminProductService);
+container.bind<IAdminProductController>(TYPES.IAdminProductController).to(AdminProductController);
 
 
 export default container;
