@@ -5,6 +5,9 @@ import Image from "next/image";
 import Navbar from "@/components/user/Navbar";
 import { userProductService } from "@/services/user/userProductApiService";
 import ProductCard from "@/components/user/ProductCard";
+import { userCartService } from "@/services/user/userCartApiService";
+import { userWishlistService } from "@/services/user/userWishlistApiService";
+import { toast } from "react-hot-toast";
 
 export default function ProductDetail() {
     const { id } = useParams();
@@ -13,6 +16,7 @@ export default function ProductDetail() {
     const [loading, setLoading] = useState(true);
     const [selectedVariant, setSelectedVariant] = useState<any>(null);
     const [mainImage, setMainImage] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         if (id) fetchData(id as string);
@@ -32,6 +36,29 @@ export default function ProductDetail() {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAddToCart = async () => {
+        if (!product) return;
+        setSubmitting(true);
+        try {
+            await userCartService.addToCart(product._id, selectedVariant?.name, 1);
+            toast.success("Added to Cart");
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to add to cart");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleAddToWishlist = async () => {
+        if (!product) return;
+        try {
+            await userWishlistService.toggleWishlist(product._id);
+            toast.success("Updated Wishlist");
+        } catch (err: any) {
+            toast.error("Failed to update wishlist");
         }
     };
 
@@ -100,14 +127,24 @@ export default function ProductDetail() {
                             {product.description}
                         </p>
 
-                        <div className="pt-8 border-t border-gray-800">
-                            <button className="w-full md:w-auto px-12 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors">
-                                Add to Cart — ₹{Math.floor(finalPrice)}
+                        <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row gap-4">
+                            <button
+                                onClick={handleAddToCart}
+                                disabled={submitting || (selectedVariant ? selectedVariant.stock <= 0 : product.stock <= 0)}
+                                className="flex-1 md:flex-none px-12 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {submitting ? "Adding..." : `Add to Cart — ₹${Math.floor(finalPrice)}`}
                             </button>
-                            <p className="mt-4 text-center md:text-left text-sm text-gray-500">
-                                {selectedVariant?.stock > 0 ? "In Stock" : "Out of Stock"}
-                            </p>
+                            <button
+                                onClick={handleAddToWishlist}
+                                className="px-6 py-4 border border-gray-700 rounded-full hover:bg-gray-800 transition-colors"
+                            >
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                            </button>
                         </div>
+                        <p className="mt-4 text-center md:text-left text-sm text-gray-500">
+                            {(selectedVariant ? selectedVariant.stock : product.stock) > 0 ? "In Stock" : "Out of Stock"}
+                        </p>
                     </div>
                 </div>
 

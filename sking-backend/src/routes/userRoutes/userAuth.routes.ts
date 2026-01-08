@@ -4,7 +4,7 @@ import container from "../../core/inversify.config";
 import { TYPES } from "../../core/types";
 import { IUserAuthController } from "../../core/interfaces/controllers/user/IUserAuth.controllers";
 import { validateResource } from "../../middlewares/validateResource.middleware";
-import { verifyToken } from "../../middlewares/auth.middleware";
+import { isAuthenticated } from "../../middlewares/auth.middleware";
 import {
   registerSchema,
   loginSchema,
@@ -23,9 +23,9 @@ const userAuthController = container.get<IUserAuthController>(TYPES.IUserAuthCon
 // Authentication routes
 userAuthRouter.post("/register", authLimiter, validateResource(registerSchema), (req, res) => userAuthController.register(req, res));
 userAuthRouter.post("/login", authLimiter, validateResource(loginSchema), (req, res) => userAuthController.login(req, res));
-userAuthRouter.get("/me", verifyToken, (req, res) => userAuthController.getMe(req, res));
+userAuthRouter.get("/me", isAuthenticated, (req, res) => userAuthController.getMe(req, res));
 userAuthRouter.post("/logout", (req, res) => userAuthController.logout(req, res));
-userAuthRouter.post("/logout-all", verifyToken, (req, res) => userAuthController.logoutAll(req, res));
+userAuthRouter.post("/logout-all", isAuthenticated, (req, res) => userAuthController.logoutAll(req, res));
 
 // OTP routes with rate limiting
 userAuthRouter.post("/request-otp", otpLimiter, (req, res) => userAuthController.requestOtp(req, res));

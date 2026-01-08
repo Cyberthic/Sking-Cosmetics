@@ -5,7 +5,7 @@ export interface AuthRequest extends Request {
     user?: any;
 }
 
-export const verifyToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const isAuthenticated = async (req: AuthRequest, res: Response, next: NextFunction) => {
     let token = req.header("Authorization")?.replace("Bearer ", "");
 
     if (!token && req.cookies && req.cookies.accessToken) {

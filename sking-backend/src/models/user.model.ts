@@ -14,6 +14,7 @@ export interface IUser extends Document {
   bio?: string;
   phoneNumber?: string;
   isBanned: boolean;
+  cartLimit: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,7 +31,8 @@ const UserSchema: Schema<IUser> = new Schema(
     profilePicture: { type: String, default: "" },
     bio: { type: String, default: "" },
     phoneNumber: { type: String, default: "" },
-    isBanned: { type: Boolean, default: false }
+    isBanned: { type: Boolean, default: false },
+    cartLimit: { type: Number, default: 5 }
   },
   { timestamps: true }
 );

@@ -5,7 +5,7 @@ import { IAdminAuthController } from "../../core/interfaces/controllers/admin/IA
 
 import { validateResource } from "../../middlewares/validateResource.middleware";
 import { authLimiter } from "../../middlewares/rateLimit.middleware";
-import { verifyToken } from "../../middlewares/auth.middleware";
+import { isAuthenticated } from "../../middlewares/auth.middleware";
 import {
     adminLoginSchema,
     adminForgotPasswordSchema,
@@ -20,7 +20,7 @@ adminAuthRouter.post("/forgot-password", authLimiter, validateResource(adminForg
 adminAuthRouter.post("/verify-forgot-otp", authLimiter, adminAuthController.verifyForgotPasswordOtp.bind(adminAuthController));
 adminAuthRouter.post("/reset-password", authLimiter, validateResource(adminResetPasswordSchema), adminAuthController.resetPassword.bind(adminAuthController));
 adminAuthRouter.post("/refresh-token", adminAuthController.refreshAccessToken.bind(adminAuthController));
-adminAuthRouter.get("/me", verifyToken, adminAuthController.getMe.bind(adminAuthController));
+adminAuthRouter.get("/me", isAuthenticated, adminAuthController.getMe.bind(adminAuthController));
 adminAuthRouter.post("/logout", adminAuthController.logout.bind(adminAuthController));
 
 export default adminAuthRouter;

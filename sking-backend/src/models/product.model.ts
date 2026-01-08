@@ -11,6 +11,7 @@ export interface IProduct extends Document {
     description: string;
     category: Types.ObjectId;
     price: number;
+    stock: number;
     offer: number; // Percentage 0-99
     images: string[];
     variants: IVariant[];
@@ -25,6 +26,7 @@ const ProductSchema: Schema<IProduct> = new Schema(
         description: { type: String, default: "" },
         category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
         price: { type: Number, required: true },
+        stock: { type: Number, default: 0 },
         offer: { type: Number, default: 0, min: 0, max: 99 },
         images: [{ type: String }],
         variants: [

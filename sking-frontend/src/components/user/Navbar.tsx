@@ -190,9 +190,9 @@ export default function Navbar() {
                                 </div>
                             )}
 
-                            <button aria-label="Cart" className="text-gray-300 hover:text-white transition-colors hover:scale-110 active:scale-95 duration-200 relative">
+                            <Link href="/cart" aria-label="Cart" className="text-gray-300 hover:text-white transition-colors hover:scale-110 active:scale-95 duration-200 relative">
                                 <ShoppingBag size={20} />
-                            </button>
+                            </Link>
                         </div>
                     )}
                 </div>

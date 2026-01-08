@@ -3,7 +3,7 @@ import multer from "multer";
 import container from "../../core/inversify.config";
 import { TYPES } from "../../core/types";
 import { IUserProfileController } from "../../core/interfaces/controllers/user/IUserProfile.controller";
-import { verifyToken } from "../../middlewares/auth.middleware";
+import { isAuthenticated } from "../../middlewares/auth.middleware";
 import { validateResource } from "../../middlewares/validateResource.middleware";
 import { generalLimiter } from "../../middlewares/rateLimit.middleware";
 
@@ -18,7 +18,7 @@ const upload = multer({
     }
 });
 
-userProfileRouter.use(verifyToken);
+userProfileRouter.use(isAuthenticated);
 userProfileRouter.use(generalLimiter);
 
 userProfileRouter.get("/", (req, res) => userProfileController.getProfile(req, res));

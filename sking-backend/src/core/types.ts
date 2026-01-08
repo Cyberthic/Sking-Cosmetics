@@ -25,6 +25,12 @@ const TYPES = {
     IUserProductController: Symbol.for("IUserProductController"),
     IUserHomeService: Symbol.for("IUserHomeService"),
     IUserHomeController: Symbol.for("IUserHomeController"),
+    ICartRepository: Symbol.for("ICartRepository"),
+    ICartService: Symbol.for("ICartService"),
+    IUserCartController: Symbol.for("IUserCartController"),
+    IWishlistRepository: Symbol.for("IWishlistRepository"),
+    IWishlistService: Symbol.for("IWishlistService"),
+    IUserWishlistController: Symbol.for("IUserWishlistController"),
 };
 
 export { TYPES };

@@ -106,4 +106,27 @@ container.bind<UserProductController>(TYPES.IUserProductController).to(UserProdu
 container.bind<IUserHomeService>(TYPES.IUserHomeService).to(UserHomeService);
 container.bind<UserHomeController>(TYPES.IUserHomeController).to(UserHomeController);
 
+
+// Cart
+import { ICartRepository } from "./interfaces/repositories/user/ICart.repository";
+import { ICartService } from "./interfaces/services/user/ICart.service";
+import { CartRepository } from "../repositories/user/cart.repository";
+import { CartService } from "../services/user/cart.service";
+import { UserCartController } from "../controllers/user/userCart.controller";
+
+container.bind<ICartRepository>(TYPES.ICartRepository).to(CartRepository);
+container.bind<ICartService>(TYPES.ICartService).to(CartService);
+container.bind<UserCartController>(TYPES.IUserCartController).to(UserCartController);
+
+// Wishlist
+import { IWishlistRepository } from "./interfaces/repositories/user/IWishlist.repository";
+import { IWishlistService } from "./interfaces/services/user/IWishlist.service";
+import { WishlistRepository } from "../repositories/user/wishlist.repository";
+import { WishlistService } from "../services/user/wishlist.service";
+import { UserWishlistController } from "../controllers/user/userWishlist.controller";
+
+container.bind<IWishlistRepository>(TYPES.IWishlistRepository).to(WishlistRepository);
+container.bind<IWishlistService>(TYPES.IWishlistService).to(WishlistService);
+container.bind<UserWishlistController>(TYPES.IUserWishlistController).to(UserWishlistController);
+
 export default container;

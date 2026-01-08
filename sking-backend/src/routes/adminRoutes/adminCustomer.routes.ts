@@ -2,7 +2,7 @@ import { Router } from "express";
 import container from "../../core/inversify.config";
 import { TYPES } from "../../core/types";
 import { IAdminCustomerController } from "../../core/interfaces/controllers/admin/IAdminCustomer.controller";
-import { verifyToken } from "../../middlewares/auth.middleware"; // Assuming standard auth middleware used for admin too?
+import { isAuthenticated } from "../../middlewares/auth.middleware"; // Assuming standard auth middleware used for admin too?
 // Wait, usually there is an admin specific middleware or check?
 // The verifyToken middleware checks validity. Admin check happens in controller or middleware?
 // In adminRefresh logic, it checked role == 'admin'.
@@ -13,9 +13,9 @@ import { verifyToken } from "../../middlewares/auth.middleware"; // Assuming sta
 const customerRouter = Router();
 const adminCustomerController = container.get<IAdminCustomerController>(TYPES.IAdminCustomerController);
 
-customerRouter.get("/", verifyToken, adminCustomerController.getAllUsers);
-customerRouter.get("/:id", verifyToken, adminCustomerController.getUserById);
-customerRouter.post("/:id/ban", verifyToken, adminCustomerController.banUser);
-customerRouter.post("/:id/unban", verifyToken, adminCustomerController.unbanUser);
+customerRouter.get("/", isAuthenticated, adminCustomerController.getAllUsers);
+customerRouter.get("/:id", isAuthenticated, adminCustomerController.getUserById);
+customerRouter.post("/:id/ban", isAuthenticated, adminCustomerController.banUser);
+customerRouter.post("/:id/unban", isAuthenticated, adminCustomerController.unbanUser);
 
 export default customerRouter;
