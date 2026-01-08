@@ -1,5 +1,5 @@
 import { ICategory } from "../../../../models/category.model";
-import { CreateCategoryDto, UpdateCategoryDto } from "../../../../dtos/category.dto";
+import { CreateCategoryDto, UpdateCategoryDto } from "../../../dtos/admin/adminCategory.dto";
 
 
 export interface IAdminCategoryService {

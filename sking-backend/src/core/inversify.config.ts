@@ -86,4 +86,24 @@ container.bind<IAdminProductService>(TYPES.IAdminProductService).to(AdminProduct
 container.bind<IAdminProductController>(TYPES.IAdminProductController).to(AdminProductController);
 
 
+
+// User Product
+import { IUserProductService } from "./interfaces/services/user/IUserProduct.service";
+import { IUserProductRepository } from "./interfaces/repositories/user/IUserProduct.repository";
+import { UserProductService } from "../services/user/userProduct.service";
+import { UserProductRepository } from "../repositories/user/userProduct.repository";
+import { UserProductController } from "../controllers/user/userProduct.controller";
+
+// User Home
+import { IUserHomeService } from "./interfaces/services/user/IUserHome.service";
+import { UserHomeService } from "../services/user/userHome.service";
+import { UserHomeController } from "../controllers/user/userHome.controller";
+
+container.bind<IUserProductRepository>(TYPES.IUserProductRepository).to(UserProductRepository);
+container.bind<IUserProductService>(TYPES.IUserProductService).to(UserProductService);
+container.bind<UserProductController>(TYPES.IUserProductController).to(UserProductController);
+
+container.bind<IUserHomeService>(TYPES.IUserHomeService).to(UserHomeService);
+container.bind<UserHomeController>(TYPES.IUserHomeController).to(UserHomeController);
+
 export default container;

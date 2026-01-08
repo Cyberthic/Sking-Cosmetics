@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import Link from "next/link";
 import Navbar from "@/components/user/Navbar";
+import { userHomeService } from "@/services/user/userHomeApiService";
+import ProductCard from "@/components/user/ProductCard";
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -12,7 +14,11 @@ export default function Home() {
   const ctaRef = useRef<HTMLDivElement>(null);
   const visualsRef = useRef<HTMLDivElement>(null);
 
+  const [newArrivals, setNewArrivals] = useState<any[]>([]);
+
   useEffect(() => {
+    fetchData();
+
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
@@ -64,66 +70,93 @@ export default function Home() {
     return () => ctx.revert();
   }, []);
 
+  const fetchData = async () => {
+    try {
+      const data = await userHomeService.getHomeData();
+      if (data.success && data.newArrivals) {
+        setNewArrivals(data.newArrivals);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
-      className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-black text-white selection:bg-white selection:text-black invisible"
+      className="relative min-h-screen w-full flex flex-col overflow-x-hidden bg-black text-white selection:bg-white selection:text-black invisible"
     >
       <Navbar />
 
-      {/* Background Ambience */}
-      <div ref={visualsRef} className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="glow-orb absolute top-[-10%] left-[20%] h-125 w-125 rounded-full bg-purple-900/40 blur-[120px]" />
-        <div className="glow-orb absolute bottom-[-10%] right-[20%] h-100 w-100 rounded-full bg-blue-900/30 blur-[100px]" />
-        <div className="glow-orb absolute top-[40%] left-[80%] h-75 w-75 rounded-full bg-fuchsia-900/20 blur-[80px]" />
+      {/* Hero Section */}
+      <div className="relative min-h-screen flex flex-col items-center justify-center">
+        {/* Background Ambience */}
+        <div ref={visualsRef} className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="glow-orb absolute top-[-10%] left-[20%] h-125 w-125 rounded-full bg-purple-900/40 blur-[120px]" />
+          <div className="glow-orb absolute bottom-[-10%] right-[20%] h-100 w-100 rounded-full bg-blue-900/30 blur-[100px]" />
+          <div className="glow-orb absolute top-[40%] left-[80%] h-75 w-75 rounded-full bg-fuchsia-900/20 blur-[80px]" />
+        </div>
+
+        {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-size-[64px_64px] mask-[radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)] pointer-events-none" />
+
+        {/* Main Content */}
+        <main className="relative z-10 flex flex-col items-center px-4 md:px-6 text-center max-w-5xl mx-auto space-y-8 mt-20">
+          <div className="overflow-hidden">
+            <h1
+              ref={headlineRef}
+              className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter bg-clip-text text-transparent bg-linear-to-b from-white to-white/60"
+            >
+              SKING COSMETICS
+            </h1>
+          </div>
+
+          <div className="overflow-hidden">
+            <p
+              ref={subheadlineRef}
+              className="text-lg md:text-xl text-neutral-400 max-w-2xl font-light tracking-wide mx-auto"
+            >
+              Experience the future of skincare. Pure, potent, and precisely formulated for your radiance.
+            </p>
+          </div>
+
+          <div ref={ctaRef} className="pt-4">
+            <Link
+              href="#new-arrivals"
+              className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-white px-8 font-medium text-black transition-all duration-300 hover:bg-neutral-200 hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-black"
+            >
+              <span className="mr-2">Discover Collection</span>
+              <span className="relative overflow-hidden w-5 h-5 flex items-center justify-center">
+                <svg
+                  className="w-4 h-4 transform transition-transform group-hover:translate-x-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </span>
+            </Link>
+          </div>
+        </main>
       </div>
 
-      {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-size-[64px_64px] mask-[radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)] pointer-events-none" />
-
-      {/* Main Content */}
-      <main className="relative z-10 flex flex-col items-center px-4 md:px-6 text-center max-w-5xl mx-auto space-y-8">
-        <div className="overflow-hidden">
-          <h1
-            ref={headlineRef}
-            className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter bg-clip-text text-transparent bg-linear-to-b from-white to-white/60"
-          >
-            SKING COSMETICS
-          </h1>
+      {/* New Arrivals Section */}
+      <section id="new-arrivals" className="relative z-10 py-24 px-4 md:px-6 max-w-7xl mx-auto w-full">
+        <h2 className="text-3xl md:text-5xl font-bold mb-12 text-center">New Arrivals</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {newArrivals.map(product => (
+            <ProductCard key={product._id} product={product} />
+          ))}
+          {newArrivals.length === 0 && (
+            <div className="col-span-full text-center text-gray-500 py-12">Loading products...</div>
+          )}
         </div>
-
-        <div className="overflow-hidden">
-          <p
-            ref={subheadlineRef}
-            className="text-lg md:text-xl text-neutral-400 max-w-2xl font-light tracking-wide"
-          >
-            Experience the future of skincare. Pure, potent, and precisely formulated for your radiance.
-          </p>
-        </div>
-
-        <div ref={ctaRef} className="pt-4">
-          <Link
-            href="#"
-            className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-white px-8 font-medium text-black transition-all duration-300 hover:bg-neutral-200 hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-black"
-          >
-            <span className="mr-2">Discover Collection</span>
-            <span className="relative overflow-hidden w-5 h-5 flex items-center justify-center">
-              <svg
-                className="w-4 h-4 transform transition-transform group-hover:translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </span>
-          </Link>
-        </div>
-      </main>
+      </section>
 
       {/* Footer / Bottom Elements */}
-      <footer className="absolute bottom-8 w-full text-center text-neutral-600 text-xs tracking-widest uppercase">
+      <footer className="py-12 w-full text-center text-neutral-600 text-xs tracking-widest uppercase border-t border-white/5">
         <p>&copy; {new Date().getFullYear()} Sking Cosmetics &bull; All Rights Reserved</p>
       </footer>
     </div>

@@ -3,7 +3,7 @@ import { TYPES } from "../../core/types";
 import { IAdminProductService, IProductWithOffer } from "../../core/interfaces/services/admin/IAdminProduct.service";
 import { IAdminProductRepository } from "../../core/interfaces/repositories/admin/IAdminProduct.repository";
 import { IProduct } from "../../models/product.model";
-import { CreateProductDto, UpdateProductDto } from "../../dtos/product.dto";
+import { CreateProductDto, UpdateProductDto } from "../../core/dtos/admin/adminProduct.dto";
 import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
 import cloudinary from "../../config/cloudinary";

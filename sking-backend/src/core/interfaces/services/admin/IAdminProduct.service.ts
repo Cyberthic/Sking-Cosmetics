@@ -1,5 +1,5 @@
 import { IProduct } from "../../../../models/product.model";
-import { CreateProductDto, UpdateProductDto } from "../../../../dtos/product.dto";
+import { CreateProductDto, UpdateProductDto } from "../../../dtos/admin/adminProduct.dto";
 
 
 export interface IProductWithOffer extends IProduct {

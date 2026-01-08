@@ -3,7 +3,7 @@ import { TYPES } from "../../core/types";
 import { IAdminCategoryService } from "../../core/interfaces/services/admin/IAdminCategory.service";
 import { IAdminCategoryRepository } from "../../core/interfaces/repositories/admin/IAdminCategory.repository";
 import { ICategory } from "../../models/category.model";
-import { CreateCategoryDto, UpdateCategoryDto } from "../../dtos/category.dto";
+import { CreateCategoryDto, UpdateCategoryDto } from "../../core/dtos/admin/adminCategory.dto";
 import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
 

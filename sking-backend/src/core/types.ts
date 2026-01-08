@@ -20,6 +20,11 @@ const TYPES = {
     IAdminProductController: Symbol.for("IAdminProductController"),
     IAdminProductService: Symbol.for("IAdminProductService"),
     IAdminProductRepository: Symbol.for("IAdminProductRepository"),
+    IUserProductRepository: Symbol.for("IUserProductRepository"),
+    IUserProductService: Symbol.for("IUserProductService"),
+    IUserProductController: Symbol.for("IUserProductController"),
+    IUserHomeService: Symbol.for("IUserHomeService"),
+    IUserHomeController: Symbol.for("IUserHomeController"),
 };
 
 export { TYPES };
