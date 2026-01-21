@@ -164,6 +164,11 @@ body {
 
   --color-theme-purple-500: #7a5af8;
 
+  --color-sking-red: #A40000;
+  --color-sking-pink: #FF007F;
+  --color-sking-black: #050505;
+  --color-sking-white: #FFFFFF;
+
   --shadow-theme-md:
     0px 4px 8px -2px rgba(16, 24, 40, 0.1),
     0px 2px 4px -2px rgba(16, 24, 40, 0.06);
