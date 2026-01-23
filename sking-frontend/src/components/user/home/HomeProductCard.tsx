@@ -38,7 +38,7 @@ const HomeProductCard = ({ product }: { product: ProductProps }) => {
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
                     {product.offer && product.offer > 0 && (
-                        <span className="bg-sking-red text-white text-xs font-bold px-3 py-1 uppercase tracking-widest">
+                        <span className="bg-sking-red text-black text-xs font-bold px-3 py-1 uppercase tracking-widest">
                             -{product.offer}%
                         </span>
                     )}
@@ -52,7 +52,7 @@ const HomeProductCard = ({ product }: { product: ProductProps }) => {
 
                 {/* Quick Add Overlay */}
                 <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                    <button className="w-full bg-black text-white font-bold py-3 uppercase tracking-widest text-sm hover:bg-sking-red transition-colors">
+                    <button className="w-full bg-black text-white font-bold py-3 uppercase tracking-widest text-sm hover:bg-sking-red hover:text-black transition-colors">
                         Add to Cart
                     </button>
                 </div>
