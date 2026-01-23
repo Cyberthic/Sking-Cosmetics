@@ -117,8 +117,8 @@ export default function ProfilePage() {
 
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white">
-                <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            <div className="min-h-[400px] flex items-center justify-center bg-white text-black">
+                <Loader2 className="w-8 h-8 animate-spin text-sking-red" />
             </div>
         );
     }
@@ -128,7 +128,7 @@ export default function ProfilePage() {
 
     return (
         <div className="relative">
-            {/* Cropper Modal */}
+            {/* Cropper Modal - Stays dark as it is a modal/overlay */}
             <AnimatePresence>
                 {isCropping && tempImageSrc && (
                     <motion.div
@@ -137,10 +137,10 @@ export default function ProfilePage() {
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
                     >
-                        <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden w-full max-w-lg shadow-2xl">
-                            <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                                <h3 className="font-semibold text-lg">Adjust Profile Picture</h3>
-                                <button onClick={handleCancelCrop} className="text-gray-400 hover:text-white transition-colors">
+                        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden w-full max-w-lg shadow-2xl">
+                            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                <h3 className="font-bold text-lg text-black uppercase tracking-tight">Adjust Picture</h3>
+                                <button onClick={handleCancelCrop} className="text-gray-400 hover:text-black transition-colors">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
@@ -159,7 +159,7 @@ export default function ProfilePage() {
                                 />
                             </div>
 
-                            <div className="p-6 space-y-6">
+                            <div className="p-6 space-y-6 bg-white">
                                 <div className="flex items-center gap-4">
                                     <ZoomOut className="w-4 h-4 text-gray-400" />
                                     <input
@@ -170,7 +170,7 @@ export default function ProfilePage() {
                                         step={0.1}
                                         aria-labelledby="Zoom"
                                         onChange={(e) => setZoom(Number(e.target.value))}
-                                        className="w-full accent-purple-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                        className="w-full accent-black h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                     />
                                     <ZoomIn className="w-4 h-4 text-gray-400" />
                                 </div>
@@ -178,21 +178,21 @@ export default function ProfilePage() {
                                 <div className="flex gap-3 justify-end">
                                     <button
                                         onClick={handleCancelCrop}
-                                        className="px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/5 transition-colors text-gray-300"
+                                        className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors text-gray-600 uppercase tracking-widest"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSaveCrop}
                                         disabled={isUploading}
-                                        className="px-6 py-2 bg-purple-600 hover:bg-purple-500 rounded-xl text-sm font-medium text-white transition-colors flex items-center gap-2"
+                                        className="px-6 py-2 bg-black hover:bg-sking-red rounded-lg text-sm font-bold text-white transition-colors flex items-center gap-2 uppercase tracking-widest disabled:opacity-50"
                                     >
                                         {isUploading ? (
                                             <Loader2 className="w-4 h-4 animate-spin" />
                                         ) : (
                                             <Check className="w-4 h-4" />
                                         )}
-                                        Save Picture
+                                        Save
                                     </button>
                                 </div>
                             </div>
@@ -202,7 +202,7 @@ export default function ProfilePage() {
             </AnimatePresence>
 
             <div>
-                <h1 className="text-3xl font-bold mb-8">My Profile</h1>
+                <h1 className="text-3xl font-black mb-8 uppercase tracking-tighter hidden md:block">My Profile</h1>
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                     {/* Left Column: Profile Card */}
@@ -211,9 +211,9 @@ export default function ProfilePage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="xl:col-span-1"
                     >
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+                        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 text-center">
                             <div className="relative inline-block mb-4 group">
-                                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-purple-500/20 relative">
+                                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative">
                                     <img
                                         src={profilePic}
                                         alt={user.name}
@@ -222,7 +222,7 @@ export default function ProfilePage() {
                                 </div>
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="absolute bottom-0 right-0 bg-purple-600 hover:bg-purple-500 text-white p-2.5 rounded-full shadow-lg transition-all transform group-hover:scale-110"
+                                    className="absolute bottom-0 right-0 bg-black hover:bg-sking-red text-white p-2.5 rounded-full shadow-lg transition-all transform group-hover:scale-110"
                                 >
                                     <Camera className="w-4 h-4" />
                                 </button>
@@ -234,9 +234,9 @@ export default function ProfilePage() {
                                     onChange={handleFileSelect}
                                 />
                             </div>
-                            <h2 className="text-xl font-bold mb-1">{user.name}</h2>
-                            <p className="text-sm text-gray-400 mb-4">@{user.username}</p>
-                            <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-xs font-medium border border-green-500/20">
+                            <h2 className="text-xl font-bold mb-1 text-black uppercase tracking-tight">{user.name}</h2>
+                            <p className="text-sm text-gray-500 mb-4 font-medium">@{user.username}</p>
+                            <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-200 uppercase tracking-wide">
                                 Active Account
                             </div>
                         </div>
@@ -249,33 +249,33 @@ export default function ProfilePage() {
                         transition={{ delay: 0.1 }}
                         className="xl:col-span-2"
                     >
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <User className="w-5 h-5 text-purple-500" />
-                                Profile Settings
+                        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
+                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2 uppercase tracking-tight">
+                                <User className="w-5 h-5 text-sking-red" />
+                                Settings
                             </h3>
 
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-400">Full Name</label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Full Name</label>
                                         <div className="relative">
-                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                             <input
                                                 {...register('name')}
-                                                className="w-full bg-black/20 border border-white/10 rounded-xl px-10 py-3 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
+                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-10 py-3 text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all text-sm font-medium placeholder:text-gray-400"
                                                 placeholder="John Doe"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-400">Phone Number</label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Phone Number</label>
                                         <div className="relative">
-                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                             <input
                                                 {...register('phoneNumber')}
-                                                className="w-full bg-black/20 border border-white/10 rounded-xl px-10 py-3 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
+                                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-10 py-3 text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all text-sm font-medium placeholder:text-gray-400"
                                                 placeholder="+1 (234) 567-8900"
                                             />
                                         </div>
@@ -283,26 +283,26 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-400">Email Address</label>
-                                    <div className="relative opacity-50 cursor-not-allowed">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Email Address</label>
+                                    <div className="relative opacity-60 cursor-not-allowed">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                         <input
                                             value={user.email}
                                             disabled
-                                            className="w-full bg-black/20 border border-white/10 rounded-xl px-10 py-3 text-white focus:outline-none"
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-10 py-3 text-black focus:outline-none"
                                         />
                                     </div>
-                                    <p className="text-xs text-gray-500">Email address cannot be changed</p>
+                                    <p className="text-[10px] uppercase tracking-wide text-gray-400">Email address cannot be changed</p>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-400">Bio</label>
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Bio</label>
                                     <div className="relative">
-                                        <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                                        <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                                         <textarea
                                             {...register('bio')}
                                             rows={4}
-                                            className="w-full bg-black/20 border border-white/10 rounded-xl px-10 py-3 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none"
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-10 py-3 text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none text-sm font-medium placeholder:text-gray-400"
                                             placeholder="Tell us a little about yourself..."
                                         />
                                     </div>
@@ -312,7 +312,7 @@ export default function ProfilePage() {
                                     <button
                                         type="submit"
                                         disabled={isSaving}
-                                        className="bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="bg-black hover:bg-sking-red text-white px-8 py-3 rounded-lg font-bold tracking-widest uppercase transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                     >
                                         {isSaving ? (
                                             <Loader2 className="w-4 h-4 animate-spin" />

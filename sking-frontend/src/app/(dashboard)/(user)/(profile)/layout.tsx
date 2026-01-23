@@ -1,16 +1,37 @@
 'use client';
 
 import { UserSidebar } from '@/layout/user/UserSidebar';
+import Navbar from "@/components/user/Navbar";
+import Footer from "@/components/user/Footer";
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white pt-24 pb-12 px-4 md:px-8">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
-                <UserSidebar />
+        <div className="min-h-screen bg-white text-black selection:bg-sking-pink selection:text-white flex flex-col">
+            <Navbar />
+
+            {/* Header */}
+            <div className="relative h-[30vh] min-h-[200px] w-full bg-sking-black flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-neutral-900" />
+                <div className="relative z-10 text-center space-y-2 px-4 mt-12">
+                    <p className="text-sking-pink font-bold tracking-widest uppercase text-xs md:text-sm">
+                        Welcome Back
+                    </p>
+                    <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter">
+                        My Account
+                    </h1>
+                </div>
+            </div>
+
+            <div className="flex-grow max-w-7xl mx-auto flex flex-col md:flex-row gap-12 w-full px-4 md:px-8 py-16">
+                <aside className="w-full md:w-64 flex-shrink-0">
+                    <UserSidebar />
+                </aside>
                 <main className="flex-1 min-w-0">
                     {children}
                 </main>
             </div>
+
+            <Footer />
         </div>
     );
 }

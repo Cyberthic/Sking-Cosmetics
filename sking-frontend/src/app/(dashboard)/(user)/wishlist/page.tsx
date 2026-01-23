@@ -7,6 +7,8 @@ import { userWishlistService } from "@/services/user/userWishlistApiService";
 import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "react-hot-toast";
 
+import Footer from "@/components/user/Footer";
+
 export default function WishlistPage() {
     const [wishlist, setWishlist] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -52,41 +54,67 @@ export default function WishlistPage() {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading Wishlist...</div>;
+    if (loading) return (
+        <div className="min-h-screen bg-white text-black flex items-center justify-center">
+            <div className="animate-pulse flex flex-col items-center gap-4">
+                <div className="h-12 w-12 border-4 border-sking-black border-t-sking-red rounded-full animate-spin"></div>
+                <p className="font-bold tracking-widest uppercase text-sm">Loading Wishlist...</p>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-white selection:text-black">
+        <div className="min-h-screen bg-white text-black selection:bg-sking-pink selection:text-white flex flex-col">
             <Navbar />
-            <main className="pt-24 pb-12 px-4 md:px-8 max-w-7xl mx-auto">
-                <h1 className="text-3xl md:text-5xl font-bold mb-8">Your Wishlist</h1>
 
+            {/* Page Header - Dark to support transparent Navbar */}
+            <div className="relative h-[40vh] min-h-[300px] w-full bg-sking-black flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-neutral-900" />
+                <div className="relative z-10 text-center space-y-4 px-4">
+                    <p className="text-sking-pink font-bold tracking-widest uppercase text-xs md:text-sm">
+                        Saved for Later
+                    </p>
+                    <h1 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter italic">
+                        Your <span className="text-sking-red">Wishlist.</span>
+                    </h1>
+                </div>
+            </div>
+
+            <main className="flex-grow max-w-7xl mx-auto px-4 md:px-8 py-20 w-full">
                 {(!wishlist || wishlist.products.length === 0) ? (
-                    <div className="text-center py-20 bg-gray-900 rounded-3xl">
-                        <p className="text-xl text-gray-400 mb-6">Your wishlist is empty.</p>
-                        <Link href="/" className="px-8 py-3 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-colors">
+                    <div className="text-center py-20">
+                        <h2 className="text-3xl font-black uppercase tracking-tighter mb-4">Your wishlist is empty</h2>
+                        <p className="text-gray-500 mb-8 max-w-md mx-auto">Save your favorite luxury items here to shop them later.</p>
+                        <Link href="/shop" className="inline-block px-10 py-4 bg-black text-white font-bold tracking-widest hover:bg-sking-red transition-all uppercase text-sm">
                             Explore Products
                         </Link>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {wishlist.products.map((product: any) => (
-                            <div key={product._id} className="group relative bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
-                                <Link href={`/product/${product._id}`} className="block relative aspect-[3/4] overflow-hidden">
+                            <div key={product._id} className="group flex flex-col">
+                                <Link href={`/product/${product._id}`} className="block relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
                                     {product.images?.[0] ? (
-                                        <Image src={product.images[0]} alt={product.name} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                                        <Image src={product.images[0]} alt={product.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-500">No Image</div>
+                                        <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold uppercase text-xs">No Image</div>
                                     )}
+                                    {/* Quick action - Remove */}
+                                    <button
+                                        onClick={(e) => { e.preventDefault(); handleRemove(product._id); }}
+                                        className="absolute top-4 right-4 h-8 w-8 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-sking-red hover:text-white transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
                                 </Link>
-                                <div className="p-4">
-                                    <h3 className="font-bold text-lg truncate">{product.name}</h3>
-                                    <div className="flex justify-between items-center mt-2">
-                                        <span className="text-gray-300">₹{product.price}</span>
-                                        <button onClick={() => handleRemove(product._id)} className="text-gray-500 hover:text-red-400">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </button>
+
+                                <div className="flex-grow flex flex-col">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-lg uppercase tracking-tight truncate pr-4">{product.name}</h3>
+                                        <span className="font-medium">₹{product.price}</span>
                                     </div>
-                                    <button onClick={() => handleMoveToCart(product)} className="w-full mt-4 py-2 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors">
+
+                                    <button onClick={() => handleMoveToCart(product)} className="w-full mt-auto py-3 bg-black text-white font-bold tracking-widest uppercase hover:bg-sking-red transition-all text-sm">
                                         Add to Cart
                                     </button>
                                 </div>
@@ -95,6 +123,7 @@ export default function WishlistPage() {
                     </div>
                 )}
             </main>
+            <Footer />
         </div>
     );
 }
