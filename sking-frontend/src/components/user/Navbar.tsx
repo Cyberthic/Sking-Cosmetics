@@ -11,11 +11,14 @@ import { toast } from "sonner";
 import { RootState } from "@/redux/store";
 import { usePathname } from "next/navigation";
 
+import CartDrawer from "./CartDrawer";
+
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [isCartOpen, setIsCartOpen] = useState(false);
 
     const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
     const dispatch = useDispatch();
@@ -152,13 +155,16 @@ export default function Navbar() {
                             </div>
                         )}
 
-                        <Link href="/cart" className="relative hover:text-sking-pink transition-colors">
+                        <button
+                            onClick={() => setIsCartOpen(true)}
+                            className="relative hover:text-sking-pink transition-colors"
+                        >
                             <ShoppingBag size={22} />
                             {/* Mock cart count */}
                             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-sking-red text-[10px] text-white">
                                 0
                             </span>
-                        </Link>
+                        </button>
                     </div>
                 </div>
 
@@ -186,6 +192,8 @@ export default function Navbar() {
                         onClick={() => setShowUserMenu(false)}
                     />
                 )}
+
+                <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
             </header>
         </>
     );
