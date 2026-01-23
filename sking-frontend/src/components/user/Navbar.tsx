@@ -109,24 +109,47 @@ export default function Navbar() {
 
                         {isAuthenticated ? (
                             <div className="relative">
-                                <button onClick={() => setShowUserMenu(!showUserMenu)} className="hover:text-sking-pink transition-colors">
+                                <button
+                                    onClick={() => setShowUserMenu(!showUserMenu)}
+                                    className="flex items-center gap-2 hover:text-sking-pink transition-colors"
+                                >
+                                    <span className="hidden md:block text-xs font-bold uppercase tracking-widest">
+                                        {user?.email?.split('@')[0]}
+                                    </span>
                                     <User size={22} />
                                 </button>
                                 {showUserMenu && (
-                                    <div className="absolute top-full right-0 mt-4 w-48 bg-white text-black rounded-lg shadow-xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                                        <div className="px-4 py-2 bg-gray-100 border-b border-gray-200">
-                                            <p className="text-sm font-bold truncate">{user?.username || 'User'}</p>
+                                    <div className="absolute top-full right-0 mt-4 w-48 bg-white text-black rounded-lg shadow-xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 border border-gray-100">
+                                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                                            <p className="text-xs font-bold uppercase tracking-wide truncate">{user?.username || 'User'}</p>
+                                            <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
                                         </div>
-                                        <Link href="/profile" className="block px-4 py-2 hover:bg-gray-100 text-sm">Profile</Link>
-                                        <Link href="/orders" className="block px-4 py-2 hover:bg-gray-100 text-sm">Orders</Link>
-                                        <button onClick={handleLogout} className="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm font-medium">Logout</button>
+                                        <Link href="/profile" className="block px-4 py-2 hover:bg-gray-100 text-sm font-medium">Profile</Link>
+                                        <Link href="/orders" className="block px-4 py-2 hover:bg-gray-100 text-sm font-medium">Orders</Link>
+                                        <div className="h-px bg-gray-100 my-1"></div>
+                                        <button onClick={handleLogout} className="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm font-bold">Logout</button>
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <Link href="/login" className="hover:text-sking-pink transition-colors">
-                                <User size={22} />
-                            </Link>
+                            <div className="flex items-center gap-3">
+                                <Link
+                                    href="/login"
+                                    className="hidden md:block text-xs font-bold uppercase tracking-widest hover:text-sking-pink transition-colors"
+                                >
+                                    Login
+                                </Link>
+                                <span className="hidden md:block text-gray-600">/</span>
+                                <Link
+                                    href="/register"
+                                    className="hidden md:block text-xs font-bold uppercase tracking-widest hover:text-sking-pink transition-colors"
+                                >
+                                    Register
+                                </Link>
+                                <Link href="/login" className="md:hidden hover:text-sking-pink transition-colors">
+                                    <User size={22} />
+                                </Link>
+                            </div>
                         )}
 
                         <Link href="/cart" className="relative hover:text-sking-pink transition-colors">
