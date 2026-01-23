@@ -122,13 +122,25 @@ export default function Navbar() {
                                     <User size={22} />
                                 </button>
                                 {showUserMenu && (
-                                    <div className="absolute top-full right-0 mt-4 w-48 bg-white text-black rounded-lg shadow-xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 border border-gray-100">
+                                    <div className="absolute top-full right-0 mt-4 w-48 bg-white text-black rounded-lg shadow-xl py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 border border-gray-100 z-50">
                                         <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
                                             <p className="text-xs font-bold uppercase tracking-wide truncate">{user?.username || 'User'}</p>
                                             <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
                                         </div>
-                                        <Link href="/profile" className="block px-4 py-2 hover:bg-gray-100 text-sm font-medium">Profile</Link>
-                                        <Link href="/orders" className="block px-4 py-2 hover:bg-gray-100 text-sm font-medium">Orders</Link>
+                                        <Link
+                                            href="/profile"
+                                            className="block px-4 py-2 hover:bg-gray-100 text-sm font-medium"
+                                            onClick={() => setShowUserMenu(false)}
+                                        >
+                                            Profile
+                                        </Link>
+                                        <Link
+                                            href="/orders"
+                                            className="block px-4 py-2 hover:bg-gray-100 text-sm font-medium"
+                                            onClick={() => setShowUserMenu(false)}
+                                        >
+                                            Orders
+                                        </Link>
                                         <div className="h-px bg-gray-100 my-1"></div>
                                         <button onClick={handleLogout} className="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm font-bold">Logout</button>
                                     </div>
