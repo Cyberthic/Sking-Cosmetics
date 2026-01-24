@@ -73,7 +73,7 @@ export default function Navbar() {
             <header className={`w-full z-50 sticky top-0 transition-all duration-300 ${isScrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-white"}`}>
 
                 {/* --- TOP SECTION --- */}
-                <div className="border-b border-gray-100">
+                <div className="border-b border-gray-200">
                     <div className="max-w-[1280px] mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
 
                         {/* LEFT: Logo */}
@@ -91,9 +91,9 @@ export default function Navbar() {
                                 <input
                                     type="text"
                                     placeholder="Search for products and brands"
-                                    className="w-80 h-11 pl-4 pr-10 bg-white border border-gray-300 rounded text-sm text-gray-600 focus:outline-none focus:border-sking-pink transition-all"
+                                    className="w-80 h-11 pl-4 pr-10 bg-white border border-gray-400 rounded text-sm text-black focus:outline-none focus:border-sking-pink transition-all placeholder:text-gray-500"
                                 />
-                                <button className="absolute right-3 top-0 h-11 flex items-center justify-center text-gray-400 group-hover:text-sking-pink transition-colors">
+                                <button className="absolute right-3 top-0 h-11 flex items-center justify-center text-gray-500 group-hover:text-sking-pink transition-colors">
                                     <Search className="w-5 h-5" />
                                 </button>
                             </div>
@@ -137,7 +137,7 @@ export default function Navbar() {
                             )}
 
                             {/* Divider Line */}
-                            <div className="h-10 w-px bg-gray-200"></div>
+                            <div className="h-10 w-px bg-gray-400"></div>
 
                             {/* MY BAG */}
                             <button
@@ -151,7 +151,7 @@ export default function Navbar() {
                                     </span>
                                 </div>
                                 <div className="flex flex-col items-start leading-tight">
-                                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mb-0.5">My Bag</span>
+                                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-0.5">My Bag</span>
                                     <span className="text-sm font-medium text-black tabular-nums">
                                         (₹{totalAmount.toLocaleString()})
                                     </span>
@@ -171,7 +171,7 @@ export default function Navbar() {
                 </div>
 
                 {/* --- BOTTOM SECTION (Desktop Only) --- */}
-                <div className="hidden lg:block border-b border-gray-100 h-14 bg-white">
+                <div className="hidden lg:block border-b border-gray-200 h-14 bg-white">
                     <div className="max-w-[1280px] mx-auto px-4 md:px-8 h-full flex items-center justify-between">
 
                         {/* LEFT: Nav */}
@@ -201,7 +201,7 @@ export default function Navbar() {
                                     <div key={link.name} className="h-full relative group px-4 flex items-center">
                                         <Link
                                             href={link.href}
-                                            className="flex items-center gap-1 text-sm font-medium uppercase tracking-wide text-gray-800 group-hover:text-sking-pink transition-colors"
+                                            className="flex items-center gap-1 text-sm font-medium uppercase tracking-wide text-black group-hover:text-sking-pink transition-colors"
                                         >
                                             {link.name}
                                             {link.hasDropdown && <ChevronDown className="w-3 h-3 opacity-50" />}
