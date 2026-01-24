@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/user/Navbar";
 import HeroSection from "@/components/user/home/HeroSection";
+import CategoryPromo from "@/components/user/home/CategoryPromo";
 import CategoryGrid from "@/components/user/home/CategoryGrid";
 import BestSellers from "@/components/user/home/BestSellers";
 import OfferBanner from "@/components/user/home/OfferBanner";
@@ -38,6 +39,7 @@ export default function Home() {
 
       <main className="flex flex-col w-full">
         <HeroSection />
+        <CategoryPromo />
         <CategoryGrid />
         {/* Pass real products if available, otherwise BestSellers uses internal mock */}
         <BestSellers products={products.length > 0 ? products : undefined} />
