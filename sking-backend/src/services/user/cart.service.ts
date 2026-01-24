@@ -48,22 +48,35 @@ export class CartService implements ICartService {
         }
 
         let price = product.price;
+        let targetVariant;
+
         if (variantName) {
-            const variant = product.variants.find(v => v.name === variantName);
-            if (variant) {
-                price = variant.price;
-                // Check stock
-                if (variant.stock < quantity) throw new CustomError(`Insufficient stock for variant. Available: ${variant.stock}`, StatusCode.BAD_REQUEST);
-            } else {
-                if (product.stock < quantity) throw new CustomError(`Insufficient stock for product. Available: ${product.stock}`, StatusCode.BAD_REQUEST);
+            targetVariant = product.variants.find(v => v.size === variantName);
+            if (!targetVariant) {
+                // Try finding by 'name' for backward compatibility or if frontend sends name
+                targetVariant = product.variants.find(v => (v as any).name === variantName);
             }
+            if (!targetVariant) throw new CustomError(`Variant '${variantName}' not found`, StatusCode.BAD_REQUEST);
         } else {
-            if (product.stock < quantity) throw new CustomError(`Insufficient stock for product. Available: ${product.stock}`, StatusCode.BAD_REQUEST);
+            // Default to first variant
+            if (product.variants && product.variants.length > 0) {
+                targetVariant = product.variants[0];
+                variantName = targetVariant.size;
+            } else {
+                throw new CustomError("Product has no variants available", StatusCode.BAD_REQUEST);
+            }
+        }
+
+        if (targetVariant) {
+            price = targetVariant.price;
+            if (targetVariant.stock < quantity) {
+                throw new CustomError(`Insufficient stock for ${targetVariant.size}. Available: ${targetVariant.stock}`, StatusCode.BAD_REQUEST);
+            }
         }
 
         // Offer calculation
-        if (product.offer > 0) {
-            price = price - (price * (product.offer / 100));
+        if (product.offerPercentage > 0) {
+            price = price - (price * (product.offerPercentage / 100));
         }
 
         const existingItemIndex = cart.items.findIndex(item =>

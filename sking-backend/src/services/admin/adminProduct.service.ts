@@ -18,7 +18,7 @@ export class AdminProductService implements IAdminProductService {
 
     private calculateEffectivePrice(product: IProduct): any {
         const productObj = product.toObject ? product.toObject() : product;
-        const productOffer = product.offer || 0;
+        const productOffer = product.offerPercentage || 0;
         // Check if category is populated and has offer
         const categoryOffer = (product.category as any)?.offer || 0;
 

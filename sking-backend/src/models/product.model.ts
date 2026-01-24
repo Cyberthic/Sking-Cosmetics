@@ -1,47 +1,105 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
+/* ---------- Variant Interface ---------- */
 export interface IVariant {
-    name: string;
-    stock: number;
-    price: number;
+  size: string;           // e.g. 30ml, 50ml, Small, Medium
+  stock: number;
+  price: number;
 }
 
+/* ---------- Ingredient Interface ---------- */
+export interface IIngredient {
+  name: string;
+  description: string;
+}
+
+/* ---------- Product Interface ---------- */
 export interface IProduct extends Document {
-    name: string;
-    description: string;
-    category: Types.ObjectId;
-    price: number;
-    stock: number;
-    offer: number; // Percentage 0-99
-    images: string[];
-    variants: IVariant[];
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
+  name: string;
+  shortDescription: string;
+  description: string;
+  category: Types.ObjectId;
+
+  price: number;                 // Base price
+  offerPercentage: number;       // 0–99
+  images: string[];
+
+  variants: IVariant[];
+
+  ingredients: IIngredient[];
+  howToUse: string[];
+
+  soldCount: number;
+  reviewsCount: number;
+
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const ProductSchema: Schema<IProduct> = new Schema(
-    {
-        name: { type: String, required: true },
-        description: { type: String, default: "" },
-        category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
-        price: { type: Number, required: true },
-        stock: { type: Number, default: 0 },
-        offer: { type: Number, default: 0, min: 0, max: 99 },
-        images: [{ type: String }],
-        variants: [
-            {
-                name: { type: String, required: true },
-                stock: { type: Number, required: true, default: 0 },
-                price: { type: Number, required: true, default: 0 },
-            },
-        ],
-        isActive: { type: Boolean, default: true },
+/* ---------- Product Schema ---------- */
+const ProductSchema = new Schema<IProduct>(
+  {
+    name: { type: String, required: true },
+
+    shortDescription: { type: String, required: true },
+    description: { type: String, required: true },
+
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
     },
-    { timestamps: true }
+
+    price: { type: Number, required: true },
+
+    offerPercentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 99,
+    },
+
+    images: [{ type: String, required: true }],
+
+    /* ----- Variants (Size-wise stock & price) ----- */
+    variants: [
+      {
+        size: { type: String, required: true },
+        stock: { type: Number, default: 0 },
+        price: { type: Number, required: true },
+      },
+    ],
+
+    /* ----- Ingredients (key-value like) ----- */
+    ingredients: [
+      {
+        name: { type: String, required: true },
+        description: { type: String, required: true },
+      },
+    ],
+
+    /* ----- How to Use (Steps) ----- */
+    howToUse: [{ type: String, required: true }],
+
+    soldCount: { type: Number, default: 0 },
+    reviewsCount: { type: Number, default: 0 },
+
+    isActive: { type: Boolean, default: true },
+  },
+  { timestamps: true }
 );
 
-export const ProductModel: Model<IProduct> = mongoose.model<IProduct>(
-    "Product",
-    ProductSchema
-);
+/* ---------- Virtual: Offer Price ---------- */
+ProductSchema.virtual("offerPrice").get(function () {
+  return Math.round(
+    this.price - (this.price * this.offerPercentage) / 100
+  );
+});
+
+/* ---------- Ensure Virtuals in Response ---------- */
+ProductSchema.set("toJSON", { virtuals: true });
+ProductSchema.set("toObject", { virtuals: true });
+
+export const ProductModel: Model<IProduct> =
+  mongoose.model<IProduct>("Product", ProductSchema);

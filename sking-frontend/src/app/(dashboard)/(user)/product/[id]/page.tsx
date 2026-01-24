@@ -79,7 +79,7 @@ export default function ProductDetail() {
     const handleAddToCart = async () => {
         if (!product) return;
         try {
-            await userCartService.addToCart(product._id, selectedVariant?.name, quantity);
+            await userCartService.addToCart(product._id, selectedVariant?.size, quantity);
             toast.success("Added to Cart");
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to add to cart");
@@ -114,8 +114,8 @@ export default function ProductDetail() {
     if (!product) return <div className="min-h-screen bg-white text-black flex items-center justify-center font-bold uppercase tracking-widest">Product not found</div>;
 
     const currentPrice = selectedVariant ? selectedVariant.price : product.price;
-    const finalPrice = product.offer > 0
-        ? currentPrice - (currentPrice * (product.offer / 100))
+    const finalPrice = product.offerPercentage > 0
+        ? currentPrice - (currentPrice * (product.offerPercentage / 100))
         : currentPrice;
 
     return (
@@ -154,9 +154,9 @@ export default function ProductDetail() {
                                     transform: zoomed ? "scale(2)" : "scale(1)"
                                 }}
                             />
-                            {product.offer > 0 && (
+                            {product.offerPercentage > 0 && (
                                 <span className="absolute top-4 left-4 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">
-                                    {product.offer}% OFF
+                                    {product.offerPercentage}% OFF
                                 </span>
                             )}
                         </div>
@@ -216,10 +216,10 @@ export default function ProductDetail() {
                             <span className="text-4xl font-bold text-sking-pink">
                                 ${finalPrice.toFixed(2)}
                             </span>
-                            {product.offer > 0 && (
+                            {product.offerPercentage > 0 && (
                                 <>
                                     <span className="bg-purple-600 text-white text-xs font-bold px-1 py-0.5 rounded mb-2">
-                                        {product.offer}%
+                                        {product.offerPercentage}%
                                     </span>
                                     <span className="text-gray-400 line-through text-lg mb-1">
                                         ${currentPrice.toFixed(2)}
@@ -233,17 +233,35 @@ export default function ProductDetail() {
                         <div className="space-y-6 mb-8 text-sm text-gray-600">
                             <div className="grid grid-cols-[120px_1fr] gap-4">
                                 <span className="font-bold text-black">Brief Description</span>
-                                <p className="leading-relaxed">{product.description?.substring(0, 150)}...</p>
+                                <p className="leading-relaxed">{product.shortDescription || product.description?.substring(0, 150)}...</p>
                             </div>
                             <div className="grid grid-cols-[120px_1fr] gap-4">
                                 <span className="font-bold text-black">Size</span>
-                                <p>90 ml</p>
+                                <p>{selectedVariant ? selectedVariant.size : "Select Variant"}</p>
                             </div>
                             <div className="grid grid-cols-[120px_1fr] gap-4">
                                 <span className="font-bold text-black">Stock</span>
-                                <p>{selectedVariant ? selectedVariant.stock : product.stock}</p>
+                                <p>{selectedVariant ? selectedVariant.stock : product.variants?.reduce((acc: number, v: any) => acc + v.stock, 0) || 0}</p>
                             </div>
                         </div>
+
+                        {/* Variants Selection */}
+                        {product.variants && product.variants.length > 0 && (
+                            <div className="mb-8">
+                                <label className="block text-sm font-bold text-black mb-2">Select Variant</label>
+                                <div className="flex gap-3">
+                                    {product.variants.map((variant: any, idx: number) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setSelectedVariant(variant)}
+                                            className={`px-4 py-2 border rounded transition-colors ${selectedVariant?.size === variant.size ? "border-sking-pink bg-pink-50 text-sking-pink font-bold" : "border-gray-200 hover:border-gray-400"}`}
+                                        >
+                                            {variant.size} - ${variant.price}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Vouchers */}
                         <div className="mb-8">
@@ -323,10 +341,29 @@ export default function ProductDetail() {
                             <p>{product.description}</p>
                         )}
                         {activeTab === 'ingredients' && (
-                            <p>Water, Glycerin, Rosa Damascena Flower Water, Aloe Barbadensis Leaf Juice, Hamamelis Virginiana (Witch Hazel) Extract...</p>
+                            product.ingredients && product.ingredients.length > 0 ? (
+                                <ul className="space-y-4">
+                                    {product.ingredients.map((ing: any, idx: number) => (
+                                        <li key={idx}>
+                                            <span className="font-bold text-black block">{ing.name}</span>
+                                            {ing.description}
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p>Ingredients detailed on packaging.</p>
+                            )
                         )}
                         {activeTab === 'how to use' && (
-                            <p>Spritz it on for an instant pick-me-up throughout the day, leaving your skin feeling hydrated, radiant, and revitalized.</p>
+                            product.howToUse && product.howToUse.length > 0 ? (
+                                <ol className="list-decimal pl-5 space-y-2">
+                                    {product.howToUse.map((step: string, idx: number) => (
+                                        <li key={idx}>{step}</li>
+                                    ))}
+                                </ol>
+                            ) : (
+                                <p>Instructions detailed on packaging.</p>
+                            )
                         )}
                     </div>
 

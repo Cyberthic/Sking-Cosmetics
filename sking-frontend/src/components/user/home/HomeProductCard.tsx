@@ -8,15 +8,15 @@ interface ProductProps {
     _id: string;
     name: string;
     price: number;
-    offer?: number;
+    offerPercentage?: number;
     images: string[];
     rating?: number;
     reviewCount?: number;
 }
 
 const HomeProductCard = ({ product }: { product: ProductProps }) => {
-    const finalPrice = product.offer
-        ? product.price - (product.price * (product.offer / 100))
+    const finalPrice = product.offerPercentage
+        ? product.price - (product.price * (product.offerPercentage / 100))
         : product.price;
 
     return (
@@ -37,9 +37,9 @@ const HomeProductCard = ({ product }: { product: ProductProps }) => {
 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {product.offer && product.offer > 0 && (
+                    {product.offerPercentage && product.offerPercentage > 0 && (
                         <span className="bg-sking-red text-black text-xs font-bold px-3 py-1 uppercase tracking-widest">
-                            -{product.offer}%
+                            -{product.offerPercentage}%
                         </span>
                     )}
                     {/* Mock Best Seller Badge if relevant */}
@@ -70,7 +70,7 @@ const HomeProductCard = ({ product }: { product: ProductProps }) => {
                 </Link>
                 <div className="flex items-center gap-2">
                     <span className="text-black font-bold text-lg">₹{Math.floor(finalPrice)}</span>
-                    {product.offer && product.offer > 0 && (
+                    {product.offerPercentage && product.offerPercentage > 0 && (
                         <span className="text-gray-400 line-through text-sm">₹{product.price}</span>
                     )}
                 </div>

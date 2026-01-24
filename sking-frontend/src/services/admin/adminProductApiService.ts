@@ -3,18 +3,27 @@ import axiosInstance from '../../lib/axios';
 const API_URL = '/api/admin/products';
 
 interface Variant {
-    name: string;
+    size: string;
     stock: number;
+    price: number;
+}
+
+interface Ingredient {
+    name: string;
+    description: string;
 }
 
 interface ProductData {
     name: string;
-    description?: string;
+    shortDescription: string;
+    description: string;
     category: string;
     price: number;
-    offer?: number;
+    offerPercentage?: number;
     images: string[];
     variants: Variant[];
+    ingredients?: Ingredient[];
+    howToUse?: string[];
     isActive?: boolean;
 }
 

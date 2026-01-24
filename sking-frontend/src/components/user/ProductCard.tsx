@@ -7,8 +7,8 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-    const finalPrice = product.offer > 0
-        ? product.price - (product.price * (product.offer / 100))
+    const finalPrice = product.offerPercentage > 0
+        ? product.price - (product.price * (product.offerPercentage / 100))
         : product.price;
 
     return (
@@ -25,9 +25,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold uppercase text-xs">No Image</div>
                 )}
 
-                {product.offer > 0 && (
+                {product.offerPercentage > 0 && (
                     <span className="absolute top-3 left-3 bg-white text-black text-xs font-bold px-2 py-1 uppercase tracking-widest shadow-sm">
-                        -{product.offer}%
+                        -{product.offerPercentage}%
                     </span>
                 )}
             </div>
@@ -35,7 +35,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <h3 className="font-bold text-lg uppercase tracking-tight text-black group-hover:text-sking-red transition-colors truncate">{product.name}</h3>
                 <div className="flex items-center gap-2">
                     <span className="font-bold text-black">₹{Math.floor(finalPrice)}</span>
-                    {product.offer > 0 && (
+                    {product.offerPercentage > 0 && (
                         <span className="text-sm text-gray-400 line-through">₹{product.price}</span>
                     )}
                 </div>

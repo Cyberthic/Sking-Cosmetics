@@ -34,8 +34,8 @@ export default function ProductDetailPage() {
     if (loading) return <div className="p-6">Loading...</div>;
     if (!product) return <div className="p-6">Product not found</div>;
 
-    const finalPrice = product.offer > 0
-        ? product.price - (product.price * (product.offer / 100))
+    const finalPrice = product.offerPercentage > 0
+        ? product.price - (product.price * (product.offerPercentage / 100))
         : product.price;
 
     return (
@@ -89,7 +89,7 @@ export default function ProductDetailPage() {
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-500 mb-1">Applied Offer</label>
-                                <div className="text-xl font-bold text-green-600">{product.offer}% OFF</div>
+                                <div className="text-xl font-bold text-green-600">{product.offerPercentage}% OFF</div>
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-500 mb-1">Final Base Price</label>
@@ -103,8 +103,35 @@ export default function ProductDetailPage() {
                             </div>
                         </div>
                         <div className="mt-6">
+                            <label className="block text-xs text-gray-500 mb-1">Short Description</label>
+                            <p className="text-gray-600 dark:text-gray-300 mb-4">{product.shortDescription || "N/A"}</p>
+
                             <label className="block text-xs text-gray-500 mb-1">Description</label>
                             <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{product.description}</p>
+                        </div>
+
+                        {/* Ingredients & How to Use */}
+                        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1">Ingredients</label>
+                                {product.ingredients && product.ingredients.length > 0 ? (
+                                    <ul className="text-sm list-disc pl-4 text-gray-600 dark:text-gray-300">
+                                        {product.ingredients.map((ing: any, i: number) => (
+                                            <li key={i}><span className="font-semibold">{ing.name}</span>: {ing.description}</li>
+                                        ))}
+                                    </ul>
+                                ) : <p className="text-sm text-gray-400">No ingredients listed</p>}
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1">How To Use</label>
+                                {product.howToUse && product.howToUse.length > 0 ? (
+                                    <ol className="text-sm list-decimal pl-4 text-gray-600 dark:text-gray-300">
+                                        {product.howToUse.map((step: string, i: number) => (
+                                            <li key={i}>{step}</li>
+                                        ))}
+                                    </ol>
+                                ) : <p className="text-sm text-gray-400">No instructions listed</p>}
+                            </div>
                         </div>
                     </div>
 
@@ -124,7 +151,7 @@ export default function ProductDetailPage() {
                                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                                     {product.variants?.map((v: any, idx: number) => (
                                         <tr key={idx}>
-                                            <td className="py-3 text-sm font-medium text-gray-800 dark:text-white">{v.name}</td>
+                                            <td className="py-3 text-sm font-medium text-gray-800 dark:text-white">{v.size || v.name}</td>
                                             <td className="py-3 text-sm text-gray-600 dark:text-gray-300">₹{v.price || 0}</td>
                                             <td className="py-3 text-sm text-gray-600 dark:text-gray-300">{v.stock}</td>
                                             <td className="py-3">
