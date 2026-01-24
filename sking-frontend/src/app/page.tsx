@@ -4,13 +4,11 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/components/user/Navbar";
 import HeroSection from "@/components/user/home/HeroSection";
 import CategoryPromo from "@/components/user/home/CategoryPromo";
-import CategoryGrid from "@/components/user/home/CategoryGrid";
-import BestSellers from "@/components/user/home/BestSellers";
-import OfferBanner from "@/components/user/home/OfferBanner";
-import NewLaunches from "@/components/user/home/NewLaunches";
-import USPSection from "@/components/user/home/USPSection";
-import ReviewsSection from "@/components/user/home/ReviewsSection";
-import InstagramGrid from "@/components/user/home/InstagramGrid";
+import FlashSale from "@/components/user/home/FlashSale";
+import FeaturedProducts from "@/components/user/home/FeaturedProducts";
+import TrendingBanner from "@/components/user/home/TrendingBanner";
+import NewInStore from "@/components/user/home/NewInStore";
+import ServicePromo from "@/components/user/home/ServicePromo";
 import Footer from "@/components/user/Footer";
 import { userHomeService } from "@/services/user/userHomeApiService";
 
@@ -40,14 +38,11 @@ export default function Home() {
       <main className="flex flex-col w-full">
         <HeroSection />
         <CategoryPromo />
-        <CategoryGrid />
-        {/* Pass real products if available, otherwise BestSellers uses internal mock */}
-        <BestSellers products={products.length > 0 ? products : undefined} />
-        <OfferBanner />
-        <NewLaunches />
-        <USPSection />
-        <ReviewsSection />
-        <InstagramGrid />
+        <FlashSale />
+        <FeaturedProducts />
+        <TrendingBanner />
+        <NewInStore />
+        <ServicePromo />
       </main>
 
       <Footer />
