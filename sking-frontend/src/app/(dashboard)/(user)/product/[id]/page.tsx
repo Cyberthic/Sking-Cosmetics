@@ -209,7 +209,7 @@ export default function ProductDetail() {
                     {/* Price */}
                     <div className="flex items-end gap-3 mb-8">
                         <span className="text-4xl font-bold text-sking-pink">
-                            ${finalPrice.toFixed(2)}
+                            ₹{finalPrice.toFixed(2)}
                         </span>
                         {product.offerPercentage > 0 && (
                             <>
@@ -217,7 +217,7 @@ export default function ProductDetail() {
                                     {product.offerPercentage}%
                                 </span>
                                 <span className="text-gray-400 line-through text-lg mb-1">
-                                    ${currentPrice.toFixed(2)}
+                                    ₹{currentPrice.toFixed(2)}
                                 </span>
                             </>
                         )}
@@ -251,7 +251,7 @@ export default function ProductDetail() {
                                         onClick={() => setSelectedVariant(variant)}
                                         className={`px-4 py-2 border rounded transition-colors ${selectedVariant?.size === variant.size ? "border-sking-pink bg-pink-50 text-sking-pink font-bold" : "border-gray-200 hover:border-gray-400"}`}
                                     >
-                                        {variant.size} - ${variant.price}
+                                        {variant.size} - ₹{variant.price}
                                     </button>
                                 ))}
                             </div>

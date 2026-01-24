@@ -132,8 +132,8 @@ const FlashSale = () => {
                                 <h3 className="font-bold text-sm truncate text-black">{product.name}</h3>
 
                                 <div className="flex items-end gap-2 mt-1">
-                                    <span className="font-bold text-lg">${product.price}</span>
-                                    <span className="text-xs text-gray-400 line-through mb-1">${product.originalPrice}</span>
+                                    <span className="font-bold text-lg">₹{product.price}</span>
+                                    <span className="text-xs text-gray-400 line-through mb-1">₹{product.originalPrice}</span>
                                 </div>
 
                                 {/* Rating */}

@@ -81,7 +81,7 @@ const FeaturedProducts = () => {
                                 <h3 className="font-bold text-sm truncate text-black">{product.name}</h3>
 
                                 <div className="mt-1">
-                                    <span className="font-bold text-lg">${product.price}</span>
+                                    <span className="font-bold text-lg">₹{product.price}</span>
                                 </div>
 
                                 {/* Rating */}

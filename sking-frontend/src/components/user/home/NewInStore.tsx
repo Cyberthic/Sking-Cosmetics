@@ -104,7 +104,7 @@ const NewInStore = () => {
                                     <span className="text-[10px] text-gray-500 uppercase font-bold">{product.category}</span>
                                     <h3 className="font-bold text-sm text-black line-clamp-2 leading-tight h-9">{product.name}</h3>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className="font-bold text-lg">${product.price}</span>
+                                        <span className="font-bold text-lg">₹{product.price}</span>
                                         <div className="flex text-sking-pink">
                                             <Star size={10} fill="currentColor" />
                                             <Star size={10} fill="currentColor" />
@@ -150,7 +150,7 @@ const NewInStore = () => {
                             <span className="text-[10px] text-gray-500 uppercase font-bold">{featuredNew.category}</span>
                             <div className="flex items-start justify-between">
                                 <h3 className="text-xl font-bold text-black">{featuredNew.name}</h3>
-                                <span className="text-2xl font-bold text-black">${featuredNew.price}</span>
+                                <span className="text-2xl font-bold text-black">₹{featuredNew.price}</span>
                             </div>
 
                             <div className="flex items-center gap-1">
