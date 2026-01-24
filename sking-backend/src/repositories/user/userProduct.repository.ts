@@ -35,4 +35,8 @@ export class UserProductRepository extends BaseRepository<IProduct> implements I
     async findByIdActive(id: string): Promise<IProduct | null> {
         return this._model.findOne({ _id: id, isActive: true }).populate('category').exec();
     }
+
+    async findBySlugActive(slug: string): Promise<IProduct | null> {
+        return this._model.findOne({ slug: slug, isActive: true }).populate('category').exec();
+    }
 }

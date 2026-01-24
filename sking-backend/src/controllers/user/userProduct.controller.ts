@@ -25,7 +25,7 @@ export class UserProductController {
     async getProductById(req: Request, res: Response, next: NextFunction) {
         try {
             const product = await this._productService.getProductById(req.params.id);
-            const related = await this._productService.getRelatedProducts(req.params.id, 4);
+            const related = await this._productService.getRelatedProducts((product as any)._id.toString(), 4);
 
             res.status(StatusCode.OK).json({
                 success: true,

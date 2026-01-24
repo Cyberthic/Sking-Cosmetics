@@ -42,4 +42,8 @@ export class AdminProductRepository implements IAdminProductRepository {
     async findByCategory(categoryId: string): Promise<IProduct[]> {
         return await ProductModel.find({ category: categoryId }).populate("category");
     }
+
+    async findBySlug(slug: string): Promise<IProduct | null> {
+        return await ProductModel.findOne({ slug }).populate("category");
+    }
 }

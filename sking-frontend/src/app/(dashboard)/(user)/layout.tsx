@@ -8,9 +8,9 @@ export default function UserLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen flex-col bg-white">
+        <div className="min-h-screen w-full bg-white font-sans text-black selection:bg-sking-pink selection:text-white flex flex-col">
             <Navbar />
-            <main className="flex-1 w-full">
+            <main className="flex-1 w-full flex flex-col">
                 {children}
             </main>
             <Footer />

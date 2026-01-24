@@ -32,8 +32,28 @@ export class AdminProductService implements IAdminProductService {
         };
     }
 
+    private slugify(text: string): string {
+        return text
+            .toString()
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, "-")
+            .replace(/[^\w\-]+/g, "")
+            .replace(/\-\-+/g, "-");
+    }
+
     async createProduct(data: CreateProductDto): Promise<IProduct> {
         const productData: any = { ...data };
+
+        // Generate Slug
+        const slug = this.slugify(productData.name);
+        const existingProduct = await this._repo.findBySlug(slug);
+
+        if (existingProduct) {
+            throw new CustomError("Product with this name already exists (similar slug)", StatusCode.CONFLICT);
+        }
+
+        productData.slug = slug;
         return await this._repo.create(productData);
     }
 
@@ -47,14 +67,37 @@ export class AdminProductService implements IAdminProductService {
         return { products: productsWithPrice, total, totalPages };
     }
 
-    async getProductById(id: string): Promise<any | null> {
-        const product = await this._repo.findById(id);
+    async getProductById(idOrSlug: string): Promise<any | null> {
+        let product;
+
+        // Check if it's a valid ObjectId
+        if (idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
+            product = await this._repo.findById(idOrSlug);
+        }
+
+        // If not found by ID or not an ID, try by slug
+        if (!product) {
+            product = await this._repo.findBySlug(idOrSlug);
+        }
+
         if (!product) throw new CustomError("Product not found", StatusCode.NOT_FOUND);
         return this.calculateEffectivePrice(product);
     }
 
     async updateProduct(id: string, data: UpdateProductDto): Promise<IProduct | null> {
         const productData: any = { ...data };
+
+        if (productData.name) {
+            const newSlug = this.slugify(productData.name);
+            const existingProduct = await this._repo.findBySlug(newSlug);
+
+            // Check if slug exists and belongs to a DIFFERENT product
+            if (existingProduct && existingProduct._id.toString() !== id) {
+                throw new CustomError("Product with this name already exists (similar slug)", StatusCode.CONFLICT);
+            }
+            productData.slug = newSlug;
+        }
+
         const product = await this._repo.update(id, productData);
         if (!product) throw new CustomError("Product not found", StatusCode.NOT_FOUND);
         return product;

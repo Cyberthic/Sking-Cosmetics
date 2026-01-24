@@ -18,6 +18,7 @@ import Button from "../../../../../components/admin/ui/button/Button";
 
 interface IProduct {
     _id: string;
+    slug?: string;
     name: string;
     price: number;
     finalPrice: number;
@@ -167,7 +168,7 @@ export default function ProductsPage() {
                                     <TableRow key={product._id}>
                                         <TableCell className="px-5 py-4">
                                             <div className="flex items-center gap-3">
-                                                <Link href={`./products/${product._id}`} className="flex items-center gap-3 group">
+                                                <Link href={`./products/${product.slug || product._id}`} className="flex items-center gap-3 group">
                                                     <div className="w-12 h-12 flex-shrink-0 overflow-hidden rounded bg-gray-200 relative group-hover:opacity-80 transition-opacity">
                                                         {product.images?.[0] && (
                                                             <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
@@ -206,7 +207,7 @@ export default function ProductsPage() {
                                         </TableCell>
                                         <TableCell className="px-5 py-4">
                                             <div className="flex items-center gap-2">
-                                                <Link href={`./products/edit/${product._id}`} className="p-2 text-gray-500 hover:text-brand-500 transition-colors">
+                                                <Link href={`./products/edit/${product.slug || product._id}`} className="p-2 text-gray-500 hover:text-brand-500 transition-colors">
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                                 </Link>
                                                 <button onClick={() => handleDelete(product._id)} className="p-2 text-gray-500 hover:text-red-500 transition-colors">

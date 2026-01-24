@@ -8,6 +8,7 @@ import Cropper from "react-easy-crop";
 import getCroppedImg from "../../../utils/cropImage";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface ProductFormProps {
     initialData?: any;
@@ -199,7 +200,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
             router.push("/admin/products");
         } catch (error: any) {
             console.error("Submit error", error);
-            alert(error.response?.data?.error || "Failed to save product");
+            toast.error(error.response?.data?.error || "Failed to save product");
         } finally {
             setSubmitting(false);
         }

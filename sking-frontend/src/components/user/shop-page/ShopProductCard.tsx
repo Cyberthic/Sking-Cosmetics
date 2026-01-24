@@ -5,6 +5,7 @@ import { Heart, ShoppingBag, Star } from "lucide-react";
 
 export interface ShopProduct {
     id: string;
+    slug?: string;
     name: string;
     brand: string;
     price: number;
@@ -28,7 +29,7 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
         <div className="group relative flex flex-col bg-white">
             {/* Image Container */}
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-50 rounded-sm">
-                <Link href={`/product/${product.id}`}>
+                <Link href={`/product/${product.slug || product.id}`}>
                     {/* Main Image */}
                     <div className="relative h-full w-full">
                         {product.image ? (
@@ -72,7 +73,7 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
                 <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
                     {product.brand}
                 </span>
-                <Link href={`/product/${product.id}`} className="block w-full">
+                <Link href={`/product/${product.slug || product.id}`} className="block w-full">
                     <h3 className="truncate text-base font-normal text-gray-900 transition-colors group-hover:text-sking-pink">
                         {product.name}
                     </h3>

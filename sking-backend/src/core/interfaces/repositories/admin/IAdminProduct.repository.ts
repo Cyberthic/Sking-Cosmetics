@@ -7,4 +7,5 @@ export interface IAdminProductRepository {
     update(id: string, data: Partial<IProduct>): Promise<IProduct | null>;
     delete(id: string): Promise<IProduct | null>;
     findByCategory(categoryId: string): Promise<IProduct[]>;
+    findBySlug(slug: string): Promise<IProduct | null>;
 }

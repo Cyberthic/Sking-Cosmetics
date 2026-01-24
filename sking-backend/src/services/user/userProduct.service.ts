@@ -41,8 +41,17 @@ export class UserProductService implements IUserProductService {
         };
     }
 
-    async getProductById(id: string): Promise<IProduct> {
-        const product = await this._productRepository.findByIdActive(id);
+    async getProductById(idOrSlug: string): Promise<IProduct> {
+        let product;
+
+        if (idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
+            product = await this._productRepository.findByIdActive(idOrSlug);
+        }
+
+        if (!product) {
+            product = await this._productRepository.findBySlugActive(idOrSlug);
+        }
+
         if (!product) {
             throw new CustomError("Product not found", StatusCode.NOT_FOUND);
         }

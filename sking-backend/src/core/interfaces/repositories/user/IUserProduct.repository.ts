@@ -6,4 +6,5 @@ export interface IUserProductRepository extends IBaseRepository<IProduct> {
     countActive(filter: any): Promise<number>;
     findNewArrivals(limit: number): Promise<IProduct[]>;
     findByIdActive(id: string): Promise<IProduct | null>;
+    findBySlugActive(slug: string): Promise<IProduct | null>;
 }

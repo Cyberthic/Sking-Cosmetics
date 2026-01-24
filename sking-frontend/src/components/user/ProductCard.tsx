@@ -12,7 +12,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         : product.price;
 
     return (
-        <Link href={`/product/${product._id}`} className="group block h-full">
+        <Link href={`/product/${product.slug || product._id}`} className="group block h-full">
             <div className="relative aspect-[3/4] overflow-hidden bg-gray-50">
                 {product.images?.[0] ? (
                     <Image
