@@ -9,6 +9,9 @@ import FeaturedProducts from "@/components/user/home/FeaturedProducts";
 import TrendingBanner from "@/components/user/home/TrendingBanner";
 import NewInStore from "@/components/user/home/NewInStore";
 import ServicePromo from "@/components/user/home/ServicePromo";
+import BlogSection from "@/components/user/home/BlogSection";
+import FAQSection from "@/components/user/home/FAQSection";
+import NewsletterSection from "@/components/user/home/NewsletterSection";
 import Footer from "@/components/user/Footer";
 import { userHomeService } from "@/services/user/userHomeApiService";
 
@@ -43,6 +46,9 @@ export default function Home() {
         <TrendingBanner />
         <NewInStore />
         <ServicePromo />
+        <BlogSection />
+        <FAQSection />
+        <NewsletterSection />
       </main>
 
       <Footer />
