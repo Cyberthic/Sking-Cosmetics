@@ -74,7 +74,7 @@ export default function Navbar() {
 
                 {/* --- TOP SECTION --- */}
                 <div className="border-b border-gray-100">
-                    <div className="max-w-[1440px] mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
+                    <div className="max-w-[1280px] mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
 
                         {/* LEFT: Logo */}
                         <div className="flex-shrink-0">
@@ -172,7 +172,7 @@ export default function Navbar() {
 
                 {/* --- BOTTOM SECTION (Desktop Only) --- */}
                 <div className="hidden lg:block border-b border-gray-100 h-14 bg-white">
-                    <div className="max-w-[1440px] mx-auto px-4 md:px-8 h-full flex items-center justify-between">
+                    <div className="max-w-[1280px] mx-auto px-4 md:px-8 h-full flex items-center justify-between">
 
                         {/* LEFT: Nav */}
                         <div className="flex items-center h-full">

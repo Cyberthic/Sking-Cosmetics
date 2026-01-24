@@ -88,36 +88,38 @@ const HeroSection = () => {
             </AnimatePresence>
 
             {/* Content - Left Aligned */}
-            <div ref={contentRef} className="relative z-10 flex h-full items-center px-6 md:px-12 lg:px-24">
-                <div className="max-w-4xl space-y-8">
+            <div ref={contentRef} className="relative z-10 h-full flex items-center">
+                <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8">
+                    <div className="max-w-4xl space-y-8">
 
-                    {/* Motto */}
-                    <p ref={mottoRef} className="text-sking-pink font-bold tracking-widest uppercase text-xs md:text-sm mb-2">
-                        Sking Cosmetics
-                    </p>
+                        {/* Motto */}
+                        <p ref={mottoRef} className="text-sking-pink font-bold tracking-widest uppercase text-xs md:text-sm mb-2">
+                            Sking Cosmetics
+                        </p>
 
-                    <h1 ref={headingRef} className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter uppercase leading-[0.9]">
-                        Confidence begins with <br />
-                        <span className="text-sking-red">the skin you wear.</span>
-                    </h1>
+                        <h1 ref={headingRef} className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter uppercase leading-[0.9]">
+                            Confidence begins with <br />
+                            <span className="text-sking-red">the skin you wear.</span>
+                        </h1>
 
-                    <p ref={subRef} className="text-lg md:text-xl text-gray-200 max-w-2xl font-light tracking-wide leading-relaxed">
-                        High-performance, cruelty-free makeup made for unapologetic confidence.
-                    </p>
+                        <p ref={subRef} className="text-lg md:text-xl text-gray-200 max-w-2xl font-light tracking-wide leading-relaxed">
+                            High-performance, cruelty-free makeup made for unapologetic confidence.
+                        </p>
 
-                    <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-6 pt-4">
-                        <Link
-                            href="/shop"
-                            className="px-10 py-5 bg-sking-red text-black font-bold tracking-widest hover:bg-white transition-all uppercase text-sm md:text-base border border-sking-red"
-                        >
-                            Shop Now
-                        </Link>
-                        <Link
-                            href="/best-sellers"
-                            className="px-10 py-5 bg-transparent border border-white text-white font-bold tracking-widest hover:bg-white hover:text-black transition-all uppercase text-sm md:text-base backdrop-blur-sm"
-                        >
-                            Explore Best Sellers
-                        </Link>
+                        <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-6 pt-4">
+                            <Link
+                                href="/shop"
+                                className="px-10 py-5 bg-sking-red text-black font-bold tracking-widest hover:bg-white transition-all uppercase text-sm md:text-base border border-sking-red"
+                            >
+                                Shop Now
+                            </Link>
+                            <Link
+                                href="/best-sellers"
+                                className="px-10 py-5 bg-transparent border border-white text-white font-bold tracking-widest hover:bg-white hover:text-black transition-all uppercase text-sm md:text-base backdrop-blur-sm"
+                            >
+                                Explore Best Sellers
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

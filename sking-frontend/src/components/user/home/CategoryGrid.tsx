@@ -13,7 +13,7 @@ const categories = [
 const CategoryGrid = () => {
     return (
         <section className="py-24 px-4 md:px-6 bg-white text-black">
-            <div className="max-w-[1440px] mx-auto">
+            <div className="max-w-[1280px] mx-auto">
                 <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6">
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]">
                         Shop By <br /><span className="text-sking-red italic">Category</span>
