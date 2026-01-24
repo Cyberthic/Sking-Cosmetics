@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/user/Navbar";
+import Footer from "@/components/user/Footer";
 import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "react-hot-toast";
 
@@ -59,9 +60,7 @@ export default function CartPage() {
     const total = cart?.items?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0) || 0;
 
     return (
-        <div className="min-h-screen bg-white text-black selection:bg-sking-pink selection:text-white flex flex-col">
-            <Navbar />
-
+        <>
             {/* Page Header - Dark to support transparent Navbar */}
             <div className="relative h-[40vh] min-h-[300px] w-full bg-sking-black flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-neutral-900" />
@@ -75,7 +74,7 @@ export default function CartPage() {
                 </div>
             </div>
 
-            <main className="flex-grow max-w-7xl mx-auto px-4 md:px-8 py-20 w-full">
+            <div className="flex-grow max-w-7xl mx-auto px-4 md:px-8 py-20 w-full">
                 {(!cart || cart.items.length === 0) ? (
                     <div className="text-center py-20">
                         <h2 className="text-3xl font-black uppercase tracking-tighter mb-4">Your bag is empty</h2>
@@ -157,7 +156,7 @@ export default function CartPage() {
                         </div>
                     </div>
                 )}
-            </main>
-        </div>
+            </div>
+        </>
     );
 }

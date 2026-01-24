@@ -70,90 +70,84 @@ const ShopPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white pb-20 pt-10">
-            <div className="max-w-[1280px] mx-auto px-4 md:px-8">
+        <div className="w-full max-w-[1280px] mx-auto px-4 md:px-8 pb-20 pt-10">
+            {/* Filter Bar */}
+            <FilterBar
+                totalResults={totalResults}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+            />
 
-                {/* Filter Bar */}
-                <FilterBar
-                    totalResults={totalResults}
-                    viewMode={viewMode}
-                    setViewMode={setViewMode}
-                />
+            {/* Product Grid */}
+            {loading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {/* Skeletons */}
+                    {[...Array(8)].map((_, i) => (
+                        <div key={i} className="animate-pulse">
+                            <div className="bg-gray-100 aspect-[3/4] rounded-sm mb-4"></div>
+                            <div className="h-4 bg-gray-100 w-3/4 mb-2"></div>
+                            <div className="h-4 bg-gray-100 w-1/4"></div>
+                        </div>
+                    ))}
+                </div>
+            ) : products.length === 0 ? (
+                <div className="text-center py-20 text-gray-500">
+                    No products found.
+                </div>
+            ) : (
+                <div className={`grid gap-x-3 gap-y-6 md:gap-x-6 md:gap-y-10 ${viewMode === 'grid'
+                    ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                    : 'grid-cols-1'
+                    }`}>
+                    {products.map((product) => (
+                        <div key={product.id} className={viewMode === 'list' ? 'flex gap-6' : ''}>
+                            <ShopProductCard product={product} />
+                        </div>
+                    ))}
+                </div>
+            )}
 
-                {/* Product Grid */}
-                {loading ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {/* Skeletons */}
-                        {[...Array(8)].map((_, i) => (
-                            <div key={i} className="animate-pulse">
-                                <div className="bg-gray-100 aspect-[3/4] rounded-sm mb-4"></div>
-                                <div className="h-4 bg-gray-100 w-3/4 mb-2"></div>
-                                <div className="h-4 bg-gray-100 w-1/4"></div>
-                            </div>
-                        ))}
-                    </div>
-                ) : products.length === 0 ? (
-                    <div className="text-center py-20 text-gray-500">
-                        No products found.
-                    </div>
-                ) : (
-                    <div className={`grid gap-x-3 gap-y-6 md:gap-x-6 md:gap-y-10 ${viewMode === 'grid'
-                        ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                        : 'grid-cols-1'
-                        }`}>
-                        {products.map((product) => (
-                            <div key={product.id} className={viewMode === 'list' ? 'flex gap-6' : ''}>
-                                <ShopProductCard product={product} />
-                            </div>
-                        ))}
-                    </div>
-                )}
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="mt-16 flex items-center justify-center gap-2">
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-sking-pink hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="mt-16 flex items-center justify-center gap-2">
-                        <button
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="flex h-10 w-10 items-center justify-center rounded-full text-sking-pink hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
+                    {[...Array(totalPages)].map((_, i) => {
+                        const page = i + 1;
+                        if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                            return (
+                                <button
+                                    key={page}
+                                    onClick={() => handlePageChange(page)}
+                                    className={`flex h-10 w-10 items-center justify-center rounded-md text-sm font-medium transition-colors ${currentPage === page
+                                        ? 'bg-sking-pink text-white shadow-md'
+                                        : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                                        }`}
+                                >
+                                    {page}
+                                </button>
+                            );
+                        } else if (page === currentPage - 2 || page === currentPage + 2) {
+                            return <span key={page} className="flex h-10 w-10 items-center justify-center text-gray-400">...</span>;
+                        }
+                        return null;
+                    })}
 
-                        {/* Simpler pagination for now: show current page and total */}
-                        {/* Logic to show range of pages can be added here similar to admin table */}
-                        {[...Array(totalPages)].map((_, i) => {
-                            const page = i + 1;
-                            // Show first, last, current, and neighbors
-                            if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
-                                return (
-                                    <button
-                                        key={page}
-                                        onClick={() => handlePageChange(page)}
-                                        className={`flex h-10 w-10 items-center justify-center rounded-md text-sm font-medium transition-colors ${currentPage === page
-                                                ? 'bg-sking-pink text-white shadow-md'
-                                                : 'text-gray-500 hover:bg-gray-50 hover:text-black'
-                                            }`}
-                                    >
-                                        {page}
-                                    </button>
-                                );
-                            } else if (page === currentPage - 2 || page === currentPage + 2) {
-                                return <span key={page} className="flex h-10 w-10 items-center justify-center text-gray-400">...</span>;
-                            }
-                            return null;
-                        })}
-
-                        <button
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className="flex h-10 w-10 items-center justify-center rounded-full text-sking-pink hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronRight size={20} />
-                        </button>
-                    </div>
-                )}
-            </div>
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-sking-pink hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

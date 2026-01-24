@@ -2,12 +2,9 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Navbar from "@/components/user/Navbar";
 import { userWishlistService } from "@/services/user/userWishlistApiService";
 import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "react-hot-toast";
-
-import Footer from "@/components/user/Footer";
 
 export default function WishlistPage() {
     const [wishlist, setWishlist] = useState<any>(null);
@@ -64,9 +61,7 @@ export default function WishlistPage() {
     );
 
     return (
-        <div className="min-h-screen bg-white text-black selection:bg-sking-pink selection:text-white flex flex-col">
-            <Navbar />
-
+        <>
             {/* Page Header - Dark to support transparent Navbar */}
             <div className="relative h-[40vh] min-h-[300px] w-full bg-sking-black flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-neutral-900" />
@@ -123,7 +118,6 @@ export default function WishlistPage() {
                     </div>
                 )}
             </main>
-            <Footer />
-        </div>
+        </>
     );
 }

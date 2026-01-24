@@ -1,14 +1,10 @@
 'use client';
 
 import { UserSidebar } from '@/layout/user/UserSidebar';
-import Navbar from "@/components/user/Navbar";
-import Footer from "@/components/user/Footer";
 
-export default function UserLayout({ children }: { children: React.ReactNode }) {
+export default function ProfileLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-screen bg-white text-black selection:bg-sking-pink selection:text-white flex flex-col">
-            <Navbar />
-
+        <>
             {/* Header */}
             <div className="relative h-[30vh] min-h-[200px] w-full bg-sking-black flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-neutral-900" />
@@ -30,8 +26,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                     {children}
                 </main>
             </div>
-
-            <Footer />
-        </div>
+        </>
     );
 }

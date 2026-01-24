@@ -205,7 +205,7 @@ export default function Navbar() {
                                     <div className="py-2">
                                         {categories.length > 0 ? (
                                             categories.map((cat) => (
-                                                <Link key={cat._id} href={`/shop?category=${cat._id}`} className="block px-6 py-2.5 text-sm hover:bg-gray-50 hover:text-sking-pink transition-colors">
+                                                <Link key={cat._id} href={`/shop?category=${cat._id}`} className="block px-6 py-2.5 text-sm text-black hover:bg-gray-50 hover:text-sking-pink transition-colors">
                                                     {cat.name}
                                                 </Link>
                                             ))
@@ -232,9 +232,9 @@ export default function Navbar() {
                                         {link.hasDropdown && (
                                             <div className="absolute top-full left-0 w-48 bg-white shadow-xl border-t-2 border-sking-pink opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                                                 <div className="py-2">
-                                                    <Link href="#" className="block px-4 py-2 text-sm hover:bg-gray-50 hover:text-sking-pink">New Arrival</Link>
-                                                    <Link href="#" className="block px-4 py-2 text-sm hover:bg-gray-50 hover:text-sking-pink">Best Sellers</Link>
-                                                    <Link href="#" className="block px-4 py-2 text-sm hover:bg-gray-50 hover:text-sking-pink">Featured</Link>
+                                                    <Link href="#" className="block px-4 py-2 text-sm text-black hover:bg-gray-50 hover:text-sking-pink">New Arrival</Link>
+                                                    <Link href="#" className="block px-4 py-2 text-sm text-black hover:bg-gray-50 hover:text-sking-pink">Best Sellers</Link>
+                                                    <Link href="#" className="block px-4 py-2 text-sm text-black hover:bg-gray-50 hover:text-sking-pink">Featured</Link>
                                                 </div>
                                             </div>
                                         )}
