@@ -87,7 +87,7 @@ export default function Navbar() {
 
     return (
         <>
-            <header className={`w-full z-50 sticky top-0 transition-all duration-300 ${isScrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-white"}`}>
+            <header className={`w-full z-[999] sticky top-0 transition-all duration-300 ${isScrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-white"}`}>
 
                 {/* --- TOP SECTION --- */}
                 <div className="border-b border-gray-200">
