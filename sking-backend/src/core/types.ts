@@ -31,6 +31,10 @@ const TYPES = {
     IWishlistRepository: Symbol.for("IWishlistRepository"),
     IWishlistService: Symbol.for("IWishlistService"),
     IUserWishlistController: Symbol.for("IUserWishlistController"),
+    IUserCategoryRepository: Symbol.for("IUserCategoryRepository"),
+    IUserCategoryService: Symbol.for("IUserCategoryService"),
+    IUserCategoryController: Symbol.for("IUserCategoryController"),
+    UserCategoryController: Symbol.for("UserCategoryController"),
 };
 
 export { TYPES };

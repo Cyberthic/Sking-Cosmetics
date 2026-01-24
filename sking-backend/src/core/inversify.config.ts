@@ -129,4 +129,15 @@ container.bind<IWishlistRepository>(TYPES.IWishlistRepository).to(WishlistReposi
 container.bind<IWishlistService>(TYPES.IWishlistService).to(WishlistService);
 container.bind<UserWishlistController>(TYPES.IUserWishlistController).to(UserWishlistController);
 
+// User Category
+import { IUserCategoryRepository } from "./interfaces/repositories/user/IUserCategory.repository";
+import { IUserCategoryService } from "./interfaces/services/user/IUserCategory.service";
+import { UserCategoryRepository } from "../repositories/user/userCategory.repository";
+import { UserCategoryService } from "../services/user/userCategory.service";
+import { UserCategoryController } from "../controllers/user/userCategory.controller";
+
+container.bind<IUserCategoryRepository>(TYPES.IUserCategoryRepository).to(UserCategoryRepository);
+container.bind<IUserCategoryService>(TYPES.IUserCategoryService).to(UserCategoryService);
+container.bind<UserCategoryController>(TYPES.UserCategoryController).to(UserCategoryController);
+
 export default container;

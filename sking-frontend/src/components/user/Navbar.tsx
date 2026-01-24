@@ -8,6 +8,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { logout } from "@/redux/features/authSlice";
 import { fetchCart } from "@/redux/features/cartSlice"; // Import fetchCart
 import { userAuthService } from "@/services/user/userAuthApiService";
+import { userCategoryService } from "@/services/user/userCategoryApiService"; // Add this
 import { toast } from "sonner";
 import { RootState, AppDispatch } from "@/redux/store"; // Import AppDispatch
 import CartDrawer from "./CartDrawer";
@@ -17,6 +18,7 @@ export default function Navbar() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [categories, setCategories] = useState<any[]>([]);
 
     // Redux
     const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -24,6 +26,21 @@ export default function Navbar() {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const pathname = usePathname();
+
+    // Fetch categories on mount
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const data = await userCategoryService.getCategories();
+                if (data.success) {
+                    setCategories(data.categories);
+                }
+            } catch (error) {
+                console.error("Failed to fetch categories");
+            }
+        };
+        fetchCategories();
+    }, []);
 
     // Fetch cart on mount
     useEffect(() => {
@@ -186,11 +203,15 @@ export default function Navbar() {
                                 {/* Dropdown placeholder */}
                                 <div className="absolute top-full left-0 w-64 bg-white shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-left z-50">
                                     <div className="py-2">
-                                        {['Skincare', 'Makeup', 'Hair Care', 'Fragrance', 'Body & Bath'].map((cat) => (
-                                            <Link key={cat} href={`/category/${cat.toLowerCase().replace(' ', '-')}`} className="block px-6 py-2.5 text-sm hover:bg-gray-50 hover:text-sking-pink transition-colors">
-                                                {cat}
-                                            </Link>
-                                        ))}
+                                        {categories.length > 0 ? (
+                                            categories.map((cat) => (
+                                                <Link key={cat._id} href={`/shop?category=${cat._id}`} className="block px-6 py-2.5 text-sm hover:bg-gray-50 hover:text-sking-pink transition-colors">
+                                                    {cat.name}
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <p className="px-6 py-2.5 text-sm text-gray-400">Loading...</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
