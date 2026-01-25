@@ -7,7 +7,7 @@ export default function AddressesPage() {
     return (
         <div>
             <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-black uppercase tracking-tighter hidden md:block">My Addresses</h1>
+                <h1 className="text-3xl font-black mb-8 uppercase tracking-tighter hidden md:block text-black">My Addresses</h1>
                 <button className="flex items-center gap-2 bg-black hover:bg-sking-red text-white px-6 py-3 rounded-lg text-sm font-bold tracking-widest uppercase transition-colors">
                     <Plus className="w-4 h-4" />
                     Add New Address

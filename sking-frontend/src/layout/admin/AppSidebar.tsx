@@ -15,7 +15,8 @@ import {
   Box,
   ShieldCheck,
   ChevronDown,
-  MoreHorizontal
+  MoreHorizontal,
+  Settings  
 } from "lucide-react";
 import SidebarWidget from "@/layout/admin/SidebarWidget";
 
@@ -31,6 +32,11 @@ const navItems: NavItem[] = [
     icon: <LayoutGrid size={20} />,
     name: "Dashboard",
     path: "/admin"
+  },
+  {
+    icon: <Settings size={20} />,
+    name: "Site Settings",
+    path: "/admin/site-settings"
   },
   {
     icon: <Users size={20} />,

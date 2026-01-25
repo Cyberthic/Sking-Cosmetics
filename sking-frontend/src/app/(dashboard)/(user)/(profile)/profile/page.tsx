@@ -202,7 +202,7 @@ export default function ProfilePage() {
             </AnimatePresence>
 
             <div>
-                <h1 className="text-3xl font-black mb-8 uppercase tracking-tighter hidden md:block">My Profile</h1>
+                <h1 className="text-3xl font-black mb-8 uppercase tracking-tighter hidden md:block text-black">My Profile</h1>
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                     {/* Left Column: Profile Card */}

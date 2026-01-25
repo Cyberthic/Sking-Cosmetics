@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 export default function WalletPage() {
     return (
         <div>
-            <h1 className="text-3xl font-black mb-8 uppercase tracking-tighter hidden md:block">My Wallet</h1>
+            <h1 className="text-3xl font-black mb-8 uppercase tracking-tighter hidden md:block text-black">My Wallet</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <motion.div

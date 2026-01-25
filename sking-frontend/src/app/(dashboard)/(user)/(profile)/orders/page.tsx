@@ -7,7 +7,7 @@ export default function OrdersPage() {
     return (
         <div>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <h1 className="text-3xl font-black uppercase tracking-tighter hidden md:block">My Orders</h1>
+                <h1 className="text-3xl font-black uppercase tracking-tighter hidden md:block text-black">My Orders</h1>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
