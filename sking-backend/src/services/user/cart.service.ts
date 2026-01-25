@@ -37,15 +37,8 @@ export class CartService implements ICartService {
             throw new CustomError("User not found", StatusCode.NOT_FOUND);
         }
 
-        const cartLimit = user.cartLimit || 5;
-        const currentTotalQuantity = cart.items.reduce((acc, item) => acc + item.quantity, 0);
-
-        console.log(`[CartService] Adding Item: Limit=${cartLimit}, CurrentQty=${currentTotalQuantity}, AddQty=${quantity}`);
-
-        // Check overall limit
-        if (currentTotalQuantity + quantity > cartLimit) {
-            throw new CustomError(`Cart capacity exceeded. You can only have ${cartLimit} items in your cart.`, StatusCode.BAD_REQUEST);
-        }
+        const cartLimit = 10; // Maximum unique products in cart
+        const productLimit = 10; // Maximum quantity per product
 
         let price = product.price;
         let targetVariant;
@@ -53,12 +46,10 @@ export class CartService implements ICartService {
         if (variantName) {
             targetVariant = product.variants.find(v => v.size === variantName);
             if (!targetVariant) {
-                // Try finding by 'name' for backward compatibility or if frontend sends name
                 targetVariant = product.variants.find(v => (v as any).name === variantName);
             }
             if (!targetVariant) throw new CustomError(`Variant '${variantName}' not found`, StatusCode.BAD_REQUEST);
         } else {
-            // Default to first variant
             if (product.variants && product.variants.length > 0) {
                 targetVariant = product.variants[0];
                 variantName = targetVariant.size;
@@ -74,68 +65,83 @@ export class CartService implements ICartService {
             }
         }
 
-        // Offer calculation
         if (product.offerPercentage > 0) {
             price = price - (price * (product.offerPercentage / 100));
         }
 
-        const existingItemIndex = cart.items.findIndex(item =>
-            item.product.toString() === productId && item.variantName === variantName
-        );
+        const existingItemIndex = cart.items.findIndex(item => {
+            const itemProdId = (item.product as any)._id ? (item.product as any)._id.toString() : item.product.toString();
+            return itemProdId === productId && item.variantName === variantName;
+        });
 
         if (existingItemIndex > -1) {
-            cart.items[existingItemIndex].quantity += quantity;
+            const newQuantity = cart.items[existingItemIndex].quantity + quantity;
+            if (newQuantity > productLimit) {
+                throw new CustomError(`maximum 10 per product`, StatusCode.BAD_REQUEST);
+            }
+            cart.items[existingItemIndex].quantity = newQuantity;
+            cart.items[existingItemIndex].price = price; // Update price in case it changed
         } else {
+            if (cart.items.length >= cartLimit) {
+                throw new CustomError(`maximum 10 products in cart`, StatusCode.BAD_REQUEST);
+            }
+            if (quantity > productLimit) {
+                throw new CustomError(`maximum 10 per product`, StatusCode.BAD_REQUEST);
+            }
             cart.items.push({
-                product: new Types.ObjectId(productId),
+                product: new Types.ObjectId(productId) as any,
                 variantName,
                 quantity,
                 price
             });
         }
 
-        return await cart.save();
+        await cart.save();
+        return this.getCart(userId); // Return re-populated cart
     }
 
     async removeFromCart(userId: string, productId: string, variantName?: string): Promise<ICart> {
         const cart = await this._cartRepository.findByUserId(userId);
         if (!cart) throw new CustomError("Cart not found", StatusCode.NOT_FOUND);
 
-        cart.items = cart.items.filter(item =>
-            !(item.product.toString() === productId && item.variantName === variantName)
-        );
+        cart.items = cart.items.filter(item => {
+            const itemProdId = (item.product as any)._id ? (item.product as any)._id.toString() : item.product.toString();
+            return !(itemProdId === productId && item.variantName === variantName);
+        });
 
-        return await cart.save();
+        await cart.save();
+        return this.getCart(userId);
     }
 
     async updateQuantity(userId: string, productId: string, variantName: string | undefined, quantity: number): Promise<ICart> {
         const cart = await this.getCart(userId);
-        const user = await this._userRepository.findById(userId);
-        const cartLimit = user?.cartLimit || 5;
+        const productLimit = 10;
 
-        // Calculate potential new total (excluding current item's old qty)
-        const otherItemsTotal = cart.items.reduce((acc, item) => {
-            if (item.product.toString() === productId && item.variantName === variantName) return acc;
-            return acc + item.quantity;
-        }, 0);
-
-        if (otherItemsTotal + quantity > cartLimit) {
-            throw new CustomError(`Cart capacity exceeded. Limit is ${cartLimit}.`, StatusCode.BAD_REQUEST);
+        if (quantity > productLimit) {
+            throw new CustomError(`maximum 10 per product`, StatusCode.BAD_REQUEST);
         }
 
-        const itemIndex = cart.items.findIndex(item =>
-            item.product.toString() === productId && item.variantName === variantName
-        );
+        const itemIndex = cart.items.findIndex(item => {
+            const itemProdId = (item.product as any)._id ? (item.product as any)._id.toString() : item.product.toString();
+            return itemProdId === productId && item.variantName === variantName;
+        });
 
         if (itemIndex > -1) {
             if (quantity <= 0) {
                 cart.items.splice(itemIndex, 1);
             } else {
-                // Check stock (simplified)
+                const product = await this._productRepository.findById(productId);
+                if (product) {
+                    const variant = product.variants.find(v => v.size === variantName);
+                    if (variant && variant.stock < quantity) {
+                        throw new CustomError(`Insufficient stock. Available: ${variant.stock}`, StatusCode.BAD_REQUEST);
+                    }
+                }
                 cart.items[itemIndex].quantity = quantity;
             }
         }
 
-        return await cart.save();
+        await cart.save();
+        return this.getCart(userId);
     }
 }

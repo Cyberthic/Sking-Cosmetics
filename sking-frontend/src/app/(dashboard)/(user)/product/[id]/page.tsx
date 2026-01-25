@@ -7,7 +7,9 @@ import { userProductService } from "@/services/user/userProductApiService";
 import ProductCard from "@/components/user/ProductCard";
 import { userCartService } from "@/services/user/userCartApiService";
 import { userWishlistService } from "@/services/user/userWishlistApiService";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
 import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check } from "lucide-react";
 
 // Mock Data for UI elements that might not be in API yet
@@ -74,11 +76,17 @@ export default function ProductDetail() {
         }
     };
 
+    const dispatch = useDispatch();
+
     const handleAddToCart = async () => {
         if (!product) return;
         try {
-            await userCartService.addToCart(product._id, selectedVariant?.size, quantity);
-            toast.success("Added to Cart");
+            const response = await userCartService.addToCart(product._id, selectedVariant?.size, quantity);
+            if (response.success) {
+                dispatch(updateCartLocally(response.cart));
+                dispatch(setDrawerOpen(true));
+                toast.success("Added to Cart");
+            }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to add to cart");
         }
@@ -288,9 +296,25 @@ export default function ProductDetail() {
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-gray-500 uppercase">Quantity</span>
                             <div className="flex items-center border border-gray-300 rounded">
-                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 hover:bg-gray-100 text-gray-600">-</button>
+                                <button
+                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                    className="px-4 py-2 hover:bg-gray-100 text-gray-600"
+                                >
+                                    -
+                                </button>
                                 <span className="px-4 py-2 font-medium w-12 text-center">{quantity}</span>
-                                <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 hover:bg-gray-100 text-gray-600">+</button>
+                                <button
+                                    onClick={() => {
+                                        if (quantity >= 10) {
+                                            toast.error("maximum 10 per product");
+                                        } else {
+                                            setQuantity(quantity + 1);
+                                        }
+                                    }}
+                                    className="px-4 py-2 hover:bg-gray-100 text-gray-600"
+                                >
+                                    +
+                                </button>
                             </div>
                         </div>
 

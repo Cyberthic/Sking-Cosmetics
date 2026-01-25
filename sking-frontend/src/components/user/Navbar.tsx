@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { logout } from "@/redux/features/authSlice";
-import { fetchCart } from "@/redux/features/cartSlice"; // Import fetchCart
+import { fetchCart, setDrawerOpen } from "@/redux/features/cartSlice"; // Import fetchCart and setDrawerOpen
 import { userAuthService } from "@/services/user/userAuthApiService";
 import { userCategoryService } from "@/services/user/userCategoryApiService"; // Add this
 import { toast } from "sonner";
@@ -17,15 +17,16 @@ export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
-    const [isCartOpen, setIsCartOpen] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
 
     // Redux
     const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-    const { totalAmount, totalItems } = useSelector((state: RootState) => state.cart);
+    const { totalAmount, totalItems, isDrawerOpen } = useSelector((state: RootState) => state.cart);
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const pathname = usePathname();
+
+    const setIsCartOpen = (open: boolean) => dispatch(setDrawerOpen(open));
 
     // Fetch categories on mount
     useEffect(() => {
@@ -293,7 +294,7 @@ export default function Navbar() {
                     <div className="fixed inset-0 z-[55] lg:hidden" onClick={() => setShowUserMenu(false)} />
                 )}
 
-                <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+                <CartDrawer isOpen={isDrawerOpen} onClose={() => setIsCartOpen(false)} />
             </header>
         </>
     );

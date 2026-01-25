@@ -4,7 +4,7 @@ export interface ICartItem {
     product: Types.ObjectId;
     variantName?: string;
     quantity: number;
-    price: number;
+    price?: number;
 }
 
 export interface ICart extends Document {
@@ -22,6 +22,7 @@ const CartSchema: Schema<ICart> = new Schema(
                 product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
                 variantName: { type: String },
                 quantity: { type: Number, required: true, min: 1 },
+                price: { type: Number }, // Removed required: true to support legacy items
             },
         ],
     },

@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { userWishlistService } from "@/services/user/userWishlistApiService";
 import { userCartService } from "@/services/user/userCartApiService";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
 
 export default function WishlistPage() {
     const [wishlist, setWishlist] = useState<any>(null);
@@ -38,14 +40,20 @@ export default function WishlistPage() {
         }
     };
 
+    const dispatch = useDispatch();
+
     const handleMoveToCart = async (product: any) => {
         try {
             // Defaulting to 1st variant if exists, else base
-            const variantName = product.variants?.length > 0 ? product.variants[0].name : undefined;
-            await userCartService.addToCart(product._id, variantName, 1);
-            toast.success("Added to Cart");
-            // Optionally remove from wishlist? 
-            // await handleRemove(product._id);
+            // API shows variants use 'size' not 'name'. Let's check. 
+            // In cart.service.ts: targetVariant = product.variants.find(v => v.size === variantName);
+            const variantName = product.variants?.length > 0 ? product.variants[0].size : undefined;
+            const response = await userCartService.addToCart(product._id, variantName, 1);
+            if (response.success) {
+                dispatch(updateCartLocally(response.cart));
+                dispatch(setDrawerOpen(true));
+                toast.success("Added to Cart");
+            }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to add to cart");
         }

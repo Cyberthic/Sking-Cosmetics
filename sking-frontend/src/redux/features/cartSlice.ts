@@ -19,6 +19,7 @@ interface CartState {
     totalItems: number;
     loading: boolean;
     error: string | null;
+    isDrawerOpen: boolean;
 }
 
 const initialState: CartState = {
@@ -27,6 +28,7 @@ const initialState: CartState = {
     totalItems: 0,
     loading: false,
     error: null,
+    isDrawerOpen: false,
 };
 
 export const fetchCart = createAsyncThunk(
@@ -51,12 +53,16 @@ const cartSlice = createSlice({
         updateCartLocally: (state, action: PayloadAction<any>) => {
             // Helper to update state from a cart object directly (e.g. after add/remove)
             const cart = action.payload;
+            state.loading = false;
             if (cart && cart.items) {
                 state.items = cart.items;
-                state.totalItems = cart.items.length;
+                state.totalItems = cart.items.reduce((acc: number, item: any) => acc + item.quantity, 0);
                 // Calculate total price
-                state.totalAmount = cart.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+                state.totalAmount = cart.items.reduce((acc: number, item: any) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
             }
+        },
+        setDrawerOpen: (state, action: PayloadAction<boolean>) => {
+            state.isDrawerOpen = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -70,8 +76,8 @@ const cartSlice = createSlice({
                 const cart = action.payload;
                 if (cart && cart.items) {
                     state.items = cart.items;
-                    state.totalItems = cart.items.length;
-                    state.totalAmount = cart.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+                    state.totalItems = cart.items.reduce((acc: number, item: any) => acc + item.quantity, 0);
+                    state.totalAmount = cart.items.reduce((acc: number, item: any) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
                 } else {
                     state.items = [];
                     state.totalItems = 0;
@@ -85,5 +91,5 @@ const cartSlice = createSlice({
     },
 });
 
-export const { updateCartLocally } = cartSlice.actions;
+export const { updateCartLocally, setDrawerOpen } = cartSlice.actions;
 export default cartSlice.reducer;

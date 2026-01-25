@@ -2,6 +2,10 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingBag, Star } from "lucide-react";
+import { userCartService } from "@/services/user/userCartApiService";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
 
 export interface ShopProduct {
     id: string;
@@ -21,9 +25,27 @@ interface ShopProductCardProps {
 }
 
 const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
+    const dispatch = useDispatch();
+
     const discountPercentage = product.originalPrice
         ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
         : 0;
+
+    const handleAddToCart = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            const response = await userCartService.addToCart(product.id, undefined, 1);
+            if (response.success) {
+                dispatch(updateCartLocally(response.cart));
+                dispatch(setDrawerOpen(true));
+                toast.success("Added to Bag");
+            }
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Failed to add to bag";
+            toast.error(message);
+        }
+    };
 
     return (
         <div className="group relative flex flex-col bg-white">
@@ -55,10 +77,12 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
                     </div>
                 )}
 
-                {/* Wishlist Button (Always visible or on hover? Reference shows heart next to Add to Cart on hover, but mostly clear image. Let's place it top right or with actions) */}
-                {/* Reference Image 3 shows Add to Bag and Heart appearing on hover at the bottom of the image area */}
+                {/* Wishlist Button */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full transition-transform duration-300 group-hover:translate-y-0 flex gap-2 z-10">
-                    <button className="flex-1 bg-sking-pink text-white hover:bg-pink-700 h-10 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest shadow-md transition-colors">
+                    <button
+                        onClick={handleAddToCart}
+                        className="flex-1 bg-sking-pink text-white hover:bg-pink-700 h-10 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest shadow-md transition-colors"
+                    >
                         <ShoppingBag size={14} className="mb-0.5" />
                         Add to Bag
                     </button>

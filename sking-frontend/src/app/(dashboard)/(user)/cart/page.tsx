@@ -5,7 +5,9 @@ import Link from "next/link";
 import Navbar from "@/components/user/Navbar";
 import Footer from "@/components/user/Footer";
 import { userCartService } from "@/services/user/userCartApiService";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { updateCartLocally } from "@/redux/features/cartSlice";
 
 export default function CartPage() {
     const [cart, setCart] = useState<any>(null);
@@ -29,10 +31,24 @@ export default function CartPage() {
         }
     };
 
-    const handleUpdateQuantity = async (productId: string, variantName: string | undefined, quantity: number) => {
+    const dispatch = useDispatch();
+
+    const handleUpdateQuantity = async (productId: string, variantName: string | undefined, currentQuantity: number, targetQuantity: number) => {
+        if (targetQuantity < 1) return;
+        if (targetQuantity > 10) {
+            toast.error("maximum 10 per product");
+            return;
+        }
+
         try {
-            await userCartService.updateQuantity(productId, variantName, quantity);
-            fetchCart();
+            const response = await userCartService.updateQuantity(productId, variantName, targetQuantity);
+            if (response.success) {
+                setCart(response.cart);
+                dispatch(updateCartLocally(response.cart));
+                if (targetQuantity > currentQuantity) {
+                    toast.success("Added to Bag");
+                }
+            }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to update quantity");
         }
@@ -40,11 +56,14 @@ export default function CartPage() {
 
     const handleRemove = async (productId: string, variantName?: string) => {
         try {
-            await userCartService.removeFromCart(productId, variantName);
-            toast.success("Item removed");
-            fetchCart();
-        } catch (err) {
-            toast.error("Failed to remove item");
+            const response = await userCartService.removeFromCart(productId, variantName);
+            if (response.success) {
+                setCart(response.cart);
+                dispatch(updateCartLocally(response.cart));
+                toast.success("Item removed");
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to remove item");
         }
     };
 
@@ -112,9 +131,19 @@ export default function CartPage() {
                                             <div className="flex items-center gap-4">
                                                 <span className="text-xs uppercase font-bold text-gray-400">Qty</span>
                                                 <div className="flex items-center border border-gray-200">
-                                                    <button onClick={() => handleUpdateQuantity(item.product._id, item.variantName, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-600">-</button>
+                                                    <button
+                                                        onClick={() => handleUpdateQuantity(item.product._id, item.variantName, item.quantity, item.quantity - 1)}
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-600"
+                                                    >
+                                                        -
+                                                    </button>
                                                     <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                                                    <button onClick={() => handleUpdateQuantity(item.product._id, item.variantName, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-600">+</button>
+                                                    <button
+                                                        onClick={() => handleUpdateQuantity(item.product._id, item.variantName, item.quantity, item.quantity + 1)}
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-600"
+                                                    >
+                                                        +
+                                                    </button>
                                                 </div>
                                             </div>
                                             <div className="font-bold text-xl tracking-tight">₹{((item.price || 0) * item.quantity).toLocaleString()}</div>
