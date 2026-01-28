@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model, Types } from "mongoose";
 export interface IAddress extends Document {
     user: Types.ObjectId;
     name: string;
+    email: string;
     phoneNumber: string;
     street: string;
     city: string;
@@ -17,6 +18,7 @@ const AddressSchema: Schema<IAddress> = new Schema(
     {
         user: { type: Schema.Types.ObjectId, ref: "User", required: true },
         name: { type: String, required: true },
+        email: { type: String, required: true },
         phoneNumber: { type: String, required: true },
         street: { type: String, required: true },
         city: { type: String, required: true },

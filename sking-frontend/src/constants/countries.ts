@@ -1,0 +1,66 @@
+export interface Country {
+    name: string;
+    code: string;
+    phone: string;
+}
+
+export const countries: Country[] = [
+    { name: "India", code: "IN", phone: "+91" },
+    { name: "United States", code: "US", phone: "+1" },
+    { name: "United Kingdom", code: "GB", phone: "+44" },
+    { name: "United Arab Emirates", code: "AE", phone: "+971" },
+    { name: "Australia", code: "AU", phone: "+61" },
+    { name: "Canada", code: "CA", phone: "+1" },
+    { name: "Germany", code: "DE", phone: "+49" },
+    { name: "France", code: "FR", phone: "+33" },
+    { name: "Japan", code: "JP", phone: "+81" },
+    { name: "China", code: "CN", phone: "+86" },
+    { name: "Brazil", code: "BR", phone: "+55" },
+    { name: "South Africa", code: "ZA", phone: "+27" },
+    { name: "Singapore", code: "SG", phone: "+65" },
+    { name: "Netherlands", code: "NL", phone: "+31" },
+    { name: "Italy", code: "IT", phone: "+39" },
+    { name: "Spain", code: "ES", phone: "+34" },
+    { name: "Sweden", code: "SE", phone: "+46" },
+    { name: "Norway", code: "NO", phone: "+47" },
+    { name: "Denmark", code: "DK", phone: "+45" },
+    { name: "Finland", code: "FI", phone: "+358" },
+    { name: "Switzerland", code: "CH", phone: "+41" },
+    { name: "Austria", code: "AT", phone: "+43" },
+    { name: "Belgium", code: "BE", phone: "+32" },
+    { name: "Ireland", code: "IE", phone: "+353" },
+    { name: "New Zealand", code: "NZ", phone: "+64" },
+    { name: "Mexico", code: "MX", phone: "+52" },
+    { name: "Argentina", code: "AR", phone: "+54" },
+    { name: "Chile", code: "CL", phone: "+56" },
+    { name: "Colombia", code: "CO", phone: "+57" },
+    { name: "Peru", code: "PE", phone: "+51" },
+    { name: "Turkey", code: "TR", phone: "+90" },
+    { name: "Saudi Arabia", code: "SA", phone: "+966" },
+    { name: "Qatar", code: "QA", phone: "+974" },
+    { name: "Kuwait", code: "KW", phone: "+965" },
+    { name: "Oman", code: "OM", phone: "+968" },
+    { name: "Thailand", code: "TH", phone: "+66" },
+    { name: "Malaysia", code: "MY", phone: "+60" },
+    { name: "Indonesia", code: "ID", phone: "+62" },
+    { name: "Philippines", code: "PH", phone: "+63" },
+    { name: "Vietnam", code: "VN", phone: "+84" },
+    { name: "South Korea", code: "KR", phone: "+82" },
+    { name: "Russia", code: "RU", phone: "+7" },
+    { name: "Ukraine", code: "UA", phone: "+380" },
+    { name: "Poland", code: "PL", phone: "+48" },
+    { name: "Portugal", code: "PT", phone: "+351" },
+    { name: "Greece", code: "GR", phone: "+30" },
+    { name: "Israel", code: "IL", phone: "+972" },
+    { name: "Egypt", code: "EG", phone: "+20" },
+    { name: "Nigeria", code: "NG", phone: "+234" },
+    { name: "Kenya", code: "KE", phone: "+254" },
+    { name: "Bangladesh", code: "BD", phone: "+880" },
+    { name: "Pakistan", code: "PK", phone: "+92" },
+    { name: "Sri Lanka", code: "LK", phone: "+94" },
+    { name: "Nepal", code: "NP", phone: "+977" },
+].sort((a, b) => {
+    if (a.name === "India") return -1;
+    if (b.name === "India") return 1;
+    return a.name.localeCompare(b.name);
+});

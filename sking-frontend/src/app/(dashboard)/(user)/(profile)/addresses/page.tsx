@@ -8,6 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { addressSchema, AddressSchema } from '../../../../../validations/userAddress.validation';
 import { userAddressService, Address } from '../../../../../services/user/userAddressApiService';
+import { SearchableSelect } from '@/components/user/ui/SearchableSelect';
+import { countries } from '@/constants/countries';
 
 export default function AddressesPage() {
     const [addresses, setAddresses] = useState<Address[]>([]);
@@ -140,6 +142,7 @@ export default function AddressesPage() {
                             </div>
 
                             <h3 className="font-bold text-lg mb-1">{address.name}</h3>
+                            <p className={`text-xs mb-1 font-medium ${address.isPrimary ? 'text-gray-300' : 'text-gray-500'}`}>{address.email}</p>
                             <p className={`text-sm mb-4 ${address.isPrimary ? 'text-gray-300' : 'text-gray-500'}`}>{address.phoneNumber}</p>
 
                             <div className={`text-sm leading-relaxed mb-6 ${address.isPrimary ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -172,19 +175,40 @@ export default function AddressesPage() {
 }
 
 function AddressModal({ isOpen, onClose, address, refresh }: { isOpen: boolean; onClose: () => void; address: Address | null; refresh: () => void }) {
-    const { register, handleSubmit, reset, formState: { errors, isSubmitting }, setValue } = useForm<AddressSchema>({
+    const { register, handleSubmit, reset, formState: { errors, isSubmitting }, setValue, watch } = useForm<AddressSchema>({
         resolver: zodResolver(addressSchema),
         defaultValues: {
             country: 'India',
+            countryCode: '+91',
+            email: '',
             type: 'Home'
         }
     });
 
+    const countryCodeValue = watch('countryCode');
+    const countryValue = watch('country');
+
     useEffect(() => {
         if (address) {
+            // Find country code in the phone number
+            let detectedCode = '+91';
+            let detectedPhone = address.phoneNumber;
+
+            // Try to match longest country codes first
+            const sortedCodes = [...countries].sort((a, b) => b.phone.length - a.phone.length);
+            for (const c of sortedCodes) {
+                if (address.phoneNumber.startsWith(c.phone)) {
+                    detectedCode = c.phone;
+                    detectedPhone = address.phoneNumber.slice(c.phone.length);
+                    break;
+                }
+            }
+
             reset({
                 name: address.name,
-                phoneNumber: address.phoneNumber,
+                email: address.email || '',
+                countryCode: detectedCode,
+                phoneNumber: detectedPhone,
                 street: address.street,
                 city: address.city,
                 state: address.state,
@@ -196,6 +220,8 @@ function AddressModal({ isOpen, onClose, address, refresh }: { isOpen: boolean; 
         } else {
             reset({
                 name: '',
+                email: '',
+                countryCode: '+91',
                 phoneNumber: '',
                 street: '',
                 city: '',
@@ -210,11 +236,15 @@ function AddressModal({ isOpen, onClose, address, refresh }: { isOpen: boolean; 
 
     const onSubmit = async (data: AddressSchema) => {
         try {
+            const payload = {
+                ...data,
+                phoneNumber: data.countryCode + data.phoneNumber
+            };
             if (address) {
-                await userAddressService.updateAddress(address._id, data);
+                await userAddressService.updateAddress(address._id, payload);
                 toast.success("Address updated successfully");
             } else {
-                await userAddressService.addAddress(data);
+                await userAddressService.addAddress(payload);
                 toast.success("Address added successfully");
             }
             refresh();
@@ -245,25 +275,54 @@ function AddressModal({ isOpen, onClose, address, refresh }: { isOpen: boolean; 
 
                 <div className="p-6 overflow-y-auto">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Name</label>
                                 <input
                                     {...register('name')}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-medium"
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-medium text-sm"
                                     placeholder="John Doe"
                                 />
                                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
                             </div>
                             <div className="space-y-1">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Phone</label>
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Email Address</label>
                                 <input
-                                    {...register('phoneNumber')}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-medium"
-                                    placeholder="+91 9876543210"
+                                    {...register('email')}
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-medium text-sm"
+                                    placeholder="john@example.com"
                                 />
-                                {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>}
+                                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
                             </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Phone Number</label>
+                            <div className="flex gap-2">
+                                <div className="w-[80px] flex-shrink-0">
+                                    <SearchableSelect
+                                        options={countries.map(c => ({ label: `${c.phone}`, value: c.phone, subLabel: c.name }))}
+                                        value={countryCodeValue}
+                                        onChange={(val) => setValue('countryCode', val, { shouldValidate: true })}
+                                        placeholder="+91"
+                                        dropdownWidth="min-w-[250px]"
+                                        error={errors.countryCode?.message}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <input
+                                        {...register('phoneNumber')}
+                                        onInput={(e) => {
+                                            e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
+                                        }}
+                                        className={`w-full p-3 bg-gray-50 border rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-medium text-sm ${errors.phoneNumber ? 'border-red-500' : 'border-gray-200'
+                                            }`}
+                                        placeholder="9876543210"
+                                        maxLength={10}
+                                    />
+                                </div>
+                            </div>
+                            {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>}
                         </div>
 
                         <div className="space-y-1">
@@ -302,19 +361,24 @@ function AddressModal({ isOpen, onClose, address, refresh }: { isOpen: boolean; 
                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Postal Code</label>
                                 <input
                                     {...register('postalCode')}
+                                    onInput={(e) => {
+                                        e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
+                                    }}
                                     className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-medium"
-                                    placeholder="10001"
+                                    placeholder="123456"
+                                    maxLength={6}
                                 />
                                 {errors.postalCode && <p className="text-red-500 text-xs mt-1">{errors.postalCode.message}</p>}
                             </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Country</label>
-                                <input
-                                    {...register('country')}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-medium"
-                                    placeholder="USA"
+                                <SearchableSelect
+                                    options={countries.map(c => ({ label: c.name, value: c.name }))}
+                                    value={countryValue}
+                                    onChange={(val) => setValue('country', val, { shouldValidate: true })}
+                                    placeholder="Select Country"
+                                    error={errors.country?.message}
                                 />
-                                {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country.message}</p>}
                             </div>
                         </div>
 
