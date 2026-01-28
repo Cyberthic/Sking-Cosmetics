@@ -11,12 +11,15 @@ import { StatusCode } from "../../enums/statusCode.enums";
 import razorpay from "../../config/razorpay";
 import logger from "../../utils/logger";
 
+import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
+
 @injectable()
 export class UserCheckoutService implements IUserCheckoutService {
     constructor(
         @inject(TYPES.IUserCheckoutRepository) private _checkoutRepository: IUserCheckoutRepository,
         @inject(TYPES.ICartRepository) private _cartRepository: ICartRepository,
-        @inject(TYPES.IUserAddressRepository) private _addressRepository: IUserAddressRepository
+        @inject(TYPES.IUserAddressRepository) private _addressRepository: IUserAddressRepository,
+        @inject(TYPES.IUserProductRepository) private _productRepository: IUserProductRepository
     ) { }
 
     async placeOrder(userId: string, data: PlaceOrderDto): Promise<IOrder> {
@@ -57,6 +60,9 @@ export class UserCheckoutService implements IUserCheckoutService {
         const shippingFee = totalAmount > 1000 ? 0 : 49;
         const finalAmount = totalAmount + shippingFee;
 
+        const expiryTime = new Date();
+        expiryTime.setMinutes(expiryTime.getMinutes() + 15);
+
         // 5. Create Order
         const orderData: any = {
             user: userId,
@@ -81,7 +87,8 @@ export class UserCheckoutService implements IUserCheckoutService {
             },
             paymentMethod: data.paymentMethod,
             paymentStatus: "pending",
-            orderStatus: "pending",
+            orderStatus: "payment_pending",
+            paymentExpiresAt: expiryTime,
             paymentDetails: {
                 paymentGateway: "razorpay"
             }
@@ -107,7 +114,21 @@ export class UserCheckoutService implements IUserCheckoutService {
 
         const order = await this._checkoutRepository.createOrder(orderData);
 
-        // 6. Clear Cart
+        // 6. Reserve Stock
+        try {
+            for (const item of cart.items) {
+                await this._productRepository.reserveStock(
+                    item.product._id!.toString(),
+                    item.variantName,
+                    item.quantity
+                );
+            }
+        } catch (error) {
+            logger.error("Error reserving stock for order: " + order._id, error);
+            // In a production system, we might want to rollback the order creation here
+        }
+
+        // 7. Clear Cart
         await this._cartRepository.clearCart(userId);
 
         return order;

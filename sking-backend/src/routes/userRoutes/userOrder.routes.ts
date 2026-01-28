@@ -10,5 +10,7 @@ const userOrderController = container.get<IUserOrderController>(TYPES.IUserOrder
 userOrderRouter.get("/", isAuthenticated, userOrderController.getUserOrders);
 userOrderRouter.get("/:orderId", isAuthenticated, userOrderController.getOrderDetail);
 userOrderRouter.post("/verify-payment", isAuthenticated, userOrderController.verifyPayment);
+userOrderRouter.post("/retry-payment/:orderId", isAuthenticated, userOrderController.retryPayment);
+userOrderRouter.post("/webhook", userOrderController.handleWebhook);
 
 export default userOrderRouter;

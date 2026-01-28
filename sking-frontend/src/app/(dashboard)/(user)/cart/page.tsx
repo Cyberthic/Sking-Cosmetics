@@ -6,32 +6,18 @@ import Navbar from "@/components/user/Navbar";
 import Footer from "@/components/user/Footer";
 import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "sonner";
-import { useDispatch } from "react-redux";
-import { updateCartLocally } from "@/redux/features/cartSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchCart, updateCartLocally } from "@/redux/features/cartSlice";
+import { RootState } from "@/redux/store";
 
 export default function CartPage() {
-    const [cart, setCart] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const dispatch = useDispatch();
+    const { items, loading, totalAmount } = useSelector((state: RootState) => state.cart);
 
     useEffect(() => {
-        fetchCart();
-    }, []);
-
-    const fetchCart = async () => {
-        try {
-            setLoading(true);
-            const data = await userCartService.getCart();
-            if (data.success) {
-                setCart(data.cart);
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const dispatch = useDispatch();
+        // @ts-ignore
+        dispatch(fetchCart());
+    }, [dispatch]);
 
     const handleUpdateQuantity = async (productId: string, variantName: string | undefined, currentQuantity: number, targetQuantity: number) => {
         if (targetQuantity < 1) return;
@@ -43,7 +29,6 @@ export default function CartPage() {
         try {
             const response = await userCartService.updateQuantity(productId, variantName, targetQuantity);
             if (response.success) {
-                setCart(response.cart);
                 dispatch(updateCartLocally(response.cart));
                 if (targetQuantity > currentQuantity) {
                     toast.success("Added to Bag");
@@ -58,7 +43,6 @@ export default function CartPage() {
         try {
             const response = await userCartService.removeFromCart(productId, variantName);
             if (response.success) {
-                setCart(response.cart);
                 dispatch(updateCartLocally(response.cart));
                 toast.success("Item removed");
             }
@@ -76,8 +60,6 @@ export default function CartPage() {
         </div>
     );
 
-    const total = cart?.items?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0) || 0;
-
     return (
         <>
             {/* Page Header - Dark to support transparent Navbar */}
@@ -94,7 +76,7 @@ export default function CartPage() {
             </div>
 
             <div className="flex-grow max-w-7xl mx-auto px-4 md:px-8 py-20 w-full">
-                {(!cart || cart.items.length === 0) ? (
+                {(items.length === 0) ? (
                     <div className="text-center py-20">
                         <h2 className="text-3xl font-black uppercase tracking-tighter mb-4">Your bag is empty</h2>
                         <p className="text-gray-500 mb-8 max-w-md mx-auto">Looks like you haven't added any luxury essentials to your collection yet.</p>
@@ -106,7 +88,7 @@ export default function CartPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                         {/* Cart Items */}
                         <div className="lg:col-span-2 space-y-8">
-                            {cart.items.map((item: any) => (
+                            {items.map((item: any) => (
                                 <div key={item._id} className="flex gap-6 p-6 border-b border-gray-100 items-start">
                                     <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gray-50 flex-shrink-0">
                                         {item.product.images?.[0] ? (
@@ -160,7 +142,7 @@ export default function CartPage() {
                                 <div className="space-y-4 mb-8">
                                     <div className="flex justify-between text-gray-600 uppercase text-sm font-medium">
                                         <span>Subtotal</span>
-                                        <span className="font-bold text-black">₹{Math.floor(total).toLocaleString()}</span>
+                                        <span className="font-bold text-black">₹{Math.floor(totalAmount).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-600 uppercase text-sm font-medium">
                                         <span>Shipping</span>
@@ -168,7 +150,7 @@ export default function CartPage() {
                                     </div>
                                     <div className="pt-4 border-t border-gray-200 flex justify-between font-black text-xl">
                                         <span>Total</span>
-                                        <span>₹{Math.floor(total).toLocaleString()}</span>
+                                        <span>₹{Math.floor(totalAmount).toLocaleString()}</span>
                                     </div>
                                     <p className="text-xs text-gray-400 mt-2">Tax included and shipping calculated at checkout.</p>
                                 </div>

@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Package, Search, ChevronRight, Clock, CheckCircle2, Truck, AlertCircle } from 'lucide-react';
+import { Package, Search, ChevronRight, Clock, CheckCircle2, Truck, AlertCircle, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { userOrderService } from '@/services/user/userOrderApiService';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function OrdersPage() {
+    const router = useRouter();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -24,6 +27,72 @@ export default function OrdersPage() {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            if ((window as any).Razorpay) {
+                resolve(true);
+                return;
+            }
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
+    const handleRetry = async (orderId: string, order: any) => {
+        try {
+            const response = await userOrderService.retryPayment(orderId);
+
+            if (response.success) {
+                const retryOrder = response.data;
+                const scriptLoaded = await loadRazorpayScript();
+
+                if (!scriptLoaded) {
+                    toast.error("Razorpay SDK failed to load");
+                    return;
+                }
+
+                const options = {
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                    amount: Math.round(retryOrder.finalAmount * 100),
+                    currency: "INR",
+                    name: "SKING COSMETICS",
+                    description: "Order Retry Payment",
+                    order_id: retryOrder.paymentDetails.gatewayOrderId,
+                    handler: async function (res: any) {
+                        try {
+                            const verificationResponse = await userOrderService.verifyPayment({
+                                razorpay_order_id: res.razorpay_order_id,
+                                razorpay_payment_id: res.razorpay_payment_id,
+                                razorpay_signature: res.razorpay_signature,
+                            });
+
+                            if (verificationResponse.success) {
+                                toast.success("Payment successful!");
+                                fetchOrders(); // Refresh list
+                            }
+                        } catch (error: any) {
+                            toast.error("Verification failed");
+                        }
+                    },
+                    prefill: {
+                        name: retryOrder.shippingAddress.name,
+                        email: retryOrder.shippingAddress.email,
+                        contact: retryOrder.shippingAddress.phoneNumber
+                    },
+                    theme: { color: "#FF1493" }
+                };
+
+                const paymentObject = new (window as any).Razorpay(options);
+                paymentObject.open();
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to retry payment");
         }
     };
 
@@ -88,8 +157,8 @@ export default function OrdersPage() {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${order.orderStatus === 'delivered' ? 'bg-green-50 border-green-100 text-green-600' :
-                                                order.orderStatus === 'cancelled' ? 'bg-red-50 border-red-100 text-red-600' :
-                                                    'bg-orange-50 border-orange-100 text-orange-600'
+                                            order.orderStatus === 'cancelled' ? 'bg-red-50 border-red-100 text-red-600' :
+                                                'bg-orange-50 border-orange-100 text-orange-600'
                                             }`}>
                                             {getStatusIcon(order.orderStatus)}
                                             <span className="text-[10px] font-black uppercase tracking-widest">{order.orderStatus}</span>
@@ -125,13 +194,24 @@ export default function OrdersPage() {
                                         </p>
                                     </div>
 
-                                    <Link
-                                        href={`/orders/${order._id}`}
-                                        className="w-full md:w-auto bg-black text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all shadow-lg group"
-                                    >
-                                        Order Details
-                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                    </Link>
+                                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                                        {order.orderStatus === 'payment_pending' && order.paymentStatus !== 'completed' && (
+                                            <button
+                                                onClick={() => handleRetry(order._id, order)}
+                                                className="bg-sking-pink text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg"
+                                            >
+                                                <CreditCard className="w-4 h-4" />
+                                                Pay Now
+                                            </button>
+                                        )}
+                                        <Link
+                                            href={`/orders/${order._id}`}
+                                            className="bg-black text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all shadow-lg group"
+                                        >
+                                            Order Details
+                                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                        </Link>
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}

@@ -4,6 +4,7 @@ import mongoose, { Schema, Document, Model, Types } from "mongoose";
 export interface IVariant {
     size: string;           // e.g. 30ml, 50ml, Small, Medium
     stock: number;
+    reservedStock: number;
     price: number;
 }
 
@@ -69,6 +70,7 @@ const ProductSchema = new Schema<IProduct>(
             {
                 size: { type: String, required: true },
                 stock: { type: Number, default: 0 },
+                reservedStock: { type: Number, default: 0 },
                 price: { type: Number, required: true },
             },
         ],

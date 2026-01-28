@@ -40,27 +40,42 @@ export class UserProductRepository extends BaseRepository<IProduct> implements I
         return this._model.findOne({ slug: slug, isActive: true }).populate('category').exec();
     }
 
-    async reduceStock(productId: string, variantName: string | undefined, quantity: number): Promise<void> {
+    async reserveStock(productId: string, variantName: string | undefined, quantity: number): Promise<void> {
         if (variantName) {
-            // Reduce stock for a specific variant
             await this._model.updateOne(
                 { _id: productId, "variants.size": variantName },
                 {
                     $inc: {
                         "variants.$.stock": -quantity,
+                        "variants.$.reservedStock": quantity
+                    }
+                }
+            );
+        }
+    }
+
+    async commitStock(productId: string, variantName: string | undefined, quantity: number): Promise<void> {
+        if (variantName) {
+            await this._model.updateOne(
+                { _id: productId, "variants.size": variantName },
+                {
+                    $inc: {
+                        "variants.$.reservedStock": -quantity,
                         soldCount: quantity
                     }
                 }
             );
-        } else {
-            // If no variant, this might be a simple product (not supported yet in models but for safety)
-            // Currently our models require variants for size-wise stock
-            // But if we ever have a base stock:
+        }
+    }
+
+    async releaseStock(productId: string, variantName: string | undefined, quantity: number): Promise<void> {
+        if (variantName) {
             await this._model.updateOne(
-                { _id: productId },
+                { _id: productId, "variants.size": variantName },
                 {
                     $inc: {
-                        soldCount: quantity
+                        "variants.$.stock": quantity,
+                        "variants.$.reservedStock": -quantity
                     }
                 }
             );

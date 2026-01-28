@@ -18,12 +18,16 @@ import {
 import { motion } from "framer-motion";
 import { userOrderService } from "@/services/user/userOrderApiService";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function OrderDetailPage() {
     const { orderId } = useParams();
     const router = useRouter();
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [timeLeft, setTimeLeft] = useState<string>("");
+    const [isExpired, setIsExpired] = useState(false);
+    const [isRetrying, setIsRetrying] = React.useState(false);
 
     useEffect(() => {
         if (orderId) {
@@ -40,6 +44,105 @@ export default function OrderDetailPage() {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!order?.paymentExpiresAt || order.paymentStatus === 'completed' || order.orderStatus === 'cancelled') return;
+
+        const interval = setInterval(() => {
+            const expiry = new Date(order.paymentExpiresAt).getTime();
+            const now = new Date().getTime();
+            const diff = expiry - now;
+
+            if (diff <= 0) {
+                setTimeLeft("EXPIRED");
+                setIsExpired(true);
+                clearInterval(interval);
+            } else {
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                setTimeLeft(`${minutes}m ${seconds}s`);
+                setIsExpired(false);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [order]);
+
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            if ((window as any).Razorpay) {
+                resolve(true);
+                return;
+            }
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
+    const handleRetry = async () => {
+        if (!orderId || isExpired) return;
+
+        try {
+            setIsRetrying(true);
+            const response = await userOrderService.retryPayment(orderId as string);
+
+            if (response.success) {
+                const retryOrder = response.data;
+                const scriptLoaded = await loadRazorpayScript();
+
+                if (!scriptLoaded) {
+                    toast.error("Razorpay SDK failed to load");
+                    return;
+                }
+
+                const options = {
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                    amount: Math.round(retryOrder.finalAmount * 100),
+                    currency: "INR",
+                    name: "SKING COSMETICS",
+                    description: "Order Retry Payment",
+                    order_id: retryOrder.paymentDetails.gatewayOrderId,
+                    handler: async function (res: any) {
+                        try {
+                            const verificationResponse = await userOrderService.verifyPayment({
+                                razorpay_order_id: res.razorpay_order_id,
+                                razorpay_payment_id: res.razorpay_payment_id,
+                                razorpay_signature: res.razorpay_signature,
+                            });
+
+                            if (verificationResponse.success) {
+                                toast.success("Payment successful!");
+                                fetchOrderDetail();
+                            }
+                        } catch (error: any) {
+                            toast.error("Verification failed");
+                            setIsRetrying(false);
+                        }
+                    },
+                    prefill: {
+                        name: retryOrder.shippingAddress.name,
+                        email: retryOrder.shippingAddress.email,
+                        contact: retryOrder.shippingAddress.phoneNumber
+                    },
+                    theme: { color: "#FF1493" },
+                    modal: {
+                        ondismiss: function () {
+                            setIsRetrying(false);
+                        }
+                    }
+                };
+
+                const paymentObject = new (window as any).Razorpay(options);
+                paymentObject.open();
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to retry payment");
+            setIsRetrying(false);
         }
     };
 
@@ -68,7 +171,7 @@ export default function OrderDetailPage() {
     }
 
     const getStatusStep = (status: string) => {
-        const steps = ['pending', 'processing', 'shipped', 'delivered'];
+        const steps = ['payment_pending', 'processing', 'shipped', 'delivered'];
         const currentIndex = steps.indexOf(status);
         return currentIndex;
     };
@@ -97,12 +200,18 @@ export default function OrderDetailPage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        {order.orderStatus === 'payment_pending' && !isExpired && (
+                            <button
+                                onClick={handleRetry}
+                                disabled={isRetrying}
+                                className="bg-sking-pink text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-black transition-all shadow-lg"
+                            >
+                                {isRetrying ? <Clock className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                                Pay Now ({timeLeft})
+                            </button>
+                        )}
                         <button className="bg-white text-black border border-gray-100 p-3 rounded-xl hover:border-black transition-all">
                             <Printer className="w-5 h-5" />
-                        </button>
-                        <button className="bg-black text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-neutral-800 transition-all shadow-lg">
-                            <MessageCircle className="w-4 h-4" />
-                            Help Center
                         </button>
                     </div>
                 </div>
@@ -117,8 +226,8 @@ export default function OrderDetailPage() {
                             <div className="flex items-center justify-between mb-10">
                                 <h2 className="text-xl font-black uppercase tracking-tight">Track Order</h2>
                                 <div className={`px-4 py-1.5 rounded-full border ${order.orderStatus === 'delivered' ? 'bg-green-50 border-green-100 text-green-600' :
-                                        order.orderStatus === 'cancelled' ? 'bg-red-50 border-red-100 text-red-600' :
-                                            'bg-orange-50 border-orange-100 text-orange-600'
+                                    order.orderStatus === 'cancelled' ? 'bg-red-50 border-red-100 text-red-600' :
+                                        'bg-orange-50 border-orange-100 text-orange-600'
                                     }`}>
                                     <span className="text-[10px] font-black uppercase tracking-widest">{order.orderStatus}</span>
                                 </div>

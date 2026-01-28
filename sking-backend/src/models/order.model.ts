@@ -24,8 +24,9 @@ export interface IOrder extends Document {
         postalCode: string;
     };
     paymentMethod: "online";
-    paymentStatus: "pending" | "completed" | "failed" | "refunded";
-    orderStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+    paymentStatus: "pending" | "completed" | "failed" | "refunded" | "expired";
+    orderStatus: "payment_pending" | "processing" | "shipped" | "delivered" | "cancelled";
+    paymentExpiresAt: Date;
     paymentDetails?: {
         gatewayOrderId?: string;
         gatewayPaymentId?: string;
@@ -61,8 +62,9 @@ const OrderSchema: Schema = new Schema({
         postalCode: { type: String, required: true }
     },
     paymentMethod: { type: String, enum: ["online"], default: "online" },
-    paymentStatus: { type: String, enum: ["pending", "completed", "failed", "refunded"], default: "pending" },
-    orderStatus: { type: String, enum: ["pending", "processing", "shipped", "delivered", "cancelled"], default: "pending" },
+    paymentStatus: { type: String, enum: ["pending", "completed", "failed", "refunded", "expired"], default: "pending" },
+    orderStatus: { type: String, enum: ["payment_pending", "processing", "shipped", "delivered", "cancelled"], default: "payment_pending" },
+    paymentExpiresAt: { type: Date, required: true },
     paymentDetails: {
         gatewayOrderId: { type: String },
         gatewayPaymentId: { type: String },
