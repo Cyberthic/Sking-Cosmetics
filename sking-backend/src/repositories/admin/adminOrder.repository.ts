@@ -40,12 +40,23 @@ export class AdminOrderRepository implements IAdminOrderRepository {
             .populate("items.product");
     }
 
-    async updateStatus(id: string, status: string): Promise<IOrder | null> {
+    async updateStatus(id: string, status: string, isCritical?: boolean): Promise<IOrder | null> {
+        const message = isCritical
+            ? `Order status CRITICALLY modified to ${status} by Admin`
+            : `Order marked as ${status} by Admin`;
+
         return await Order.findByIdAndUpdate(
             id,
             {
                 $set: { orderStatus: status },
-                $push: { statusHistory: { status, timestamp: new Date(), message: `Order marked as ${status} by Admin` } }
+                $push: {
+                    statusHistory: {
+                        status,
+                        timestamp: new Date(),
+                        message,
+                        isCritical: !!isCritical
+                    }
+                }
             },
             { new: true }
         ).populate("user", "name email phoneNumber").populate("items.product");

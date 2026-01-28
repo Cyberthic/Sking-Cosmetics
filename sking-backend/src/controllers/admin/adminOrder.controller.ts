@@ -56,7 +56,7 @@ export class AdminOrderController implements IAdminOrderController {
     updateOrderStatus = async (req: Request, res: Response): Promise<Response> => {
         try {
             const { id } = req.params;
-            const { status } = req.body;
+            const { status, isCritical } = req.body;
 
             if (!status) {
                 return res.status(StatusCode.BAD_REQUEST).json({
@@ -65,7 +65,7 @@ export class AdminOrderController implements IAdminOrderController {
                 });
             }
 
-            const order = await this._orderService.updateOrderStatus(id, status);
+            const order = await this._orderService.updateOrderStatus(id, status, isCritical);
             return res.status(StatusCode.OK).json({
                 success: true,
                 message: "Order status updated successfully",

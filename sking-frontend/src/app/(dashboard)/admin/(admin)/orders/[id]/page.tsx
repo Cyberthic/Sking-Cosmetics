@@ -33,6 +33,7 @@ export default function OrderDetailPage() {
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [pendingStatus, setPendingStatus] = useState("");
+    const [isCriticalUpdate, setIsCriticalUpdate] = useState(false);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -67,8 +68,9 @@ export default function OrderDetailPage() {
         }
     };
 
-    const handleStatusUpdate = (status: string) => {
+    const handleStatusUpdate = (status: string, isCritical: boolean = false) => {
         setPendingStatus(status);
+        setIsCriticalUpdate(isCritical);
         setIsDropdownOpen(false);
         setIsConfirmModalOpen(true);
     };
@@ -77,10 +79,10 @@ export default function OrderDetailPage() {
         if (!pendingStatus) return;
         try {
             setStatusLoading(true);
-            const res = await adminOrderService.updateOrderStatus(id as string, pendingStatus);
+            const res = await adminOrderService.updateOrderStatus(id as string, pendingStatus, isCriticalUpdate);
             if (res.success) {
                 setOrder(res.order);
-                toast.success(`Order status updated to ${pendingStatus.replace('_', ' ')}`);
+                toast.success(`Order status ${isCriticalUpdate ? 'CRITICALLY ' : ''}updated to ${pendingStatus.replace('_', ' ')}`);
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to update status");
@@ -201,7 +203,10 @@ export default function OrderDetailPage() {
                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 px-3 py-1">Select New Status</span>
                                 </div>
                                 <div className="p-1">
-                                    {['processing', 'shipped', 'delivered', 'cancelled']
+                                    {(isCancelled ? [] :
+                                        order.orderStatus === 'shipped' ? ['delivered', 'cancelled'] :
+                                            ['processing', 'shipped', 'delivered', 'cancelled']
+                                    )
                                         .filter(s => s !== order.orderStatus)
                                         .map((status) => (
                                             <button
@@ -213,6 +218,11 @@ export default function OrderDetailPage() {
                                                 <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all" />
                                             </button>
                                         ))}
+                                    {isCancelled && (
+                                        <div className="p-3 text-[10px] text-gray-500 font-bold text-center uppercase">
+                                            Cancelled orders cannot be modified
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -245,9 +255,14 @@ export default function OrderDetailPage() {
                                         </div>
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                                             <div>
-                                                <h4 className={`text-sm font-black uppercase tracking-wide italic ${isFirst ? 'text-black dark:text-white' : 'text-gray-400'}`}>
-                                                    {history.status.replace('_', ' ')}
-                                                </h4>
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className={`text-sm font-black uppercase tracking-wide italic ${isFirst ? 'text-black dark:text-white' : 'text-gray-400'}`}>
+                                                        {history.status.replace('_', ' ')}
+                                                    </h4>
+                                                    {history.isCritical && (
+                                                        <Badge color="error" size="sm" className="text-[8px] animate-pulse">Critical Change</Badge>
+                                                    )}
+                                                </div>
                                                 <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 uppercase tracking-wider">
                                                     {history.message || (isFirst ? 'Most recent update' : 'Previous update')}
                                                 </p>
@@ -452,14 +467,43 @@ export default function OrderDetailPage() {
                 </div>
             </div>
 
+            {/* Critical Admin Actions */}
+            <div className="pt-12 border-t border-gray-100 dark:border-white/5">
+                <div className="bg-red-50/30 dark:bg-red-500/5 border border-red-100 dark:border-red-500/10 rounded-[40px] p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-red-500 text-white rounded-[20px] flex items-center justify-center shadow-lg shadow-red-500/20">
+                            <XCircle size={28} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black uppercase tracking-tight text-red-600 dark:text-red-500">Critical Override System</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-widest text-[10px]">Bypass all status transition rules and force a specific order state</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3">
+                        {['payment_pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
+                            <button
+                                key={status}
+                                onClick={() => handleStatusUpdate(status, true)}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${order.orderStatus === status ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-red-500 hover:text-white dark:hover:bg-red-500 shadow-sm border border-gray-100 dark:border-white/10'}`}
+                                disabled={order.orderStatus === status}
+                            >
+                                Force {status.replace('_', ' ')}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
             <ConfirmationModal
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={confirmStatusUpdate}
-                title="Update Order Status"
-                message={`Are you sure you want to change the order status to "${pendingStatus.replace('_', ' ')}"? The customer will be notified of this change.`}
-                confirmText="Update Status"
-                type={pendingStatus === 'cancelled' ? 'danger' : 'success'}
+                title={isCriticalUpdate ? "⚠️ Critical Status Override" : "Update Order Status"}
+                message={isCriticalUpdate
+                    ? `Warning: You are performing a critical override to mark this order as "${pendingStatus.replace('_', ' ')}". This bypasses normal workflow rules. Proceed with extreme caution.`
+                    : `Are you sure you want to change the order status to "${pendingStatus.replace('_', ' ')}"? The customer will be notified of this change.`}
+                confirmText={isCriticalUpdate ? "Force Update Status" : "Update Status"}
+                type={(pendingStatus === 'cancelled' || isCriticalUpdate) ? 'danger' : 'success'}
                 isLoading={statusLoading}
             />
         </div>

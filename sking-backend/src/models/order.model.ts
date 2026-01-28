@@ -11,6 +11,7 @@ export interface IStatusHistory {
     status: string;
     timestamp: Date;
     message?: string;
+    isCritical?: boolean;
 }
 
 export interface IOrder extends Document {
@@ -85,7 +86,8 @@ const OrderSchema: Schema = new Schema({
         {
             status: { type: String, required: true },
             timestamp: { type: Date, default: Date.now },
-            message: { type: String }
+            message: { type: String },
+            isCritical: { type: Boolean, default: false }
         }
     ]
 }, { timestamps: true });

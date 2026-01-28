@@ -18,8 +18,8 @@ export const adminOrderService = {
         return response.data;
     },
 
-    updateOrderStatus: async (id: string, status: string) => {
-        const response = await axiosInstance.patch(`/api/admin/orders/${id}/status`, { status });
+    updateOrderStatus: async (id: string, status: string, isCritical?: boolean) => {
+        const response = await axiosInstance.patch(`/api/admin/orders/${id}/status`, { status, isCritical });
         return response.data;
     }
 };

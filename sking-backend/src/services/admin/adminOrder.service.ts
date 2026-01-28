@@ -31,9 +31,9 @@ export class AdminOrderService implements IAdminOrderService {
         return order;
     }
 
-    async updateOrderStatus(id: string, status: string): Promise<IOrder | null> {
-        // You might want to add validation for state transitions here
-        const order = await this._orderRepository.updateStatus(id, status);
+    async updateOrderStatus(id: string, status: string, isCritical?: boolean): Promise<IOrder | null> {
+        // Validation for state transitions can be overridden by isCritical
+        const order = await this._orderRepository.updateStatus(id, status, isCritical);
         if (!order) {
             throw new CustomError("Order not found", StatusCode.NOT_FOUND);
         }
