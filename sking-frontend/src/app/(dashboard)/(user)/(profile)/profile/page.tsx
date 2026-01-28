@@ -135,7 +135,7 @@ export default function ProfilePage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                        className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
                     >
                         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden w-full max-w-lg shadow-2xl">
                             <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">

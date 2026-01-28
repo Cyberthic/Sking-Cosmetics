@@ -140,4 +140,15 @@ container.bind<IUserCategoryRepository>(TYPES.IUserCategoryRepository).to(UserCa
 container.bind<IUserCategoryService>(TYPES.IUserCategoryService).to(UserCategoryService);
 container.bind<UserCategoryController>(TYPES.UserCategoryController).to(UserCategoryController);
 
+// User Address
+import { IUserAddressRepository } from "./interfaces/repositories/user/IUserAddress.repository";
+import { IUserAddressService } from "./interfaces/services/user/IUserAddress.service";
+import { UserAddressRepository } from "../repositories/user/userAddress.repository";
+import { UserAddressService } from "../services/user/userAddress.service";
+import { UserAddressController } from "../controllers/user/userAddress.controller";
+
+container.bind<IUserAddressRepository>(TYPES.IUserAddressRepository).to(UserAddressRepository);
+container.bind<IUserAddressService>(TYPES.IUserAddressService).to(UserAddressService);
+container.bind<UserAddressController>(TYPES.IUserAddressController).to(UserAddressController);
+
 export default container;

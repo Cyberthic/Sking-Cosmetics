@@ -35,6 +35,9 @@ const TYPES = {
     IUserCategoryService: Symbol.for("IUserCategoryService"),
     IUserCategoryController: Symbol.for("IUserCategoryController"),
     UserCategoryController: Symbol.for("UserCategoryController"),
+    IUserAddressRepository: Symbol.for("IUserAddressRepository"),
+    IUserAddressService: Symbol.for("IUserAddressService"),
+    IUserAddressController: Symbol.for("IUserAddressController"),
 };
 
 export { TYPES };
