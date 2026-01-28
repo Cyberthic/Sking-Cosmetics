@@ -296,7 +296,7 @@ export default function ProductDetail() {
                     </div>
 
                     {/* Actions */}
-                    <div className="mt-auto space-y-6">
+                    <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-gray-500 uppercase">Quantity</span>
                             <div className="flex items-center border border-gray-300 rounded">
