@@ -151,4 +151,17 @@ container.bind<IUserAddressRepository>(TYPES.IUserAddressRepository).to(UserAddr
 container.bind<IUserAddressService>(TYPES.IUserAddressService).to(UserAddressService);
 container.bind<UserAddressController>(TYPES.IUserAddressController).to(UserAddressController);
 
+// User Checkout
+import { IUserCheckoutRepository } from "./interfaces/repositories/user/IUserCheckout.repository";
+import { IUserCheckoutService } from "./interfaces/services/user/IUserCheckout.service";
+import { IUserCheckoutController } from "./interfaces/controllers/user/IUserCheckout.controller";
+import { UserCheckoutRepository } from "../repositories/user/userCheckout.repository";
+import { UserCheckoutService } from "../services/user/userCheckout.service";
+import { UserCheckoutController } from "../controllers/user/userCheckout.controller";
+
+container.bind<IUserCheckoutRepository>(TYPES.IUserCheckoutRepository).to(UserCheckoutRepository);
+container.bind<IUserCheckoutService>(TYPES.IUserCheckoutService).to(UserCheckoutService);
+container.bind<IUserCheckoutController>(TYPES.IUserCheckoutController).to(UserCheckoutController);
+
+export { container };
 export default container;

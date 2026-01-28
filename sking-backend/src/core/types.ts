@@ -38,6 +38,9 @@ const TYPES = {
     IUserAddressRepository: Symbol.for("IUserAddressRepository"),
     IUserAddressService: Symbol.for("IUserAddressService"),
     IUserAddressController: Symbol.for("IUserAddressController"),
+    IUserCheckoutRepository: Symbol.for("IUserCheckoutRepository"),
+    IUserCheckoutService: Symbol.for("IUserCheckoutService"),
+    IUserCheckoutController: Symbol.for("IUserCheckoutController"),
 };
 
 export { TYPES };
