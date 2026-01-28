@@ -90,7 +90,7 @@ export default function CartPage() {
                         <div className="lg:col-span-2 space-y-8">
                             {items.map((item: any) => (
                                 <div key={item._id} className="flex gap-6 p-6 border-b border-gray-100 items-start">
-                                    <Link href={`/product/${item.product._id}`} className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gray-50 flex-shrink-0 cursor-pointer overflow-hidden group">
+                                    <Link href={`/product/${item.product.slug || item.product._id}`} className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gray-50 flex-shrink-0 cursor-pointer overflow-hidden group">
                                         {item.product.images?.[0] ? (
                                             <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
                                         ) : (
@@ -100,7 +100,7 @@ export default function CartPage() {
                                     <div className="flex flex-col justify-between flex-grow min-h-[128px]">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <Link href={`/product/${item.product._id}`}>
+                                                <Link href={`/product/${item.product.slug || item.product._id}`}>
                                                     <h3 className="font-bold text-xl uppercase tracking-tight hover:text-sking-red transition-colors cursor-pointer">{item.product.name}</h3>
                                                 </Link>
                                                 {item.variantName && <p className="text-sm text-gray-400 mt-1 uppercase tracking-wide">{item.variantName}</p>}
