@@ -17,6 +17,17 @@ export class UserOrderRepository implements IUserOrderRepository {
     }
 
     async updateOrder(orderId: string, updateData: any): Promise<IOrder | null> {
+        if (updateData.orderStatus) {
+            updateData.$push = {
+                statusHistory: {
+                    status: updateData.orderStatus,
+                    timestamp: new Date(),
+                    message: updateData.orderStatus === 'processing' ? 'Payment confirmed, order is being processed' :
+                        updateData.orderStatus === 'cancelled' ? 'Order cancelled due to payment expiry or user action' :
+                            `Status updated to ${updateData.orderStatus}`
+                }
+            };
+        }
         return await Order.findByIdAndUpdate(orderId, updateData, { new: true });
     }
 }

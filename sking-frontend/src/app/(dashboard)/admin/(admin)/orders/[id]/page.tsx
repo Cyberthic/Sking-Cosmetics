@@ -98,33 +98,47 @@ export default function OrderDetailPage() {
     const isCancelled = order.orderStatus === 'cancelled';
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen bg-transparent">
-            {/* New Status Hero Section */}
-            <div className="bg-white dark:bg-white/[0.03] rounded-[40px] p-8 border border-gray-50 dark:border-white/[0.05] shadow-sm flex flex-col md:flex-row items-center gap-8 mb-10 transition-all duration-500">
-                <div className={`w-28 h-28 rounded-[35px] flex items-center justify-center shadow-2xl ${isCancelled ? 'bg-error-50 dark:bg-error-500/10 text-error-500' : 'bg-success-50 dark:bg-success-500/10 text-success-500'}`}>
-                    {isCancelled ? <XCircle size={56} /> : steps[currentStepIndex]?.icon && React.createElement(steps[currentStepIndex].icon, { size: 56 })}
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto min-h-screen bg-transparent space-y-8">
+            {/* Status Hero Section */}
+            <div className="bg-white dark:bg-white/[0.03] rounded-[40px] p-8 border border-gray-50 dark:border-white/[0.05] shadow-sm flex flex-col md:flex-row items-center gap-8 transition-all duration-500 relative overflow-hidden group">
+                <div className="absolute -right-8 -bottom-8 text-black/[0.02] dark:text-white/[0.02] transition-transform group-hover:scale-110 duration-1000">
+                    {isCancelled ? <XCircle size={240} /> : steps[currentStepIndex]?.icon && React.createElement(steps[currentStepIndex].icon, { size: 240 })}
                 </div>
-                <div className="text-center md:text-left flex-grow">
+
+                <div className={`relative z-10 w-28 h-28 rounded-[35px] flex items-center justify-center shadow-2xl transition-all duration-500 ${isCancelled ? 'bg-error-50 dark:bg-error-500/10 text-error-500' : 'bg-success-50 dark:bg-success-500/10 text-success-500'}`}>
+                    {isCancelled ? <XCircle size={56} className="animate-pulse" /> : steps[currentStepIndex]?.icon && React.createElement(steps[currentStepIndex].icon, { size: 56, className: "animate-bounce-slow" })}
+                </div>
+                <div className="relative z-10 text-center md:text-left flex-grow">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className={`w-2 h-2 rounded-full animate-ping ${isCancelled ? 'bg-error-500' : 'bg-success-500'}`}></span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Live Status</span>
+                            </div>
                             <h2 className="text-4xl font-black uppercase tracking-tighter dark:text-white mb-2 italic">
                                 {isCancelled ? 'Order Cancelled.' : steps[currentStepIndex]?.label + '.'}
                             </h2>
                             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-[0.2em]">
-                                {isCancelled ? 'This order was cancelled by the administrator.' : `The order is currently being ${steps[currentStepIndex]?.label.toLowerCase()}.`}
+                                {isCancelled ? 'This order was cancelled and will not be processed.' : `The order is currently being ${steps[currentStepIndex]?.label.toLowerCase()}.`}
                             </p>
                         </div>
-                        <div className="flex flex-col items-center md:items-end">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Estimated Completion</span>
+                        <div className="flex flex-col items-center md:items-end bg-gray-50 dark:bg-white/5 p-4 rounded-3xl border border-gray-100 dark:border-white/5">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Last Update Received</span>
                             <span className="text-xl font-black dark:text-white">
-                                {order.orderStatus === 'delivered' ? 'DELIVERED' : '2-3 DAYS'}
+                                {order.statusHistory?.length > 0
+                                    ? new Date(order.statusHistory[order.statusHistory.length - 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    : new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                }
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                                {new Date(order.updatedAt).toLocaleDateString()}
                             </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Header */}
+            {/* Header Actions */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
                 <div className="flex items-center gap-4">
                     <button
@@ -177,35 +191,49 @@ export default function OrderDetailPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Columns - Body Content */}
                 <div className="lg:col-span-2 space-y-8">
-
-                    {/* Progress Tracker Visibility */}
-                    {!isCancelled && (
-                        <div className="bg-white dark:bg-white/[0.03] rounded-[40px] p-10 border border-gray-50 dark:border-white/[0.05] shadow-sm overflow-hidden mb-8">
-                            <div className="relative flex justify-between">
-                                {/* Connector Line */}
-                                <div className="absolute top-5 left-0 w-full h-0.5 bg-gray-100 dark:bg-gray-800">
-                                    <div
-                                        className="h-full bg-black dark:bg-sking-red transition-all duration-1000"
-                                        style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
-                                    />
-                                </div>
-                                {steps.map((step, idx) => {
-                                    const Icon = step.icon;
-                                    const isActive = idx <= currentStepIndex;
-                                    return (
-                                        <div key={step.key} className="relative z-10 flex flex-col items-center">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${isActive ? 'bg-black dark:bg-gray-100 border-black dark:border-gray-100 text-white dark:text-black shadow-lg' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-200 dark:text-gray-600'}`}>
-                                                <Icon size={18} />
-                                            </div>
-                                            <span className={`mt-3 text-[9px] font-black uppercase tracking-widest text-center ${isActive ? 'text-black dark:text-white' : 'text-gray-300 dark:text-gray-600'}`}>
-                                                {step.label}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
+                    {/* Detailed Status Tracks (Amazon Style) */}
+                    <div className="bg-white dark:bg-white/[0.03] rounded-[40px] p-8 border border-gray-50 dark:border-white/[0.05] shadow-sm">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="w-10 h-10 bg-indigo-500 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                                <Truck size={20} />
                             </div>
+                            <h3 className="font-black uppercase tracking-tight text-sm dark:text-white">Live Tracking Timeline</h3>
                         </div>
-                    )}
+
+                        <div className="relative pl-8 space-y-10 border-l-2 border-dashed border-gray-100 dark:border-white/10 ml-4 mb-4">
+                            {(order.statusHistory?.length > 0 ? [...order.statusHistory].reverse() : [{ status: order.orderStatus, timestamp: order.updatedAt, message: 'Current order status' }]).map((history: any, idx: number) => {
+                                const step = steps.find(s => s.key === history.status) || { icon: Clock, color: 'text-gray-400' };
+                                const Icon = step.icon;
+                                const isFirst = idx === 0;
+
+                                return (
+                                    <div key={idx} className="relative group">
+                                        <div className={`absolute -left-[45px] top-0 w-8 h-8 rounded-full border-4 border-white dark:border-gray-900 shadow-sm flex items-center justify-center transition-all duration-300 ${isFirst ? 'bg-black dark:bg-white text-white dark:text-black scale-125' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
+                                            <Icon size={isFirst ? 14 : 12} />
+                                        </div>
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                            <div>
+                                                <h4 className={`text-sm font-black uppercase tracking-wide italic ${isFirst ? 'text-black dark:text-white' : 'text-gray-400'}`}>
+                                                    {history.status.replace('_', ' ')}
+                                                </h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 uppercase tracking-wider">
+                                                    {history.message || (isFirst ? 'Most recent update' : 'Previous update')}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-[10px] font-black text-black dark:text-white uppercase tracking-widest leading-none">
+                                                    {new Date(history.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                </div>
+                                                <div className="text-[9px] text-gray-400 font-bold uppercase mt-1">
+                                                    {new Date(history.timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
 
                     {/* Order Items */}
                     <div className="bg-white dark:bg-white/[0.03] rounded-[40px] border border-gray-50 dark:border-white/[0.05] shadow-sm overflow-hidden">
@@ -268,22 +296,28 @@ export default function OrderDetailPage() {
                         <div className="space-y-4">
                             <div>
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Full Name</h4>
-                                <p className="text-sm font-bold text-black dark:text-white">{order.shippingAddress.name}</p>
+                                <p className="text-sm font-bold text-black dark:text-white uppercase tracking-tight">{order.shippingAddress.name}</p>
                             </div>
-                            <div>
+                            <div className="pt-4 border-t border-gray-50 dark:border-white/5">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Email Address</h4>
-                                <div className="flex items-center gap-2 group">
+                                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => copyToClipboard(order.shippingAddress.email, 'Email')}>
                                     <Mail size={12} className="text-gray-300 dark:text-gray-600" />
                                     <p className="text-sm font-medium text-black dark:text-white truncate pr-4">{order.shippingAddress.email}</p>
                                 </div>
                             </div>
-                            <div>
+                            <div className="pt-4 border-t border-gray-50 dark:border-white/5">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Phone Number</h4>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => copyToClipboard(order.shippingAddress.phoneNumber, 'Phone')}>
                                     <Phone size={12} className="text-gray-300 dark:text-gray-600" />
-                                    <p className="text-sm font-bold text-black dark:text-white">{order.shippingAddress.phoneNumber}</p>
+                                    <p className="text-sm font-bold text-black dark:text-white tracking-widest">{order.shippingAddress.phoneNumber}</p>
                                 </div>
                             </div>
+                            {order.user?._id && (
+                                <div className="pt-4 border-t border-gray-50 dark:border-white/5">
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">System Account ID</h4>
+                                    <p className="text-[10px] font-mono font-medium text-gray-400 truncate uppercase">{order.user._id}</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -295,10 +329,31 @@ export default function OrderDetailPage() {
                             </div>
                             <h3 className="font-black uppercase tracking-tight text-sm dark:text-white">Shipping Address</h3>
                         </div>
-                        <div className="text-xs text-gray-500 font-medium leading-loose uppercase tracking-wider">
-                            <p className="text-black dark:text-white font-bold mb-1">{order.shippingAddress.street}</p>
-                            <p className="dark:text-gray-400">{order.shippingAddress.city}, {order.shippingAddress.state}</p>
-                            <p className="dark:text-gray-400">{order.shippingAddress.country} - <span className="text-black dark:text-white font-black">{order.shippingAddress.postalCode}</span></p>
+                        <div className="text-xs text-gray-500 font-medium leading-loose uppercase tracking-wider relative">
+                            <div className="mb-4">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Street / Landmark</h4>
+                                <p className="text-black dark:text-white font-bold">{order.shippingAddress.street}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-50 dark:border-white/5">
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">City</h4>
+                                    <p className="text-black dark:text-white font-bold">{order.shippingAddress.city}</p>
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">State</h4>
+                                    <p className="text-black dark:text-white font-bold">{order.shippingAddress.state}</p>
+                                </div>
+                            </div>
+                            <div className="pt-4 grid grid-cols-2 gap-4">
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Pincode</h4>
+                                    <p className="text-black dark:text-white font-black text-sm">{order.shippingAddress.postalCode}</p>
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Country</h4>
+                                    <p className="text-black dark:text-white font-bold">{order.shippingAddress.country}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -313,19 +368,29 @@ export default function OrderDetailPage() {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center pb-4 border-b border-gray-50 dark:border-white/[0.05]">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Method</span>
-                                <span className="text-xs font-black uppercase text-black dark:text-white">Online Payment</span>
+                                <span className="text-xs font-black uppercase text-black dark:text-white italic">Gateway: Razorpay</span>
                             </div>
                             <div className="flex justify-between items-center pb-4 border-b border-gray-50 dark:border-white/[0.05]">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Status</span>
-                                <Badge color={order.paymentStatus === 'completed' ? 'success' : 'warning'} size="sm" className="font-black uppercase text-[8px] tracking-[0.2em]">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Flow Status</span>
+                                <Badge color={order.paymentStatus === 'completed' ? 'success' : order.paymentStatus === 'failed' ? 'error' : 'warning'} size="sm" className="font-black uppercase text-[8px] tracking-[0.2em]">
                                     {order.paymentStatus}
                                 </Badge>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Razorpay ID</span>
-                                <span className="text-[10px] font-mono font-medium text-black dark:text-white uppercase">
-                                    {order.paymentDetails?.gatewayPaymentId?.slice(-12) || 'N/A'}
-                                </span>
+                            <div className="space-y-3">
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Gateway Order ID</h4>
+                                    <p className="text-[10px] font-mono font-medium text-gray-400 dark:text-white/60 truncate uppercase">{order.paymentDetails?.gatewayOrderId || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Transaction ID</h4>
+                                    <p className="text-[10px] font-mono font-medium text-black dark:text-white truncate uppercase">{order.paymentDetails?.gatewayPaymentId || 'N/A'}</p>
+                                </div>
+                                {order.paymentDetails?.paidAt && (
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Settlement Time</h4>
+                                        <p className="text-[10px] font-bold text-success-500 uppercase">{new Date(order.paymentDetails.paidAt).toLocaleString()}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

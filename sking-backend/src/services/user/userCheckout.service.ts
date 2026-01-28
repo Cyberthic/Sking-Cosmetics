@@ -88,10 +88,16 @@ export class UserCheckoutService implements IUserCheckoutService {
             paymentMethod: data.paymentMethod,
             paymentStatus: "pending",
             orderStatus: "payment_pending",
-            paymentExpiresAt: expiryTime,
             paymentDetails: {
                 paymentGateway: "razorpay"
-            }
+            },
+            statusHistory: [
+                {
+                    status: "payment_pending",
+                    timestamp: new Date(),
+                    message: "Order initiated. Awaiting payment confirmation."
+                }
+            ]
         };
 
         // Create Razorpay order if payment method is online

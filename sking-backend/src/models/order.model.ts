@@ -7,6 +7,12 @@ export interface IOrderItem {
     price: number;
 }
 
+export interface IStatusHistory {
+    status: string;
+    timestamp: Date;
+    message?: string;
+}
+
 export interface IOrder extends Document {
     user: mongoose.Types.ObjectId;
     items: IOrderItem[];
@@ -34,6 +40,7 @@ export interface IOrder extends Document {
         paymentGateway?: string;
         paidAt?: Date;
     };
+    statusHistory: IStatusHistory[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -71,7 +78,14 @@ const OrderSchema: Schema = new Schema({
         gatewaySignature: { type: String },
         paymentGateway: { type: String },
         paidAt: { type: Date }
-    }
+    },
+    statusHistory: [
+        {
+            status: { type: String, required: true },
+            timestamp: { type: Date, default: Date.now },
+            message: { type: String }
+        }
+    ]
 }, { timestamps: true });
 
 export default mongoose.model<IOrder>("Order", OrderSchema);
