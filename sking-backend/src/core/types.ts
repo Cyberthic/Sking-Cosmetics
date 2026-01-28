@@ -41,6 +41,9 @@ const TYPES = {
     IUserCheckoutRepository: Symbol.for("IUserCheckoutRepository"),
     IUserCheckoutService: Symbol.for("IUserCheckoutService"),
     IUserCheckoutController: Symbol.for("IUserCheckoutController"),
+    IUserOrderRepository: Symbol.for("IUserOrderRepository"),
+    IUserOrderService: Symbol.for("IUserOrderService"),
+    IUserOrderController: Symbol.for("IUserOrderController"),
 };
 
 export { TYPES };

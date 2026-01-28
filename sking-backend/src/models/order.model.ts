@@ -27,7 +27,9 @@ export interface IOrder extends Document {
     paymentStatus: "pending" | "completed" | "failed" | "refunded";
     orderStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
     paymentDetails?: {
-        transactionId?: string;
+        gatewayOrderId?: string;
+        gatewayPaymentId?: string;
+        gatewaySignature?: string;
         paymentGateway?: string;
         paidAt?: Date;
     };
@@ -62,7 +64,9 @@ const OrderSchema: Schema = new Schema({
     paymentStatus: { type: String, enum: ["pending", "completed", "failed", "refunded"], default: "pending" },
     orderStatus: { type: String, enum: ["pending", "processing", "shipped", "delivered", "cancelled"], default: "pending" },
     paymentDetails: {
-        transactionId: { type: String },
+        gatewayOrderId: { type: String },
+        gatewayPaymentId: { type: String },
+        gatewaySignature: { type: String },
         paymentGateway: { type: String },
         paidAt: { type: Date }
     }

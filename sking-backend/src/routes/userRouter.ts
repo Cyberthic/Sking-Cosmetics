@@ -8,6 +8,7 @@ import userWishlistRoutes from "./userRoutes/userWishlist.routes";
 import userCategoryRoutes from "./userRoutes/userCategory.routes";
 import userAddressRoutes from "./userRoutes/userAddress.routes";
 import userCheckoutRoutes from "./userRoutes/userCheckout.routes";
+import userOrderRoutes from "./userRoutes/userOrder.routes";
 
 const userRouter = Router();
 
@@ -20,5 +21,6 @@ userRouter.use("/wishlist", userWishlistRoutes);
 userRouter.use("/categories", userCategoryRoutes);
 userRouter.use("/address", userAddressRoutes);
 userRouter.use("/checkout", userCheckoutRoutes);
+userRouter.use("/orders", userOrderRoutes);
 
 export default userRouter;

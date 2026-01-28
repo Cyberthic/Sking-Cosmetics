@@ -163,5 +163,17 @@ container.bind<IUserCheckoutRepository>(TYPES.IUserCheckoutRepository).to(UserCh
 container.bind<IUserCheckoutService>(TYPES.IUserCheckoutService).to(UserCheckoutService);
 container.bind<IUserCheckoutController>(TYPES.IUserCheckoutController).to(UserCheckoutController);
 
+// User Order
+import { IUserOrderRepository } from "./interfaces/repositories/user/IUserOrder.repository";
+import { IUserOrderService } from "./interfaces/services/user/IUserOrder.service";
+import { IUserOrderController } from "./interfaces/controllers/user/IUserOrder.controller";
+import { UserOrderRepository } from "../repositories/user/userOrder.repository";
+import { UserOrderService } from "../services/user/userOrder.service";
+import { UserOrderController } from "../controllers/user/userOrder.controller";
+
+container.bind<IUserOrderRepository>(TYPES.IUserOrderRepository).to(UserOrderRepository);
+container.bind<IUserOrderService>(TYPES.IUserOrderService).to(UserOrderService);
+container.bind<IUserOrderController>(TYPES.IUserOrderController).to(UserOrderController);
+
 export { container };
 export default container;

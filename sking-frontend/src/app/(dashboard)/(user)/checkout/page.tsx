@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { userAddressService, Address } from "@/services/user/userAddressApiService";
 import { userCheckoutService } from "@/services/user/userCheckoutApiService";
+import { userOrderService } from "@/services/user/userOrderApiService";
 import { AddressModal } from "@/components/user/modals/AddressModal";
 
 export default function CheckoutPage() {
@@ -65,6 +66,16 @@ export default function CheckoutPage() {
         fetchAddresses();
     }, [items, router]);
 
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
     const handlePlaceOrder = async () => {
         if (!selectedAddressId) {
             toast.error("Please select a shipping address");
@@ -79,13 +90,67 @@ export default function CheckoutPage() {
             });
 
             if (response.success) {
-                toast.success("Order placed successfully!");
-                // Redirect to success page or payment gateway
-                // router.push(`/checkout/success/${response.data.orderId}`);
+                const order = response.data;
+                const res = await loadRazorpayScript();
+
+                if (!res) {
+                    toast.error("Razorpay SDK failed to load. Are you online?");
+                    return;
+                }
+
+                const options = {
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                    amount: Math.round(order.finalAmount * 100),
+                    currency: "INR",
+                    name: "SKING COSMETICS",
+                    description: "Order Payment",
+                    image: "/logo.png", // Replace with your actual logo path
+                    order_id: order.paymentDetails.gatewayOrderId,
+                    handler: async function (response: any) {
+                        try {
+                            const verificationData = {
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                            };
+
+                            const verificationResponse = await userOrderService.verifyPayment(verificationData);
+
+                            if (verificationResponse.success) {
+                                toast.success("Payment successful!");
+                                router.push(`/checkout/success?orderId=${order._id}`);
+                            }
+                        } catch (error: any) {
+                            console.error("Verification Error:", error);
+                            toast.error(error.response?.data?.error || "Payment verification failed");
+                            router.push(`/checkout/failure?orderId=${order._id}`);
+                        }
+                    },
+                    prefill: {
+                        name: order.shippingAddress.name,
+                        email: order.shippingAddress.email,
+                        contact: order.shippingAddress.phoneNumber
+                    },
+                    theme: {
+                        color: "#FF1493" // Hot pink color
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            setIsPlacingOrder(false);
+                        }
+                    }
+                };
+
+                const paymentObject = new (window as any).Razorpay(options);
+                paymentObject.open();
+
+                paymentObject.on('payment.failed', function (response: any) {
+                    toast.error("Payment failed: " + response.error.description);
+                    router.push(`/checkout/failure?orderId=${order._id}`);
+                });
             }
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to place order");
-        } finally {
             setIsPlacingOrder(false);
         }
     };

@@ -8,6 +8,8 @@ import { PlaceOrderDto } from "../../core/dtos/user/userCheckout.dto";
 import { IOrder } from "../../models/order.model";
 import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
+import razorpay from "../../config/razorpay";
+import logger from "../../utils/logger";
 
 @injectable()
 export class UserCheckoutService implements IUserCheckoutService {
@@ -40,7 +42,7 @@ export class UserCheckoutService implements IUserCheckoutService {
         const finalAmount = totalAmount + shippingFee;
 
         // 4. Create Order
-        const orderData = {
+        const orderData: any = {
             user: userId,
             items: cart.items.map((item: any) => ({
                 product: item.product._id,
@@ -63,8 +65,29 @@ export class UserCheckoutService implements IUserCheckoutService {
             },
             paymentMethod: data.paymentMethod,
             paymentStatus: "pending",
-            orderStatus: "pending"
+            orderStatus: "pending",
+            paymentDetails: {
+                paymentGateway: "razorpay"
+            }
         };
+
+        // Create Razorpay order if payment method is online
+        if (data.paymentMethod === "online") {
+            try {
+                const razorpayOrder = await razorpay.orders.create({
+                    amount: Math.round(finalAmount * 100),
+                    currency: "INR",
+                    receipt: `order_rcptid_${Date.now()}`
+                });
+
+                if (orderData.paymentDetails) {
+                    orderData.paymentDetails.gatewayOrderId = razorpayOrder.id;
+                }
+            } catch (error: any) {
+                logger.error("Razorpay Order Creation Error", error);
+                throw new CustomError("Failed to initiate payment: " + error.message, StatusCode.INTERNAL_SERVER_ERROR);
+            }
+        }
 
         const order = await this._checkoutRepository.createOrder(orderData);
 
