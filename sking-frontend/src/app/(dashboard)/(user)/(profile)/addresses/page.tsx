@@ -10,6 +10,7 @@ import { addressSchema, AddressSchema } from '../../../../../validations/userAdd
 import { userAddressService, Address } from '../../../../../services/user/userAddressApiService';
 import { SearchableSelect } from '@/components/user/ui/SearchableSelect';
 import { countries } from '@/constants/countries';
+import { Country as CSC, State as CSCState, City as CSCCity } from 'country-state-city';
 
 export default function AddressesPage() {
     const [addresses, setAddresses] = useState<Address[]>([]);
@@ -187,6 +188,49 @@ function AddressModal({ isOpen, onClose, address, refresh }: { isOpen: boolean; 
 
     const countryCodeValue = watch('countryCode');
     const countryValue = watch('country');
+    const stateValue = watch('state');
+    const cityValue = watch('city');
+
+    const [availableStates, setAvailableStates] = useState<{ label: string; value: string }[]>([]);
+    const [availableCities, setAvailableCities] = useState<{ label: string; value: string }[]>([]);
+
+    // Load states when country changes
+    useEffect(() => {
+        if (countryValue) {
+            const countryObj = CSC.getAllCountries().find(c => c.name === countryValue);
+            if (countryObj) {
+                const states = CSCState.getStatesOfCountry(countryObj.isoCode).map(s => ({
+                    label: s.name,
+                    value: s.name,
+                    code: s.isoCode
+                }));
+                setAvailableStates(states);
+            } else {
+                setAvailableStates([]);
+            }
+        } else {
+            setAvailableStates([]);
+        }
+    }, [countryValue]);
+
+    // Load cities when state changes
+    useEffect(() => {
+        if (stateValue && countryValue) {
+            const countryObj = CSC.getAllCountries().find(c => c.name === countryValue);
+            const stateObj = CSCState.getStatesOfCountry(countryObj?.isoCode || '').find(s => s.name === stateValue);
+            if (countryObj && stateObj) {
+                const cities = CSCCity.getCitiesOfState(countryObj.isoCode, stateObj.isoCode).map(c => ({
+                    label: c.name,
+                    value: c.name
+                }));
+                setAvailableCities(cities);
+            } else {
+                setAvailableCities([]);
+            }
+        } else {
+            setAvailableCities([]);
+        }
+    }, [stateValue, countryValue]);
 
     useEffect(() => {
         if (address) {
@@ -337,26 +381,47 @@ function AddressModal({ isOpen, onClose, address, refresh }: { isOpen: boolean; 
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500">City</label>
-                                <input
-                                    {...register('city')}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-medium"
-                                    placeholder="New York"
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Country</label>
+                                <SearchableSelect
+                                    options={countries.map(c => ({ label: c.name, value: c.name }))}
+                                    value={countryValue}
+                                    onChange={(val) => {
+                                        setValue('country', val, { shouldValidate: true });
+                                        setValue('state', '');
+                                        setValue('city', '');
+                                    }}
+                                    placeholder="Select Country"
+                                    error={errors.country?.message}
                                 />
-                                {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
                             </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500">State</label>
-                                <input
-                                    {...register('state')}
-                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-medium"
-                                    placeholder="NY"
+                                <SearchableSelect
+                                    options={availableStates}
+                                    value={stateValue}
+                                    onChange={(val) => {
+                                        setValue('state', val, { shouldValidate: true });
+                                        setValue('city', '');
+                                    }}
+                                    placeholder="Select State"
+                                    error={errors.state?.message}
+                                    disabled={!countryValue}
                                 />
-                                {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>}
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500">City</label>
+                                <SearchableSelect
+                                    options={availableCities}
+                                    value={cityValue}
+                                    onChange={(val) => setValue('city', val, { shouldValidate: true })}
+                                    placeholder="Select City"
+                                    error={errors.city?.message}
+                                    disabled={!stateValue}
+                                />
+                            </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Postal Code</label>
                                 <input
@@ -369,16 +434,6 @@ function AddressModal({ isOpen, onClose, address, refresh }: { isOpen: boolean; 
                                     maxLength={6}
                                 />
                                 {errors.postalCode && <p className="text-red-500 text-xs mt-1">{errors.postalCode.message}</p>}
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Country</label>
-                                <SearchableSelect
-                                    options={countries.map(c => ({ label: c.name, value: c.name }))}
-                                    value={countryValue}
-                                    onChange={(val) => setValue('country', val, { shouldValidate: true })}
-                                    placeholder="Select Country"
-                                    error={errors.country?.message}
-                                />
                             </div>
                         </div>
 

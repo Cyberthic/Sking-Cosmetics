@@ -18,6 +18,7 @@ interface SearchableSelectProps {
     label?: string;
     error?: string;
     className?: string;
+    disabled?: boolean;
     dropdownAlign?: 'left' | 'right';
     dropdownWidth?: string;
 }
@@ -30,6 +31,7 @@ export function SearchableSelect({
     label,
     error,
     className,
+    disabled,
     dropdownAlign = 'left',
     dropdownWidth = 'w-full'
 }: SearchableSelectProps) {
@@ -60,9 +62,10 @@ export function SearchableSelect({
 
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                disabled={disabled}
                 className={`w-full flex items-center justify-between px-2.5 py-3 bg-gray-50 border rounded-lg transition-all font-medium text-sm ${isOpen ? 'border-black ring-1 ring-black' : 'border-gray-200 hover:border-black'
-                    } ${error ? 'border-red-500' : ''}`}
+                    } ${error ? 'border-red-500' : ''} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
             >
                 <span className={`truncate ${selectedOption ? 'text-black' : 'text-gray-400'}`}>
                     {selectedOption ? selectedOption.label : placeholder}
