@@ -31,14 +31,26 @@ export class WishlistService implements IWishlistService {
             throw new CustomError("Product not found", StatusCode.NOT_FOUND);
         }
 
-        const productIndex = wishlist.products.findIndex(p => p.toString() === productId);
+        // Handle case where items might be populated or not
+        const productIndex = wishlist.products.findIndex(p => {
+            const id = (p as any)._id ? (p as any)._id.toString() : p.toString();
+            return id === productId;
+        });
 
         if (productIndex > -1) {
             wishlist.products.splice(productIndex, 1);
         } else {
-            wishlist.products.push(new Types.ObjectId(productId));
+            // Remove any potential duplicates that might have slipped in
+            wishlist.products = wishlist.products.filter(p => {
+                const id = (p as any)._id ? (p as any)._id.toString() : p.toString();
+                return id !== productId;
+            }) as any;
+            wishlist.products.push(new Types.ObjectId(productId) as any);
         }
 
-        return await wishlist.save();
+        await wishlist.save();
+
+        // Return populated wishlist
+        return (await this._wishlistRepository.findByUserId(userId))!;
     }
 }

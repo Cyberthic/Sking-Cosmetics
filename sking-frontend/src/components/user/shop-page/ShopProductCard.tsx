@@ -6,6 +6,10 @@ import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
+import { userWishlistService } from "@/services/user/userWishlistApiService"; // Still keep for direct if needed, but we'll use thunk
+import { useSelector } from "react-redux";
+import { RootState, AppDispatch } from "@/redux/store";
+import { toggleWishlist } from "@/redux/features/wishlistSlice";
 
 export interface ShopProduct {
     id: string;
@@ -25,7 +29,9 @@ interface ShopProductCardProps {
 }
 
 const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
+    const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
+    const isInWishlist = wishlistItems.includes(product.id);
 
     const discountPercentage = product.originalPrice
         ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -44,6 +50,17 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
         } catch (error: any) {
             const message = error.response?.data?.message || "Failed to add to bag";
             toast.error(message);
+        }
+    };
+
+    const handleToggleWishlist = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            await dispatch(toggleWishlist(product.id)).unwrap();
+            toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
+        } catch (error: any) {
+            toast.error("Failed to update wishlist");
         }
     };
 
@@ -86,8 +103,11 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
                         <ShoppingBag size={14} className="mb-0.5" />
                         Add to Bag
                     </button>
-                    <button className="h-10 w-10 bg-white text-gray-800 hover:text-sking-pink flex items-center justify-center shadow-md transition-colors border border-gray-100">
-                        <Heart size={18} />
+                    <button
+                        onClick={handleToggleWishlist}
+                        className={`h-10 w-10 flex items-center justify-center shadow-md transition-all border border-gray-100 ${isInWishlist ? 'bg-sking-pink text-white border-sking-pink' : 'bg-white text-gray-800 hover:text-sking-pink'}`}
+                    >
+                        <Heart size={18} fill={isInWishlist ? "currentColor" : "none"} />
                     </button>
                 </div>
             </div>

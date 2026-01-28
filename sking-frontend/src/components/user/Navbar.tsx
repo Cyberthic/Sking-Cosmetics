@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Search, ShoppingBag, User, Menu, X, ChevronDown, Headphones, Phone } from "lucide-react";
+import { Search, ShoppingBag, User, Menu, X, ChevronDown, Headphones, Phone, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { logout } from "@/redux/features/authSlice";
 import { fetchCart, setDrawerOpen } from "@/redux/features/cartSlice"; // Import fetchCart and setDrawerOpen
+import { fetchWishlist } from "@/redux/features/wishlistSlice";
 import { userAuthService } from "@/services/user/userAuthApiService";
 import { userCategoryService } from "@/services/user/userCategoryApiService"; // Add this
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ export default function Navbar() {
     // Redux
     const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
     const { totalAmount, totalItems, isDrawerOpen } = useSelector((state: RootState) => state.cart);
+    const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const pathname = usePathname();
@@ -43,10 +45,11 @@ export default function Navbar() {
         fetchCategories();
     }, []);
 
-    // Fetch cart on mount
+    // Fetch cart and wishlist on mount
     useEffect(() => {
         if (isAuthenticated) {
             dispatch(fetchCart());
+            dispatch(fetchWishlist());
         }
     }, [dispatch, isAuthenticated]);
 
@@ -156,6 +159,14 @@ export default function Navbar() {
 
                             {/* Divider Line */}
                             <div className="h-10 w-px bg-gray-400"></div>
+
+                            {/* WISHLIST */}
+                            <Link href="/wishlist" className="p-2 text-black hover:text-sking-pink transition-colors relative group">
+                                <Heart className="w-6 h-6" />
+                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[9px] text-white font-bold group-hover:bg-sking-pink transition-colors">
+                                    {wishlistItems.length}
+                                </span>
+                            </Link>
 
                             {/* MY BAG */}
                             <button

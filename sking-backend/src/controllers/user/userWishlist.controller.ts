@@ -5,8 +5,10 @@ import { IWishlistService } from "../../core/interfaces/services/user/IWishlist.
 import { StatusCode } from "../../enums/statusCode.enums";
 import { AuthRequest } from "../../middlewares/auth.middleware";
 
+import { IUserWishlistController } from "../../core/interfaces/controllers/user/IUserWishlist.controller";
+
 @injectable()
-export class UserWishlistController {
+export class UserWishlistController implements IUserWishlistController {
     constructor(
         @inject(TYPES.IWishlistService) private _wishlistService: IWishlistService
     ) { }

@@ -7,6 +7,8 @@ import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
+import { toggleWishlist } from "@/redux/features/wishlistSlice";
+import { AppDispatch } from "@/redux/store";
 
 export default function WishlistPage() {
     const [wishlist, setWishlist] = useState<any>(null);
@@ -30,17 +32,17 @@ export default function WishlistPage() {
         }
     };
 
+    const dispatch = useDispatch<AppDispatch>();
+
     const handleRemove = async (productId: string) => {
         try {
-            await userWishlistService.toggleWishlist(productId);
+            await dispatch(toggleWishlist(productId)).unwrap();
             toast.success("Removed from wishlist");
             fetchWishlist();
         } catch (err) {
             toast.error("Failed to update wishlist");
         }
     };
-
-    const dispatch = useDispatch();
 
     const handleMoveToCart = async (product: any) => {
         try {

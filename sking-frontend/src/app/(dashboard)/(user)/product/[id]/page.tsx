@@ -8,8 +8,10 @@ import ProductCard from "@/components/user/ProductCard";
 import { userCartService } from "@/services/user/userCartApiService";
 import { userWishlistService } from "@/services/user/userWishlistApiService";
 import { toast } from "sonner";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
+import { toggleWishlist } from "@/redux/features/wishlistSlice";
+import { RootState, AppDispatch } from "@/redux/store";
 import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check } from "lucide-react";
 
 // Mock Data for UI elements that might not be in API yet
@@ -76,7 +78,9 @@ export default function ProductDetail() {
         }
     };
 
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
+    const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
+    const isInWishlist = product ? wishlistItems.includes(product._id) : false;
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -95,8 +99,8 @@ export default function ProductDetail() {
     const handleAddToWishlist = async () => {
         if (!product) return;
         try {
-            await userWishlistService.toggleWishlist(product._id);
-            toast.success("Updated Wishlist");
+            await dispatch(toggleWishlist(product._id)).unwrap();
+            toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
         } catch (err: any) {
             toast.error("Failed to update wishlist");
         }
@@ -330,9 +334,9 @@ export default function ProductDetail() {
                             </button>
                             <button
                                 onClick={handleAddToWishlist}
-                                className="w-12 h-12 border border-sking-pink text-sking-pink rounded flex items-center justify-center hover:bg-pink-50 transition-colors"
+                                className={`w-12 h-12 border rounded flex items-center justify-center transition-all ${isInWishlist ? 'bg-sking-pink border-sking-pink text-white' : 'border-sking-pink text-sking-pink hover:bg-pink-50'}`}
                             >
-                                <Heart size={20} />
+                                <Heart size={20} fill={isInWishlist ? "currentColor" : "none"} />
                             </button>
                         </div>
                     </div>
