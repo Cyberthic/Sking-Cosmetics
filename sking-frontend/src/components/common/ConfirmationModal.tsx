@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Trash2, Info, X, Loader2 } from 'lucide-react';
+import { AlertCircle, Trash2, Info, X, Loader2, CheckCircle2 } from 'lucide-react';
 
 interface ConfirmationModalProps {
     isOpen: boolean;
@@ -12,7 +12,7 @@ interface ConfirmationModalProps {
     message: string;
     confirmText?: string;
     cancelText?: string;
-    type?: 'danger' | 'warning' | 'info';
+    type?: 'danger' | 'warning' | 'info' | 'success';
     isLoading?: boolean;
 }
 
@@ -20,18 +20,21 @@ const icons = {
     danger: <Trash2 className="w-6 h-6 text-red-600" />,
     warning: <AlertCircle className="w-6 h-6 text-amber-600" />,
     info: <Info className="w-6 h-6 text-blue-600" />,
+    success: <CheckCircle2 className="w-6 h-6 text-green-600" />,
 };
 
 const bgColors = {
     danger: 'bg-red-50',
     warning: 'bg-amber-50',
     info: 'bg-blue-50',
+    success: 'bg-green-50',
 };
 
 const buttonColors = {
     danger: 'bg-red-600 hover:bg-red-700 shadow-red-200',
     warning: 'bg-amber-600 hover:bg-amber-700 shadow-amber-200',
     info: 'bg-black hover:bg-neutral-800 shadow-black/20',
+    success: 'bg-green-600 hover:bg-green-700 shadow-green-200',
 };
 
 export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -67,7 +70,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                         className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden z-10"
                     >
                         {/* Header Decoration */}
-                        <div className={`h-2 w-full ${type === 'danger' ? 'bg-red-600' : type === 'warning' ? 'bg-amber-600' : 'bg-black'}`} />
+                        <div className={`h-2 w-full ${type === 'danger' ? 'bg-red-600' : type === 'warning' ? 'bg-amber-600' : type === 'success' ? 'bg-green-600' : 'bg-black'}`} />
 
                         <div className="p-8">
                             <div className="flex items-start gap-4">

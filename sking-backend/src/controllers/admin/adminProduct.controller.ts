@@ -66,13 +66,13 @@ export class AdminProductController implements IAdminProductController {
         }
     }
 
-    deleteProduct = async (req: Request, res: Response): Promise<Response> => {
+    toggleProductStatus = async (req: Request, res: Response): Promise<Response> => {
         try {
             const { id } = req.params;
-            await this._service.deleteProduct(id);
-            return res.status(StatusCode.OK).json({ success: true, message: "Product deleted successfully" });
+            const product = await this._service.toggleProductStatus(id);
+            return res.status(StatusCode.OK).json({ success: true, message: `Product ${product?.isActive ? 'listed' : 'unlisted'} successfully`, product });
         } catch (error: any) {
-            logger.error("Error deleting product:", error);
+            logger.error("Error toggling product status:", error);
             const statusCode = error instanceof CustomError ? error.statusCode : StatusCode.NOT_FOUND;
             return res.status(statusCode).json({ success: false, error: error.message });
         }

@@ -1,16 +1,21 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { adminProductService } from "@/services/admin/adminProductApiService";
 import Button from "@/components/admin/ui/button/Button";
 import Badge from "@/components/admin/ui/badge/Badge";
+import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
+import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 
 export default function ProductDetailPage() {
     const params = useParams();
     const id = params?.id as string;
     const [product, setProduct] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -28,6 +33,28 @@ export default function ProductDetailPage() {
             console.error("Failed to fetch product", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleToggleStatus = () => {
+        if (!product?._id) return;
+        setIsConfirmModalOpen(true);
+    };
+
+    const confirmToggle = async () => {
+        if (!product?._id) return;
+        try {
+            setActionLoading(true);
+            const res = await adminProductService.toggleProductStatus(product._id);
+            if (res.success) {
+                toast.success(res.message);
+                setProduct(res.product);
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to update status");
+        } finally {
+            setActionLoading(false);
+            setIsConfirmModalOpen(false);
         }
     };
 
@@ -52,9 +79,20 @@ export default function ProductDetailPage() {
                         <span className="text-gray-500 text-sm">Created: {new Date(product.createdAt).toLocaleDateString()}</span>
                     </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                     <Button variant="outline" href="/admin/products">Back to List</Button>
-                    <Button href={`/admin/products/edit/${product._id}`}>Edit Product</Button>
+                    <Button
+                        variant={product.isActive ? "warning" : "success"}
+                        onClick={handleToggleStatus}
+                        className="flex items-center gap-2"
+                    >
+                        {product.isActive ? (
+                            <><EyeOff size={18} /> Unlist Product</>
+                        ) : (
+                            <><Eye size={18} /> List Product</>
+                        )}
+                    </Button>
+                    <Button variant="primary" href={`/admin/products/edit/${product._id}`}>Edit Product</Button>
                 </div>
             </div>
 
@@ -181,6 +219,17 @@ export default function ProductDetailPage() {
                     </div>
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={confirmToggle}
+                title={product?.isActive ? "Unlist Product" : "List Product"}
+                message={`Are you sure you want to ${product?.isActive ? 'unlist' : 'list'} "${product?.name}"? ${product?.isActive ? 'It will be hidden from the customer shop.' : 'It will be visible to customers again.'}`}
+                confirmText={product?.isActive ? "Unlist" : "List"}
+                type={product?.isActive ? "warning" : "success"}
+                isLoading={actionLoading}
+            />
         </div>
     );
 }

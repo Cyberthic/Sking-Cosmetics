@@ -48,8 +48,8 @@ export const adminProductService = {
         return response.data;
     },
 
-    deleteProduct: async (id: string) => {
-        const response = await axiosInstance.delete(`${API_URL}/${id}`);
+    toggleProductStatus: async (id: string) => {
+        const response = await axiosInstance.patch(`${API_URL}/${id}/toggle-status`);
         return response.data;
     },
 

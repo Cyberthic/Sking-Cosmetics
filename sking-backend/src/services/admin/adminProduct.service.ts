@@ -103,10 +103,23 @@ export class AdminProductService implements IAdminProductService {
         return product;
     }
 
-    async deleteProduct(id: string): Promise<IProduct | null> {
-        const product = await this._repo.delete(id);
+    async toggleProductStatus(idOrSlug: string): Promise<IProduct | null> {
+        let product;
+
+        if (idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
+            product = await this._repo.findById(idOrSlug);
+        }
+
+        if (!product) {
+            product = await this._repo.findBySlug(idOrSlug);
+        }
+
         if (!product) throw new CustomError("Product not found", StatusCode.NOT_FOUND);
-        return product;
+
+        const updatedProduct = await this._repo.update(product._id.toString(), { isActive: !product.isActive });
+        if (!updatedProduct) throw new CustomError("Failed to update product status", StatusCode.INTERNAL_SERVER_ERROR);
+
+        return this.calculateEffectivePrice(updatedProduct);
     }
 
     async uploadProductImage(file: any): Promise<string> {

@@ -18,6 +18,6 @@ productRouter.post("/upload-image", isAuthenticated, upload.single("image"), adm
 productRouter.get("/", isAuthenticated, adminProductController.getProducts);
 productRouter.get("/:id", isAuthenticated, adminProductController.getProductById);
 productRouter.put("/:id", isAuthenticated, adminProductController.updateProduct);
-productRouter.delete("/:id", isAuthenticated, adminProductController.deleteProduct);
+productRouter.patch("/:id/toggle-status", isAuthenticated, adminProductController.toggleProductStatus);
 
 export default productRouter;

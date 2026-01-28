@@ -5,7 +5,6 @@ export interface IAdminProductRepository {
     findAll(limit: number, skip: number, search?: string, categoryId?: string): Promise<{ products: IProduct[]; total: number }>;
     findById(id: string): Promise<IProduct | null>;
     update(id: string, data: Partial<IProduct>): Promise<IProduct | null>;
-    delete(id: string): Promise<IProduct | null>;
     findByCategory(categoryId: string): Promise<IProduct[]>;
     findBySlug(slug: string): Promise<IProduct | null>;
 }

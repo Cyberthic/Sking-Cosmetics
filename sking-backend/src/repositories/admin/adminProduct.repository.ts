@@ -35,10 +35,6 @@ export class AdminProductRepository implements IAdminProductRepository {
         return await ProductModel.findByIdAndUpdate(id, data, { new: true }).populate("category");
     }
 
-    async delete(id: string): Promise<IProduct | null> {
-        return await ProductModel.findByIdAndDelete(id);
-    }
-
     async findByCategory(categoryId: string): Promise<IProduct[]> {
         return await ProductModel.find({ category: categoryId }).populate("category");
     }

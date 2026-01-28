@@ -5,6 +5,6 @@ export interface IAdminProductController {
     getProducts(req: Request, res: Response): Promise<Response>;
     getProductById(req: Request, res: Response): Promise<Response>;
     updateProduct(req: Request, res: Response): Promise<Response>;
-    deleteProduct(req: Request, res: Response): Promise<Response>;
+    toggleProductStatus(req: Request, res: Response): Promise<Response>;
     uploadImage(req: Request, res: Response): Promise<Response>;
 }

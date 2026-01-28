@@ -16,6 +16,8 @@ import { adminCategoryService } from "../../../../../services/admin/adminCategor
 import Pagination from "../../../../../components/admin/tables/Pagination";
 import Button from "../../../../../components/admin/ui/button/Button";
 import { ConfirmationModal } from "../../../../../components/common/ConfirmationModal";
+import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 
 interface IProduct {
     _id: string;
@@ -45,7 +47,7 @@ export default function ProductsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("");
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const [productToDelete, setProductToDelete] = useState<string | null>(null);
+    const [productToToggle, setProductToToggle] = useState<IProduct | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
 
     const fetchProducts = async (page: number, search: string, catId: string) => {
@@ -85,23 +87,26 @@ export default function ProductsPage() {
         return () => clearTimeout(delay);
     }, [searchTerm, currentPage, selectedCategory]);
 
-    const handleDelete = (id: string) => {
-        setProductToDelete(id);
+    const handleToggleRequest = (product: IProduct) => {
+        setProductToToggle(product);
         setIsConfirmModalOpen(true);
     };
 
-    const confirmDelete = async () => {
-        if (!productToDelete) return;
+    const confirmToggle = async () => {
+        if (!productToToggle) return;
         try {
             setActionLoading(true);
-            await adminProductService.deleteProduct(productToDelete);
-            fetchProducts(currentPage, searchTerm, selectedCategory);
-        } catch (error) {
-            console.error("Failed to delete product", error);
+            const res = await adminProductService.toggleProductStatus(productToToggle._id);
+            if (res.success) {
+                toast.success(res.message);
+                fetchProducts(currentPage, searchTerm, selectedCategory);
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to update status");
         } finally {
             setActionLoading(false);
             setIsConfirmModalOpen(false);
-            setProductToDelete(null);
+            setProductToToggle(null);
         }
     };
 
@@ -220,11 +225,15 @@ export default function ProductsPage() {
                                         </TableCell>
                                         <TableCell className="px-5 py-4">
                                             <div className="flex items-center gap-2">
-                                                <Link href={`./products/edit/${product.slug || product._id}`} className="p-2 text-gray-500 hover:text-brand-500 transition-colors">
+                                                <Link href={`./products/edit/${product.slug || product._id}`} className="p-2 text-gray-400 hover:text-brand-500 transition-colors" title="Edit Product">
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                                 </Link>
-                                                <button onClick={() => handleDelete(product._id)} className="p-2 text-gray-500 hover:text-red-500 transition-colors">
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                <button
+                                                    onClick={() => handleToggleRequest(product)}
+                                                    className={`p-2 transition-colors ${product.isActive ? 'text-gray-400 hover:text-amber-500' : 'text-gray-400 hover:text-green-500'}`}
+                                                    title={product.isActive ? "Unlist Product" : "List Product"}
+                                                >
+                                                    {product.isActive ? <EyeOff size={18} /> : <Eye size={18} />}
                                                 </button>
                                             </div>
                                         </TableCell>
@@ -242,11 +251,11 @@ export default function ProductsPage() {
             <ConfirmationModal
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
-                onConfirm={confirmDelete}
-                title="Delete Product"
-                message="Are you sure you want to delete this product? This will remove the product and all its variants forever."
-                confirmText="Delete"
-                type="danger"
+                onConfirm={confirmToggle}
+                title={productToToggle?.isActive ? "Unlist Product" : "List Product"}
+                message={`Are you sure you want to ${productToToggle?.isActive ? 'unlist' : 'list'} "${productToToggle?.name}"? ${productToToggle?.isActive ? 'It will be hidden from the customer shop.' : 'It will be visible to customers again.'}`}
+                confirmText={productToToggle?.isActive ? "Unlist" : "List"}
+                type={productToToggle?.isActive ? "warning" : "success"}
                 isLoading={actionLoading}
             />
         </div>

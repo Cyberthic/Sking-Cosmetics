@@ -12,6 +12,6 @@ export interface IAdminProductService {
     getProducts(limit: number, page: number, search?: string, categoryId?: string): Promise<{ products: any[]; total: number; totalPages: number }>;
     getProductById(id: string): Promise<any | null>; // Returns product with calculated price
     updateProduct(id: string, data: UpdateProductDto): Promise<IProduct | null>;
-    deleteProduct(id: string): Promise<IProduct | null>;
+    toggleProductStatus(id: string): Promise<IProduct | null>;
     uploadProductImage(file: any): Promise<string>;
 }
