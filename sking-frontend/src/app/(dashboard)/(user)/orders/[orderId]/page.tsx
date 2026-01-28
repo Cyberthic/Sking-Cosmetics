@@ -279,15 +279,17 @@ export default function OrderDetailPage() {
                             <div className="space-y-6">
                                 {order.items.map((item: any, idx: number) => (
                                     <div key={idx} className="flex gap-6 items-center pb-6 border-b border-gray-50 last:border-0 last:pb-0">
-                                        <div className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-100">
+                                        <Link href={`/product/${item.product?._id}`} className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-100 group cursor-pointer">
                                             <img
                                                 src={item.product?.images?.[0] || 'https://via.placeholder.com/100'}
                                                 alt={item.product?.name}
-                                                className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                             />
-                                        </div>
+                                        </Link>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-base font-bold text-black mb-1 truncate">{item.product?.name}</h3>
+                                            <Link href={`/product/${item.product?._id}`}>
+                                                <h3 className="text-base font-bold text-black mb-1 truncate hover:text-sking-pink transition-colors cursor-pointer">{item.product?.name}</h3>
+                                            </Link>
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 bg-gray-50 border border-gray-100 rounded-md">
                                                     {item.variantName || 'Universal'}
