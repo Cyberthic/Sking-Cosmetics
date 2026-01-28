@@ -99,6 +99,9 @@ function CheckoutPageContent() {
 
                 if (!res) {
                     toast.error("Razorpay SDK failed to load. Are you online?");
+                    setIsPlacingOrder(false);
+                    dispatch(clearCartLocally());
+                    router.push(`/checkout/failure?orderId=${order._id}`);
                     return;
                 }
 
@@ -128,6 +131,7 @@ function CheckoutPageContent() {
                         } catch (error: any) {
                             console.error("Verification Error:", error);
                             toast.error(error.response?.data?.error || "Payment verification failed");
+                            dispatch(clearCartLocally());
                             router.push(`/checkout/failure?orderId=${order._id}`);
                         }
                     },
@@ -142,6 +146,7 @@ function CheckoutPageContent() {
                     modal: {
                         ondismiss: function () {
                             setIsPlacingOrder(false);
+                            dispatch(clearCartLocally());
                             router.push(`/checkout/failure?orderId=${order._id}`);
                         }
                     }
@@ -152,6 +157,7 @@ function CheckoutPageContent() {
 
                 paymentObject.on('payment.failed', function (response: any) {
                     toast.error("Payment failed: " + response.error.description);
+                    dispatch(clearCartLocally());
                     router.push(`/checkout/failure?orderId=${order._id}`);
                 });
             }
