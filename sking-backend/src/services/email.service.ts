@@ -26,7 +26,6 @@ export class EmailService implements IEmailService {
     private async verifyConnection(): Promise<void> {
         try {
             await this.transporter.verify();
-            logger.info("📧 Email service connected successfully");
         } catch (error) {
             logger.error("❌ Email service connection failed:", error);
         }

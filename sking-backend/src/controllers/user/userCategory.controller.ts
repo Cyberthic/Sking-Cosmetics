@@ -3,6 +3,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../core/types";
 import { IUserCategoryService } from "../../core/interfaces/services/user/IUserCategory.service";
 import { StatusCode } from "../../enums/statusCode.enums";
+import logger from "../../utils/logger";
 
 @injectable()
 export class UserCategoryController {
@@ -12,6 +13,7 @@ export class UserCategoryController {
 
     async getCategories(req: Request, res: Response) {
         try {
+            logger.info("checking")
             const categories = await this._service.getCategories();
             return res.status(StatusCode.OK).json({ success: true, categories });
         } catch (error: any) {

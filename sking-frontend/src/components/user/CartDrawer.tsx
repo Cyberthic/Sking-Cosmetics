@@ -289,9 +289,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-2.5">
-                                    <button className="flex items-center justify-center h-13 bg-black text-white font-bold uppercase tracking-[0.15em] hover:bg-sking-red transition-all text-[10px] active:scale-[0.98]">
+                                    <Link
+                                        href="/checkout"
+                                        onClick={onClose}
+                                        className="flex items-center justify-center h-13 bg-black text-white font-bold uppercase tracking-[0.15em] hover:bg-sking-red transition-all text-[10px] active:scale-[0.98]"
+                                    >
                                         Secure Checkout
-                                    </button>
+                                    </Link>
                                     <Link
                                         href="/cart"
                                         onClick={onClose}
