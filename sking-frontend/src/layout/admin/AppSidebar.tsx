@@ -59,7 +59,7 @@ const navItems: NavItem[] = [
     icon: <ShoppingCart size={20} />,
     name: "Orders",
     subItems: [
-      { name: "Order Management", path: "/orders", pro: false },
+      { name: "Order Management", path: "/admin/orders", pro: false },
       { name: "Order Details", path: "/order-details", pro: false },
     ],
   },

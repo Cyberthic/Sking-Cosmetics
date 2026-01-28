@@ -3,6 +3,7 @@ import adminAuthRoutes from "./adminRoutes/adminAuth.routes";
 import customerRouter from "./adminRoutes/adminCustomer.routes";
 import categoryRouter from "./adminRoutes/adminCategory.routes";
 import productRouter from "./adminRoutes/adminProduct.routes";
+import adminOrderRouter from "./adminRoutes/adminOrder.routes";
 
 const adminRouter = Router();
 
@@ -10,5 +11,6 @@ adminRouter.use("/auth", adminAuthRoutes);
 adminRouter.use("/customers", customerRouter);
 adminRouter.use("/categories", categoryRouter);
 adminRouter.use("/products", productRouter);
+adminRouter.use("/orders", adminOrderRouter);
 
 export default adminRouter;

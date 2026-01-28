@@ -17,24 +17,24 @@ interface ConfirmationModalProps {
 }
 
 const icons = {
-    danger: <Trash2 className="w-6 h-6 text-red-600" />,
-    warning: <AlertCircle className="w-6 h-6 text-amber-600" />,
-    info: <Info className="w-6 h-6 text-blue-600" />,
-    success: <CheckCircle2 className="w-6 h-6 text-green-600" />,
+    danger: <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />,
+    warning: <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />,
+    info: <Info className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
+    success: <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />,
 };
 
 const bgColors = {
-    danger: 'bg-red-50',
-    warning: 'bg-amber-50',
-    info: 'bg-blue-50',
-    success: 'bg-green-50',
+    danger: 'bg-red-50 dark:bg-red-500/10',
+    warning: 'bg-amber-50 dark:bg-amber-500/10',
+    info: 'bg-blue-50 dark:bg-blue-500/10',
+    success: 'bg-green-50 dark:bg-green-500/10',
 };
 
 const buttonColors = {
-    danger: 'bg-red-600 hover:bg-red-700 shadow-red-200',
-    warning: 'bg-amber-600 hover:bg-amber-700 shadow-amber-200',
-    info: 'bg-black hover:bg-neutral-800 shadow-black/20',
-    success: 'bg-green-600 hover:bg-green-700 shadow-green-200',
+    danger: 'bg-red-600 hover:bg-red-700 shadow-red-200 dark:shadow-none',
+    warning: 'bg-amber-600 hover:bg-amber-700 shadow-amber-200 dark:shadow-none',
+    info: 'bg-black dark:bg-white dark:text-black hover:bg-neutral-800 dark:hover:bg-gray-200 shadow-black/20 dark:shadow-none',
+    success: 'bg-green-600 hover:bg-green-700 shadow-green-200 dark:shadow-none',
 };
 
 export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -67,7 +67,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden z-10"
+                        className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden z-10 border border-transparent dark:border-white/[0.05]"
                     >
                         {/* Header Decoration */}
                         <div className={`h-2 w-full ${type === 'danger' ? 'bg-red-600' : type === 'warning' ? 'bg-amber-600' : type === 'success' ? 'bg-green-600' : 'bg-black'}`} />
@@ -79,15 +79,15 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between mb-2">
-                                        <h3 className="text-xl font-black uppercase tracking-tight text-black">{title}</h3>
+                                        <h3 className="text-xl font-black uppercase tracking-tight text-black dark:text-white">{title}</h3>
                                         <button
                                             onClick={onClose}
-                                            className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-black"
+                                            className="p-1 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors text-gray-400 hover:text-black dark:hover:text-white"
                                         >
                                             <X className="w-5 h-5" />
                                         </button>
                                     </div>
-                                    <p className="text-gray-500 font-medium leading-relaxed">{message}</p>
+                                    <p className="text-gray-500 dark:text-gray-400 font-medium leading-relaxed">{message}</p>
                                 </div>
                             </div>
 
@@ -96,7 +96,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                                     type="button"
                                     onClick={onClose}
                                     disabled={isLoading}
-                                    className="flex-1 px-6 py-4 rounded-2xl border-2 border-gray-100 font-bold uppercase tracking-wider text-sm hover:bg-gray-50 transition-all text-gray-600 disabled:opacity-50"
+                                    className="flex-1 px-6 py-4 rounded-2xl border-2 border-gray-100 dark:border-white/[0.05] font-bold uppercase tracking-wider text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all text-gray-600 dark:text-gray-400 disabled:opacity-50"
                                 >
                                     {cancelText}
                                 </button>

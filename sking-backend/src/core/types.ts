@@ -44,6 +44,9 @@ const TYPES = {
     IUserOrderRepository: Symbol.for("IUserOrderRepository"),
     IUserOrderService: Symbol.for("IUserOrderService"),
     IUserOrderController: Symbol.for("IUserOrderController"),
+    IAdminOrderRepository: Symbol.for("IAdminOrderRepository"),
+    IAdminOrderService: Symbol.for("IAdminOrderService"),
+    IAdminOrderController: Symbol.for("IAdminOrderController"),
 };
 
 export { TYPES };

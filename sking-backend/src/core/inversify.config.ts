@@ -52,6 +52,14 @@ import { AdminProductController } from "../controllers/admin/adminProduct.contro
 import { AdminProductService } from "../services/admin/adminProduct.service";
 import { AdminProductRepository } from "../repositories/admin/adminProduct.repository";
 
+// Admin Order
+import { IAdminOrderRepository } from "./interfaces/repositories/admin/IAdminOrder.repository";
+import { IAdminOrderService } from "./interfaces/services/admin/IAdminOrder.service";
+import { IAdminOrderController } from "./interfaces/controllers/admin/IAdminOrder.controller";
+import { AdminOrderRepository } from "../repositories/admin/adminOrder.repository";
+import { AdminOrderService } from "../services/admin/adminOrder.service";
+import { AdminOrderController } from "../controllers/admin/adminOrder.controller";
+
 const container = new Container();
 
 // Repositories
@@ -84,6 +92,11 @@ container.bind<IAdminCategoryController>(TYPES.IAdminCategoryController).to(Admi
 container.bind<IAdminProductRepository>(TYPES.IAdminProductRepository).to(AdminProductRepository);
 container.bind<IAdminProductService>(TYPES.IAdminProductService).to(AdminProductService);
 container.bind<IAdminProductController>(TYPES.IAdminProductController).to(AdminProductController);
+
+// Admin Order
+container.bind<IAdminOrderRepository>(TYPES.IAdminOrderRepository).to(AdminOrderRepository);
+container.bind<IAdminOrderService>(TYPES.IAdminOrderService).to(AdminOrderService);
+container.bind<IAdminOrderController>(TYPES.IAdminOrderController).to(AdminOrderController);
 
 
 
