@@ -31,7 +31,22 @@ export default function OrderDetailPage() {
     const [loading, setLoading] = useState(true);
     const [statusLoading, setStatusLoading] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [pendingStatus, setPendingStatus] = useState("");
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const dropdown = document.getElementById('status-dropdown-container');
+            if (dropdown && !dropdown.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        if (isDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isDropdownOpen]);
 
     useEffect(() => {
         if (id) fetchOrder();
@@ -54,6 +69,7 @@ export default function OrderDetailPage() {
 
     const handleStatusUpdate = (status: string) => {
         setPendingStatus(status);
+        setIsDropdownOpen(false);
         setIsConfirmModalOpen(true);
     };
 
@@ -169,21 +185,37 @@ export default function OrderDetailPage() {
                     <Button variant="outline" className="flex-1 md:flex-none flex items-center gap-2">
                         <Printer size={16} /> Print
                     </Button>
-                    <div className="relative group flex-1 md:flex-none">
-                        <Button variant="primary" className="w-full flex items-center gap-2">
-                            Change Status <ChevronLeft className="w-4 h-4 rotate-270 group-hover:rotate-90 transition-transform" />
+                    <div className="relative flex-1 md:flex-none" id="status-dropdown-container">
+                        <Button
+                            variant="primary"
+                            className="w-full flex items-center justify-between gap-2 min-w-[160px]"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        >
+                            <span className="flex-grow text-center">Change Status</span>
+                            <ChevronLeft className={`w-4 h-4 transition-transform duration-300 ${isDropdownOpen ? 'rotate-90' : 'rotate-270'}`} />
                         </Button>
-                        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden hidden group-hover:block z-50 animate-in fade-in slide-in-from-top-2">
-                            {['processing', 'shipped', 'delivered', 'cancelled'].filter(s => s !== order.orderStatus).map((status) => (
-                                <button
-                                    key={status}
-                                    onClick={() => handleStatusUpdate(status)}
-                                    className="w-full text-left px-4 py-3 text-xs font-black uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors border-b border-gray-50 dark:border-white/[0.05] last:border-0 dark:text-gray-200"
-                                >
-                                    Mark as {status.replace('_', ' ')}
-                                </button>
-                            ))}
-                        </div>
+
+                        {isDropdownOpen && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
+                                <div className="p-2 border-b border-gray-50 dark:border-white/[0.05] bg-gray-50/50 dark:bg-white/[0.02]">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 px-3 py-1">Select New Status</span>
+                                </div>
+                                <div className="p-1">
+                                    {['processing', 'shipped', 'delivered', 'cancelled']
+                                        .filter(s => s !== order.orderStatus)
+                                        .map((status) => (
+                                            <button
+                                                key={status}
+                                                onClick={() => handleStatusUpdate(status)}
+                                                className="w-full text-left px-4 py-3 text-xs font-black uppercase tracking-widest hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-xl transition-all duration-200 flex items-center justify-between group/item mb-1 last:mb-0 dark:text-gray-300"
+                                            >
+                                                <span>{status.replace('_', ' ')}</span>
+                                                <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all" />
+                                            </button>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
