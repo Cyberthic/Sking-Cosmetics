@@ -63,6 +63,13 @@ const cartSlice = createSlice({
         },
         setDrawerOpen: (state, action: PayloadAction<boolean>) => {
             state.isDrawerOpen = action.payload;
+        },
+        clearCartLocally: (state) => {
+            state.items = [];
+            state.totalItems = 0;
+            state.totalAmount = 0;
+            state.loading = false;
+            state.error = null;
         }
     },
     extraReducers: (builder) => {
@@ -91,5 +98,5 @@ const cartSlice = createSlice({
     },
 });
 
-export const { updateCartLocally, setDrawerOpen } = cartSlice.actions;
+export const { updateCartLocally, setDrawerOpen, clearCartLocally } = cartSlice.actions;
 export default cartSlice.reducer;

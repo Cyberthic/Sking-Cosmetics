@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
+import { clearCartLocally } from "@/redux/features/cartSlice";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,8 +23,9 @@ import { userCheckoutService } from "@/services/user/userCheckoutApiService";
 import { userOrderService } from "@/services/user/userOrderApiService";
 import { AddressModal } from "@/components/user/modals/AddressModal";
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
     const router = useRouter();
+    const dispatch = useDispatch();
     const { items, totalAmount } = useSelector((state: RootState) => state.cart);
 
     const [addresses, setAddresses] = useState<Address[]>([]);
@@ -57,14 +59,16 @@ export default function CheckoutPage() {
     };
 
     useEffect(() => {
-        // Redirection if cart is empty
-        if (items.length === 0) {
+        // Redirection if cart is empty, but NOT while we are placing an order
+        if (items.length === 0 && !isPlacingOrder) {
             toast.error("Your cart is empty. Add items to checkout.");
             router.push("/cart");
-            return;
         }
+    }, [items.length, isPlacingOrder, router]);
+
+    useEffect(() => {
         fetchAddresses();
-    }, [items, router]);
+    }, []);
 
     const loadRazorpayScript = () => {
         return new Promise((resolve) => {
@@ -118,6 +122,7 @@ export default function CheckoutPage() {
 
                             if (verificationResponse.success) {
                                 toast.success("Payment successful!");
+                                dispatch(clearCartLocally());
                                 router.push(`/checkout/success?orderId=${order._id}`);
                             }
                         } catch (error: any) {
@@ -137,6 +142,7 @@ export default function CheckoutPage() {
                     modal: {
                         ondismiss: function () {
                             setIsPlacingOrder(false);
+                            router.push(`/checkout/failure?orderId=${order._id}`);
                         }
                     }
                 };
@@ -155,7 +161,7 @@ export default function CheckoutPage() {
         }
     };
 
-    if (items.length === 0) return null;
+    if (items.length === 0 && !isPlacingOrder) return null;
 
     return (
         <div className="bg-[#fcfcfc] min-h-screen pt-24 pb-16">
@@ -373,5 +379,18 @@ export default function CheckoutPage() {
                 refresh={fetchAddresses}
             />
         </div>
+    );
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen pt-24 flex flex-col items-center justify-center bg-[#fcfcfc]">
+                <div className="w-12 h-12 border-4 border-gray-100 border-t-sking-pink rounded-full animate-spin mb-4" />
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 animate-pulse">Initializing Checkout...</p>
+            </div>
+        }>
+            <CheckoutPageContent />
+        </Suspense>
     );
 }

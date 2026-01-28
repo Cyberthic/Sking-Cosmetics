@@ -1,32 +1,55 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CheckCircle2, Package, ArrowRight, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Package, ArrowRight, ShoppingBag, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { userOrderService } from "@/services/user/userOrderApiService";
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const orderId = searchParams.get("orderId");
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (orderId) {
             userOrderService.getOrderDetail(orderId)
                 .then((res: any) => {
-                    setOrder(res.data);
+                    if (res.success) {
+                        setOrder(res.data);
+                    } else {
+                        setError("Could not retrieve order details.");
+                    }
                     setLoading(false);
                 })
                 .catch((err: any) => {
                     console.error(err);
+                    setError("An error occurred while fetching your order.");
                     setLoading(false);
                 });
+        } else {
+            setLoading(false);
         }
     }, [orderId]);
+
+    if (!orderId && !loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="text-center">
+                    <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                    <h1 className="text-2xl font-bold mb-2">Order Not Found</h1>
+                    <p className="text-gray-500 mb-6">We couldn't find the order you're looking for.</p>
+                    <Link href="/shop" className="bg-black text-white px-8 py-3 rounded-xl font-bold uppercase tracking-widest text-xs">
+                        Back to Shop
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#fcfcfc] flex items-center justify-center pt-20 pb-12 px-4">
@@ -58,8 +81,9 @@ export default function OrderSuccessPage() {
                     </p>
 
                     {loading ? (
-                        <div className="h-24 flex items-center justify-center">
+                        <div className="h-24 flex items-center justify-center gap-3">
                             <div className="w-6 h-6 border-2 border-black/10 border-t-black rounded-full animate-spin" />
+                            <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Fetching Details...</span>
                         </div>
                     ) : order ? (
                         <div className="bg-gray-50 rounded-3xl p-6 mb-10 text-left border border-gray-100">
@@ -76,11 +100,16 @@ export default function OrderSuccessPage() {
                                 <span className="text-sm font-black text-black">3-5 Business Days</span>
                             </div>
                         </div>
+                    ) : error ? (
+                        <div className="bg-orange-50 rounded-3xl p-6 mb-10 text-center border border-orange-100">
+                            <p className="text-sm font-bold text-orange-800">{error}</p>
+                            <p className="text-xs text-orange-600 mt-2">But don't worry, your order was successful!</p>
+                        </div>
                     ) : null}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Link
-                            href={`/orders/${orderId}`}
+                            href={orderId ? `/orders/${orderId}` : "/orders"}
                             className="bg-black text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-neutral-800 transition-all shadow-lg flex items-center justify-center gap-2"
                         >
                             <Package className="w-4 h-4" />
@@ -101,5 +130,17 @@ export default function OrderSuccessPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function OrderSuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-gray-100 border-t-sking-pink rounded-full animate-spin" />
+            </div>
+        }>
+            <OrderSuccessContent />
+        </Suspense>
     );
 }

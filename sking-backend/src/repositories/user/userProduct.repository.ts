@@ -39,4 +39,31 @@ export class UserProductRepository extends BaseRepository<IProduct> implements I
     async findBySlugActive(slug: string): Promise<IProduct | null> {
         return this._model.findOne({ slug: slug, isActive: true }).populate('category').exec();
     }
+
+    async reduceStock(productId: string, variantName: string | undefined, quantity: number): Promise<void> {
+        if (variantName) {
+            // Reduce stock for a specific variant
+            await this._model.updateOne(
+                { _id: productId, "variants.size": variantName },
+                {
+                    $inc: {
+                        "variants.$.stock": -quantity,
+                        soldCount: quantity
+                    }
+                }
+            );
+        } else {
+            // If no variant, this might be a simple product (not supported yet in models but for safety)
+            // Currently our models require variants for size-wise stock
+            // But if we ever have a base stock:
+            await this._model.updateOne(
+                { _id: productId },
+                {
+                    $inc: {
+                        soldCount: quantity
+                    }
+                }
+            );
+        }
+    }
 }

@@ -7,4 +7,5 @@ export interface IUserProductRepository extends IBaseRepository<IProduct> {
     findNewArrivals(limit: number): Promise<IProduct[]>;
     findByIdActive(id: string): Promise<IProduct | null>;
     findBySlugActive(slug: string): Promise<IProduct | null>;
+    reduceStock(productId: string, variantName: string | undefined, quantity: number): Promise<void>;
 }

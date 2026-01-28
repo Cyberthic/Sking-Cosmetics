@@ -1,12 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { XCircle, RefreshCw, ShoppingBag, MessageSquare } from "lucide-react";
+import { XCircle, RefreshCw, ShoppingBag, MessageSquare, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export default function OrderFailurePage() {
+function OrderFailureContent() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get("orderId");
 
@@ -34,9 +34,19 @@ export default function OrderFailurePage() {
                     <h1 className="text-3xl lg:text-4xl font-black uppercase tracking-tight text-black mb-4">
                         Payment Failed
                     </h1>
-                    <p className="text-gray-500 font-medium mb-8 max-w-md mx-auto">
-                        Something went wrong during the transaction. Don't worry, your cart is still safe and no money was debited (if it was, it will be refunded).
+                    <p className="text-gray-500 font-medium mb-4 max-w-md mx-auto">
+                        Something went wrong during the transaction. Don't worry, your cart is still safe and items are reserved.
                     </p>
+
+                    <div className="bg-amber-50 rounded-2xl p-4 mb-8 flex items-start gap-3 text-left border border-amber-100">
+                        <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+                        <div>
+                            <p className="text-sm font-bold text-amber-900">Refund Information</p>
+                            <p className="text-xs text-amber-700 font-medium mt-1">
+                                If any money was deducted from your account, it will be automatically credited back within 5-7 business days.
+                            </p>
+                        </div>
+                    </div>
 
                     <div className="bg-red-50/50 rounded-3xl p-6 mb-10 text-left border border-red-100">
                         <p className="text-xs font-bold text-red-800 uppercase tracking-widest leading-relaxed">
@@ -79,5 +89,17 @@ export default function OrderFailurePage() {
                 </button>
             </div>
         </div>
+    );
+}
+
+export default function OrderFailurePage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-gray-100 border-t-red-500 rounded-full animate-spin" />
+            </div>
+        }>
+            <OrderFailureContent />
+        </Suspense>
     );
 }

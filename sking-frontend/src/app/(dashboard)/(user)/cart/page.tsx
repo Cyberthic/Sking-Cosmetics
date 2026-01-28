@@ -172,9 +172,9 @@ export default function CartPage() {
                                     </div>
                                     <p className="text-xs text-gray-400 mt-2">Tax included and shipping calculated at checkout.</p>
                                 </div>
-                                <button className="w-full py-4 bg-sking-red text-white font-bold tracking-widest uppercase hover:bg-black transition-all duration-300">
+                                <Link href="/checkout" className="block w-full text-center py-4 bg-sking-red text-white font-bold tracking-widest uppercase hover:bg-black transition-all duration-300">
                                     Checkout
-                                </button>
+                                </Link>
                                 <div className="mt-8 flex justify-center gap-4 text-gray-300">
                                     {/* Trust badges placeholders */}
                                     <div className="h-6 w-10 bg-gray-200/50 rounded"></div>

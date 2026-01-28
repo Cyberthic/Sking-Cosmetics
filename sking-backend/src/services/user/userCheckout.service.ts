@@ -32,7 +32,23 @@ export class UserCheckoutService implements IUserCheckoutService {
             throw new CustomError("Address not found", StatusCode.NOT_FOUND);
         }
 
-        // 3. Calculate Totals
+        // 3. Check Stock
+        for (const item of cart.items) {
+            const product = item.product as any;
+            if (item.variantName) {
+                const variant = product.variants.find((v: any) => v.size === item.variantName);
+                if (!variant) {
+                    throw new CustomError(`Variant ${item.variantName} not found for product ${product.name}`, StatusCode.BAD_REQUEST);
+                }
+                if (variant.stock < item.quantity) {
+                    throw new CustomError(`Insufficient stock for ${product.name} (${item.variantName}). Available: ${variant.stock}`, StatusCode.BAD_REQUEST);
+                }
+            } else {
+                // If we had base stock, we would check it here
+            }
+        }
+
+        // 4. Calculate Totals
         const totalAmount = cart.items.reduce((acc: number, item: any) => {
             const price = item.price || item.product.price;
             return acc + (price * item.quantity);
@@ -41,7 +57,7 @@ export class UserCheckoutService implements IUserCheckoutService {
         const shippingFee = totalAmount > 1000 ? 0 : 49;
         const finalAmount = totalAmount + shippingFee;
 
-        // 4. Create Order
+        // 5. Create Order
         const orderData: any = {
             user: userId,
             items: cart.items.map((item: any) => ({
@@ -91,7 +107,7 @@ export class UserCheckoutService implements IUserCheckoutService {
 
         const order = await this._checkoutRepository.createOrder(orderData);
 
-        // 5. Clear Cart
+        // 6. Clear Cart
         await this._cartRepository.clearCart(userId);
 
         return order;
