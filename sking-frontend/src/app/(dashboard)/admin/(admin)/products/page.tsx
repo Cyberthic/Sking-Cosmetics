@@ -15,6 +15,7 @@ import { adminProductService } from "../../../../../services/admin/adminProductA
 import { adminCategoryService } from "../../../../../services/admin/adminCategoryApiService";
 import Pagination from "../../../../../components/admin/tables/Pagination";
 import Button from "../../../../../components/admin/ui/button/Button";
+import { ConfirmationModal } from "../../../../../components/common/ConfirmationModal";
 
 interface IProduct {
     _id: string;
@@ -43,6 +44,9 @@ export default function ProductsPage() {
     // Filters
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("");
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [productToDelete, setProductToDelete] = useState<string | null>(null);
+    const [actionLoading, setActionLoading] = useState(false);
 
     const fetchProducts = async (page: number, search: string, catId: string) => {
         try {
@@ -81,14 +85,23 @@ export default function ProductsPage() {
         return () => clearTimeout(delay);
     }, [searchTerm, currentPage, selectedCategory]);
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this product?")) return;
+    const handleDelete = (id: string) => {
+        setProductToDelete(id);
+        setIsConfirmModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!productToDelete) return;
         try {
-            await adminProductService.deleteProduct(id);
+            setActionLoading(true);
+            await adminProductService.deleteProduct(productToDelete);
             fetchProducts(currentPage, searchTerm, selectedCategory);
         } catch (error) {
             console.error("Failed to delete product", error);
-            alert("Failed to delete product");
+        } finally {
+            setActionLoading(false);
+            setIsConfirmModalOpen(false);
+            setProductToDelete(null);
         }
     };
 
@@ -225,6 +238,17 @@ export default function ProductsPage() {
                     <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Product"
+                message="Are you sure you want to delete this product? This will remove the product and all its variants forever."
+                confirmText="Delete"
+                type="danger"
+                isLoading={actionLoading}
+            />
         </div>
     );
 }

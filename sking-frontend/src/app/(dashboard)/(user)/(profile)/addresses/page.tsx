@@ -11,6 +11,7 @@ import { userAddressService, Address } from '../../../../../services/user/userAd
 import { SearchableSelect } from '@/components/user/ui/SearchableSelect';
 import { countries } from '@/constants/countries';
 import { Country as CSC, State as CSCState, City as CSCCity } from 'country-state-city';
+import { ConfirmationModal } from '@/components/common/ConfirmationModal';
 
 export default function AddressesPage() {
     const [addresses, setAddresses] = useState<Address[]>([]);
@@ -18,6 +19,8 @@ export default function AddressesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
 
     const fetchAddresses = async () => {
         try {
@@ -50,14 +53,24 @@ export default function AddressesPage() {
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this address?")) return;
+    const handleDeleteClick = (id: string) => {
+        setAddressToDelete(id);
+        setIsConfirmModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!addressToDelete) return;
         try {
-            await userAddressService.deleteAddress(id);
+            setSubmitting(true);
+            await userAddressService.deleteAddress(addressToDelete);
             toast.success("Address deleted successfully");
             fetchAddresses();
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to delete address");
+        } finally {
+            setSubmitting(false);
+            setIsConfirmModalOpen(false);
+            setAddressToDelete(null);
         }
     };
 
@@ -170,6 +183,17 @@ export default function AddressesPage() {
                 onClose={() => setIsModalOpen(false)}
                 address={editingAddress}
                 refresh={fetchAddresses}
+            />
+
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Address"
+                message="Are you sure you want to delete this address? This action cannot be undone."
+                confirmText="Delete"
+                type="danger"
+                isLoading={submitting}
             />
         </div>
     );

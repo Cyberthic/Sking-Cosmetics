@@ -6,6 +6,7 @@ import Image from "next/image";
 import { User, Package, MapPin, Wallet } from "lucide-react";
 import { adminCustomerService } from "../../../../../../services/admin/adminCustomerApiService";
 import Badge from "../../../../../../components/admin/ui/badge/Badge";
+import { ConfirmationModal } from "../../../../../../components/common/ConfirmationModal";
 
 interface IUser {
     _id: string;
@@ -30,6 +31,21 @@ export default function CustomerDetailPage() {
     const [user, setUser] = useState<IUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type: 'danger' | 'warning' | 'info';
+        confirmText: string;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'info',
+        confirmText: 'Confirm'
+    });
 
     const fetchUser = async () => {
         if (!id) return;
@@ -51,32 +67,48 @@ export default function CustomerDetailPage() {
         fetchUser();
     }, [id]);
 
-    const handleBan = async () => {
-        if (!confirm("Are you sure you want to ban this user? They will be logged out immediately.")) return;
-        try {
-            setActionLoading(true);
-            await adminCustomerService.banUser(id);
-            await fetchUser(); // Refresh data
-        } catch (error) {
-            console.error("Failed to ban user", error);
-            alert("Failed to ban user");
-        } finally {
-            setActionLoading(false);
-        }
+    const handleBan = () => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Ban User',
+            message: 'Are you sure you want to ban this user? They will be logged out immediately.',
+            confirmText: 'Ban User',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    setActionLoading(true);
+                    await adminCustomerService.banUser(id);
+                    await fetchUser();
+                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                } catch (error) {
+                    console.error("Failed to ban user", error);
+                } finally {
+                    setActionLoading(false);
+                }
+            }
+        });
     };
 
-    const handleUnban = async () => {
-        if (!confirm("Are you sure you want to unban this user?")) return;
-        try {
-            setActionLoading(true);
-            await adminCustomerService.unbanUser(id);
-            await fetchUser(); // Refresh data
-        } catch (error) {
-            console.error("Failed to unban user", error);
-            alert("Failed to unban user");
-        } finally {
-            setActionLoading(false);
-        }
+    const handleUnban = () => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Unban User',
+            message: 'Are you sure you want to unban this user? They will regain access to their account.',
+            confirmText: 'Unban User',
+            type: 'info',
+            onConfirm: async () => {
+                try {
+                    setActionLoading(true);
+                    await adminCustomerService.unbanUser(id);
+                    await fetchUser();
+                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                } catch (error) {
+                    console.error("Failed to unban user", error);
+                } finally {
+                    setActionLoading(false);
+                }
+            }
+        });
     };
 
     const [activeTab, setActiveTab] = useState("overview");
@@ -238,6 +270,17 @@ export default function CustomerDetailPage() {
                     </div>
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText={confirmModal.confirmText}
+                type={confirmModal.type}
+                isLoading={actionLoading}
+            />
         </div>
     );
 }
