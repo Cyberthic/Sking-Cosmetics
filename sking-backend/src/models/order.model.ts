@@ -28,6 +28,7 @@ export interface IOrder extends Document {
         state: string;
         country: string;
         postalCode: string;
+        addressType?: string;
     };
     paymentMethod: "online";
     paymentStatus: "pending" | "completed" | "failed" | "refunded" | "expired";
@@ -66,7 +67,8 @@ const OrderSchema: Schema = new Schema({
         city: { type: String, required: true },
         state: { type: String, required: true },
         country: { type: String, required: true },
-        postalCode: { type: String, required: true }
+        postalCode: { type: String, required: true },
+        addressType: { type: String }
     },
     paymentMethod: { type: String, enum: ["online"], default: "online" },
     paymentStatus: { type: String, enum: ["pending", "completed", "failed", "refunded", "expired"], default: "pending" },

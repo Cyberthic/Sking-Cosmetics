@@ -275,16 +275,23 @@ export default function OrderDetailPage() {
                         </div>
                         <div className="divide-y divide-gray-50 dark:divide-white/[0.05]">
                             {order.items.map((item: any, idx: number) => (
-                                <div key={idx} className="p-8 flex gap-6 hover:bg-gray-50/30 dark:hover:bg-white/[0.02] transition-colors">
+                                <div
+                                    key={idx}
+                                    onClick={() => item.product?._id && router.push(`/admin/products/edit/${item.product._id}`)}
+                                    className="p-8 flex gap-6 hover:bg-gray-50/30 dark:hover:bg-white/[0.02] transition-colors cursor-pointer group/item"
+                                >
                                     <div className="relative w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 flex-shrink-0">
                                         {item.product?.images?.[0] ? (
-                                            <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
+                                            <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover group-hover/item:scale-110 transition-transform duration-500" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-300 font-bold uppercase">No Image</div>
                                         )}
                                     </div>
                                     <div className="flex-grow flex flex-col justify-center">
-                                        <h3 className="font-bold text-black dark:text-white uppercase tracking-tight text-sm line-clamp-1">{item.product?.name || 'Unknown Product'}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-black dark:text-white uppercase tracking-tight text-sm line-clamp-1 group-hover/item:text-sking-red transition-colors">{item.product?.name || 'Unknown Product'}</h3>
+                                            <ArrowRight size={12} className="text-gray-300 opacity-0 group-hover/item:opacity-100 group-hover/item:translate-x-1 transition-all" />
+                                        </div>
                                         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-1 flex items-center gap-2">
                                             {item.variantName || 'Universal'} <span className="w-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full"></span> Qty: {item.quantity}
                                         </div>
@@ -319,61 +326,77 @@ export default function OrderDetailPage() {
                 <div className="space-y-8">
                     {/* Customer Info */}
                     <div className="bg-white dark:bg-white/[0.03] rounded-[40px] p-8 border border-gray-50 dark:border-white/[0.05] shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-black dark:bg-gray-100 text-white dark:text-black rounded-2xl flex items-center justify-center shadow-lg">
-                                <User size={20} />
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-black dark:bg-gray-100 text-white dark:text-black rounded-2xl flex items-center justify-center shadow-lg">
+                                    <User size={20} />
+                                </div>
+                                <h3 className="font-black uppercase tracking-tight text-sm dark:text-white">Customer Profile</h3>
                             </div>
-                            <h3 className="font-black uppercase tracking-tight text-sm dark:text-white">Customer Info</h3>
+                            {order.user?._id && (
+                                <button
+                                    onClick={() => router.push(`/admin/customers/${order.user._id}`)}
+                                    className="p-2 bg-gray-50 dark:bg-white/5 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black rounded-xl transition-all border border-transparent hover:border-black dark:hover:border-white"
+                                >
+                                    <ArrowRight size={16} />
+                                </button>
+                            )}
                         </div>
                         <div className="space-y-4">
                             <div>
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Full Name</h4>
-                                <p className="text-sm font-bold text-black dark:text-white uppercase tracking-tight">{order.shippingAddress.name}</p>
+                                <p className="text-sm font-bold text-black dark:text-white uppercase tracking-tight">{order.user?.name || order.shippingAddress.name}</p>
                             </div>
                             <div className="pt-4 border-t border-gray-50 dark:border-white/5">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Email Address</h4>
-                                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => copyToClipboard(order.shippingAddress.email, 'Email')}>
+                                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => copyToClipboard(order.user?.email || order.shippingAddress.email, 'Email')}>
                                     <Mail size={12} className="text-gray-300 dark:text-gray-600" />
-                                    <p className="text-sm font-medium text-black dark:text-white truncate pr-4">{order.shippingAddress.email}</p>
+                                    <p className="text-sm font-medium text-black dark:text-white truncate pr-4">{order.user?.email || order.shippingAddress.email}</p>
                                 </div>
                             </div>
                             <div className="pt-4 border-t border-gray-50 dark:border-white/5">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Phone Number</h4>
-                                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => copyToClipboard(order.shippingAddress.phoneNumber, 'Phone')}>
+                                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => copyToClipboard(order.user?.phoneNumber || order.shippingAddress.phoneNumber, 'Phone')}>
                                     <Phone size={12} className="text-gray-300 dark:text-gray-600" />
-                                    <p className="text-sm font-bold text-black dark:text-white tracking-widest">{order.shippingAddress.phoneNumber}</p>
+                                    <p className="text-sm font-bold text-black dark:text-white tracking-widest">{order.user?.phoneNumber || order.shippingAddress.phoneNumber}</p>
                                 </div>
                             </div>
-                            {order.user?._id && (
-                                <div className="pt-4 border-t border-gray-50 dark:border-white/5">
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">System Account ID</h4>
-                                    <p className="text-[10px] font-mono font-medium text-gray-400 truncate uppercase">{order.user._id}</p>
-                                </div>
-                            )}
                         </div>
                     </div>
 
                     {/* Delivery Address */}
                     <div className="bg-white dark:bg-white/[0.03] rounded-[40px] p-8 border border-gray-50 dark:border-white/[0.05] shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-sking-pink text-white rounded-2xl flex items-center justify-center shadow-lg">
-                                <MapPin size={20} />
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-sking-pink text-white rounded-2xl flex items-center justify-center shadow-lg">
+                                    <MapPin size={20} />
+                                </div>
+                                <h3 className="font-black uppercase tracking-tight text-sm dark:text-white">Shipping Address</h3>
                             </div>
-                            <h3 className="font-black uppercase tracking-tight text-sm dark:text-white">Shipping Address</h3>
+                            {order.shippingAddress.addressType && (
+                                <Badge color="info" size="sm" className="font-black uppercase tracking-widest text-[8px]">
+                                    {order.shippingAddress.addressType}
+                                </Badge>
+                            )}
                         </div>
-                        <div className="text-xs text-gray-500 font-medium leading-loose uppercase tracking-wider relative">
-                            <div className="mb-4">
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Recipient Info</h4>
+                                <p className="text-sm font-bold text-black dark:text-white">{order.shippingAddress.name}</p>
+                                <p className="text-xs text-gray-500">{order.shippingAddress.email} • {order.shippingAddress.phoneNumber}</p>
+                            </div>
+                            <div className="pt-4 border-t border-gray-50 dark:border-white/5">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Street / Landmark</h4>
-                                <p className="text-black dark:text-white font-bold">{order.shippingAddress.street}</p>
+                                <p className="text-sm font-bold text-black dark:text-white">{order.shippingAddress.street}</p>
                             </div>
                             <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-50 dark:border-white/5">
                                 <div>
                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">City</h4>
-                                    <p className="text-black dark:text-white font-bold">{order.shippingAddress.city}</p>
+                                    <p className="text-black dark:text-white font-bold text-xs uppercase tracking-tight">{order.shippingAddress.city}</p>
                                 </div>
                                 <div>
                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">State</h4>
-                                    <p className="text-black dark:text-white font-bold">{order.shippingAddress.state}</p>
+                                    <p className="text-black dark:text-white font-bold text-xs uppercase tracking-tight">{order.shippingAddress.state}</p>
                                 </div>
                             </div>
                             <div className="pt-4 grid grid-cols-2 gap-4">
@@ -383,7 +406,7 @@ export default function OrderDetailPage() {
                                 </div>
                                 <div>
                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Country</h4>
-                                    <p className="text-black dark:text-white font-bold">{order.shippingAddress.country}</p>
+                                    <p className="text-black dark:text-white font-bold text-xs uppercase tracking-tight">{order.shippingAddress.country}</p>
                                 </div>
                             </div>
                         </div>

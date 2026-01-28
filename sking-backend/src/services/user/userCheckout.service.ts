@@ -83,7 +83,8 @@ export class UserCheckoutService implements IUserCheckoutService {
                 city: address.city,
                 state: address.state,
                 country: address.country,
-                postalCode: address.postalCode
+                postalCode: address.postalCode,
+                addressType: address.type
             },
             paymentMethod: data.paymentMethod,
             paymentStatus: "pending",

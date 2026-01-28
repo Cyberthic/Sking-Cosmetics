@@ -24,7 +24,7 @@ export class AdminOrderRepository implements IAdminOrderRepository {
         const sortCriteria: any = { createdAt: sort === 'asc' ? 1 : -1 };
 
         const orders = await Order.find(filter)
-            .populate("user", "name email")
+            .populate("user", "name email phoneNumber")
             .populate("items.product")
             .sort(sortCriteria)
             .skip(skip)
@@ -36,7 +36,7 @@ export class AdminOrderRepository implements IAdminOrderRepository {
 
     async findById(id: string): Promise<IOrder | null> {
         return await Order.findById(id)
-            .populate("user", "name email")
+            .populate("user", "name email phoneNumber")
             .populate("items.product");
     }
 
@@ -48,7 +48,7 @@ export class AdminOrderRepository implements IAdminOrderRepository {
                 $push: { statusHistory: { status, timestamp: new Date(), message: `Order marked as ${status} by Admin` } }
             },
             { new: true }
-        ).populate("user", "name email").populate("items.product");
+        ).populate("user", "name email phoneNumber").populate("items.product");
     }
 
     async countByStatus(status: string): Promise<number> {
