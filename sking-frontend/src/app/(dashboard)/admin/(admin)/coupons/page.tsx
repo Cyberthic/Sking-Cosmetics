@@ -10,6 +10,7 @@ import Pagination from "@/components/admin/tables/Pagination";
 import { Plus, Search, Filter, Ticket, Trash2, Edit2, Copy, BarChart3, Users, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
+import SkingSwitch from "@/components/admin/form/switch/SkingSwitch";
 
 export default function CouponsPage() {
     const router = useRouter();
@@ -24,6 +25,7 @@ export default function CouponsPage() {
     });
     const [totalPages, setTotalPages] = useState(1);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [toggleCoupon, setToggleCoupon] = useState<any>(null);
 
     useEffect(() => {
         fetchCoupons();
@@ -53,6 +55,18 @@ export default function CouponsPage() {
             setDeleteId(null);
         } catch (error) {
             toast.error("Failed to delete coupon");
+        }
+    };
+
+    const handleToggleStatus = async () => {
+        if (!toggleCoupon) return;
+        try {
+            await adminCouponService.update(toggleCoupon._id, { isActive: !toggleCoupon.isActive });
+            toast.success(`Coupon ${!toggleCoupon.isActive ? 'activated' : 'deactivated'} successfully`);
+            fetchCoupons();
+            setToggleCoupon(null);
+        } catch (error) {
+            toast.error("Failed to update coupon status");
         }
     };
 
@@ -203,19 +217,30 @@ export default function CouponsPage() {
                                     </div>
                                 </div>
 
-                                <div className="pt-6 border-t border-gray-50 dark:border-white/5 flex gap-3">
-                                    <button
-                                        onClick={() => router.push(`/admin/coupons/edit/${coupon._id}`)}
-                                        className="flex-1 py-3 rounded-2xl bg-gray-50 dark:bg-white/5 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
-                                    >
-                                        <Edit2 size={14} /> Edit
-                                    </button>
-                                    <button
-                                        onClick={() => setDeleteId(coupon._id)}
-                                        className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                <div className="flex items-center justify-between gap-4 mt-auto pt-6 border-t border-gray-100 dark:border-white/5">
+                                    <div className="flex items-center gap-3">
+                                        <SkingSwitch
+                                            checked={coupon.isActive}
+                                            onChange={() => setToggleCoupon(coupon)}
+                                        />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                            {coupon.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => router.push(`/admin/coupons/edit/${coupon._id}`)}
+                                            className="flex-grow flex items-center justify-center gap-2 px-6 h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-black uppercase text-[10px] tracking-widest hover:bg-sking-pink dark:hover:bg-sking-pink dark:hover:text-white transition-all"
+                                        >
+                                            <Edit2 size={14} /> Edit
+                                        </button>
+                                        <button
+                                            onClick={() => setDeleteId(coupon._id)}
+                                            className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -240,6 +265,16 @@ export default function CouponsPage() {
                 message="Are you sure you want to delete this coupon? This action cannot be undone."
                 confirmText="Delete Coupon"
                 type="danger"
+            />
+
+            <ConfirmationModal
+                isOpen={!!toggleCoupon}
+                onClose={() => setToggleCoupon(null)}
+                onConfirm={handleToggleStatus}
+                title={toggleCoupon?.isActive ? "Deactivate Coupon" : "Activate Coupon"}
+                message={`Are you sure you want to ${toggleCoupon?.isActive ? "deactivate" : "activate"} this coupon?`}
+                confirmText={toggleCoupon?.isActive ? "Deactivate" : "Activate"}
+                type={toggleCoupon?.isActive ? "warning" : "success"}
             />
         </div>
     );
