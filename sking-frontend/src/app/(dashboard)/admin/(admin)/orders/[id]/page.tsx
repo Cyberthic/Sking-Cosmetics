@@ -328,6 +328,12 @@ export default function OrderDetailPage() {
                                     <span>Shipping</span>
                                     <span>{order.shippingFee === 0 ? 'FREE' : `₹${order.shippingFee.toLocaleString()}`}</span>
                                 </div>
+                                {order.discountAmount > 0 && (
+                                    <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-widest text-green-600">
+                                        <span>Discount {order.discountCode && <span className="text-[10px] bg-green-50 text-green-700 px-1 rounded ml-1 border border-green-100">{order.discountCode}</span>}</span>
+                                        <span>-₹{order.discountAmount.toLocaleString()}</span>
+                                    </div>
+                                )}
                                 <div className="pt-4 border-t border-gray-200 dark:border-white/[0.1] flex justify-between items-center">
                                     <span className="text-sm font-black uppercase tracking-tighter italic dark:text-white">Total Amount</span>
                                     <span className="text-xl font-black text-sking-red">₹{order.finalAmount.toLocaleString()}</span>

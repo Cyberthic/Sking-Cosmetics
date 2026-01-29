@@ -362,6 +362,19 @@ export default function OrderDetailPage() {
                                             {order.shippingFee === 0 ? 'FREE' : `₹${order.shippingFee.toFixed(2)}`}
                                         </span>
                                     </div>
+                                    {order.discountAmount > 0 && (
+                                        <div className="flex justify-between items-center text-xs font-bold text-gray-500">
+                                            <span className="flex items-center">
+                                                Discount
+                                                {order.discountCode && (
+                                                    <span className="text-[9px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded ml-2 border border-green-100 font-black uppercase tracking-widest">
+                                                        {order.discountCode}
+                                                    </span>
+                                                )}
+                                            </span>
+                                            <span className="text-green-600">-₹{order.discountAmount?.toFixed(2)}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-center pt-2 text-base font-black text-black">
                                         <span>Total</span>
                                         <span>₹{order.finalAmount.toFixed(2)}</span>
