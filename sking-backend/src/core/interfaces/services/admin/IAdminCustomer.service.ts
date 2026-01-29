@@ -6,4 +6,5 @@ export interface IAdminCustomerService {
     getUserById(id: string): Promise<AdminCustomerDetailResponseDto>;
     banUser(id: string): Promise<void>;
     unbanUser(id: string): Promise<void>;
+    getCustomerOrders(userId: string, page: number, limit: number): Promise<{ orders: any[], total: number, page: number, limit: number }>;
 }

@@ -28,4 +28,9 @@ export const adminCustomerService = {
         const response = await axiosInstance.post(`${API_URL}/${id}/unban`);
         return response.data;
     },
+
+    getCustomerOrders: async (id: string, page: number = 1, limit: number = 10) => {
+        const response = await axiosInstance.get(`${API_URL}/${id}/orders?page=${page}&limit=${limit}`);
+        return response.data;
+    },
 };

@@ -89,4 +89,25 @@ export class AdminCustomerController implements IAdminCustomerController {
             });
         }
     };
+
+    getCustomerOrders = async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+
+            const result = await this._adminCustomerService.getCustomerOrders(id, page, limit);
+            res.status(StatusCode.OK).json({
+                success: true,
+                data: result
+            });
+        } catch (error) {
+            logger.error(`Error getting customer orders ${req.params.id}:`, error);
+            const statusCode = error instanceof CustomError ? error.statusCode : StatusCode.INTERNAL_SERVER_ERROR;
+            res.status(statusCode).json({
+                success: false,
+                error: (error as Error).message
+            });
+        }
+    };
 }

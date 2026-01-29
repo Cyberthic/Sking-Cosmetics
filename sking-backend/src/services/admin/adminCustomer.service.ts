@@ -81,4 +81,9 @@ export class AdminCustomerService implements IAdminCustomerService {
 
         await this._adminCustomerRepository.unbanUser(id);
     }
+
+    async getCustomerOrders(userId: string, page: number, limit: number): Promise<{ orders: any[], total: number, page: number, limit: number }> {
+        const { orders, total } = await this._orderRepository.findByUserIdPaginated(userId, page, limit);
+        return { orders, total, page, limit };
+    }
 }

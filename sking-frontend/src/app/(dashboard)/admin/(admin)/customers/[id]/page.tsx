@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { User, Package, MapPin, Wallet, ShoppingBag, Tag, CreditCard, Calendar, Mail, Phone, Clock, ArrowRight, Ban, CheckCircle } from "lucide-react";
-import { adminCustomerService } from "../../../../../../services/admin/adminCustomerApiService";
-import Badge from "../../../../../../components/admin/ui/badge/Badge";
-import { ConfirmationModal } from "../../../../../../components/common/ConfirmationModal";
+import { adminCustomerService } from "@/services/admin/adminCustomerApiService";
+import Badge from "@/components/admin/ui/badge/Badge";
+import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 import Link from "next/link";
 import {
     Table,
@@ -14,7 +14,8 @@ import {
     TableCell,
     TableHeader,
     TableRow,
-} from "../../../../../../components/admin/ui/table";
+} from "@/components/admin/ui/table";
+import Pagination from "@/components/admin/tables/Pagination"; // Check if this exists, usually it does in this project
 
 export default function CustomerDetailPage() {
     const params = useParams();
@@ -42,6 +43,12 @@ export default function CustomerDetailPage() {
 
     const [activeTab, setActiveTab] = useState("overview");
 
+    // Orders Pagination State
+    const [orders, setOrders] = useState<any[]>([]);
+    const [ordersPage, setOrdersPage] = useState(1);
+    const [ordersTotalPages, setOrdersTotalPages] = useState(1);
+    const [ordersLoading, setOrdersLoading] = useState(false);
+
     const fetchDetails = async () => {
         if (!id) return;
         try {
@@ -49,6 +56,12 @@ export default function CustomerDetailPage() {
             const res = await adminCustomerService.getUserById(id);
             if (res.success) {
                 setDetails(res.data);
+                // Initial orders are in details.orders (all of them), but we want active pagination.
+                // Actually, if we use the NEW pagination API, we should fetch orders separately.
+                // For now, let's disregard the orders in `details` if we are in "orders" tab and fetch fresh.
+                // However, `details` contains summary stats which is good.
+
+                // If we want to display "Total Orders (count)" in tabs, details.stats.totalOrders is perfect.
             }
         } catch (error) {
             console.error("Failed to fetch customer details", error);
@@ -57,9 +70,32 @@ export default function CustomerDetailPage() {
         }
     };
 
+    const fetchOrders = useCallback(async () => {
+        if (!id) return;
+        try {
+            setOrdersLoading(true);
+            const res = await adminCustomerService.getCustomerOrders(id, ordersPage, 10);
+            if (res.success) {
+                setOrders(res.data.orders);
+                setOrdersTotalPages(Math.ceil(res.data.total / 10));
+            }
+        } catch (error) {
+            console.error("Failed to fetch orders", error);
+        } finally {
+            setOrdersLoading(false);
+        }
+    }, [id, ordersPage]);
+
     useEffect(() => {
         fetchDetails();
     }, [id]);
+
+    useEffect(() => {
+        if (activeTab === 'orders') {
+            fetchOrders();
+        }
+    }, [activeTab, ordersPage, fetchOrders]);
+
 
     const handleBan = () => {
         setConfirmModal({
@@ -113,14 +149,17 @@ export default function CustomerDetailPage() {
 
     if (!details) return <div className="p-8 text-center text-gray-500 font-bold uppercase tracking-widest">Customer not found</div>;
 
-    const { user, orders, addresses, cart, coupons, stats } = details;
+    const { user, addresses, cart: cartDetails, coupons, stats } = details;
+    const cart = cartDetails || { items: [], totalAmount: 0 };
+    const cartCount = cart.items ? cart.items.reduce((acc: number, item: any) => acc + item.quantity, 0) : 0;
+
 
     const tabs = [
         { id: "overview", label: "Overview", icon: User },
-        { id: "orders", label: `Orders (${orders.length})`, icon: Package },
+        { id: "orders", label: `Orders (${stats.totalOrders})`, icon: Package },
         { id: "addresses", label: `Addresses (${addresses.length})`, icon: MapPin },
         { id: "coupons", label: "Coupons", icon: Tag },
-        { id: "cart", label: "Cart", icon: ShoppingBag },
+        { id: "cart", label: `Cart (${cartCount})`, icon: ShoppingBag },
     ];
 
     return (
@@ -254,19 +293,19 @@ export default function CustomerDetailPage() {
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Full Name</span>
-                                    <span className="text-sm font-medium">{user.name}</span>
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Email</span>
-                                    <span className="text-sm font-medium">{user.email}</span>
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{user.email}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Phone Number</span>
-                                    <span className="text-sm font-medium">{user.phoneNumber || '-'}</span>
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{user.phoneNumber || '-'}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Customer ID</span>
-                                    <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">{user._id}</span>
+                                    <span className="text-xs font-mono bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-gray-800 dark:text-white">{user._id}</span>
                                 </div>
                             </div>
                         </div>
@@ -275,11 +314,11 @@ export default function CustomerDetailPage() {
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Registered On</span>
-                                    <span className="text-sm font-medium">{new Date(user.createdAt).toLocaleString()}</span>
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{new Date(user.createdAt).toLocaleString()}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Last Updated</span>
-                                    <span className="text-sm font-medium">{new Date(user.updatedAt).toLocaleString()}</span>
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{new Date(user.updatedAt).toLocaleString()}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Marketing Emails</span>
@@ -293,38 +332,54 @@ export default function CustomerDetailPage() {
                 {/* ORDERS TAB */}
                 {activeTab === 'orders' && (
                     <div>
-                        {orders.length === 0 ? (
+                        {ordersLoading ? (
+                            <div className="text-center py-20">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+                                <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading orders...</p>
+                            </div>
+                        ) : orders.length === 0 ? (
                             <div className="text-center py-20 text-gray-400">
                                 <Package size={48} className="mx-auto mb-4 opacity-20" />
                                 <p className="font-bold">No orders found</p>
                             </div>
                         ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Order ID</TableCell>
-                                        <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Date</TableCell>
-                                        <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Status</TableCell>
-                                        <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Total</TableCell>
-                                        <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Action</TableCell>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {orders.map((order: any) => (
-                                        <TableRow key={order._id}>
-                                            <TableCell className="font-mono text-xs">{order._id.slice(-6).toUpperCase()}</TableCell>
-                                            <TableCell className="text-xs font-bold">{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                                            <TableCell>
-                                                <Badge size="sm" color={order.orderStatus === 'active' ? 'success' : 'warning'}>{order.orderStatus}</Badge>
-                                            </TableCell>
-                                            <TableCell className="text-sm font-black">₹{order.finalAmount.toLocaleString()}</TableCell>
-                                            <TableCell>
-                                                <Link href={`/admin/orders/${order._id}`} className="text-blue-500 hover:underline text-xs font-bold uppercase">View</Link>
-                                            </TableCell>
+                            <>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Order ID</TableCell>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Date</TableCell>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Status</TableCell>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Total</TableCell>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Action</TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {orders.map((order: any) => (
+                                            <TableRow key={order._id}>
+                                                <TableCell className="font-mono text-xs dark:text-gray-300">{order._id.slice(-6).toUpperCase()}</TableCell>
+                                                <TableCell className="text-xs font-bold dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                                                <TableCell>
+                                                    <Badge size="sm" color={order.orderStatus === 'active' || order.orderStatus === 'delivered' ? 'success' : order.orderStatus === 'cancelled' ? 'error' : 'warning'}>{order.orderStatus}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-sm font-black dark:text-white">₹{order.finalAmount.toLocaleString()}</TableCell>
+                                                <TableCell>
+                                                    <Link href={`/admin/orders/${order._id}`} className="text-blue-500 hover:underline text-xs font-bold uppercase">View</Link>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                {ordersTotalPages > 1 && (
+                                    <div className="mt-4 flex justify-end">
+                                        <Pagination
+                                            currentPage={ordersPage}
+                                            totalPages={ordersTotalPages}
+                                            onPageChange={(p) => setOrdersPage(p)}
+                                        />
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 )}
@@ -339,9 +394,9 @@ export default function CustomerDetailPage() {
                                     <p className="text-xs text-gray-400 font-bold col-span-2">No active coupons available for this user.</p>
                                 ) : (
                                     coupons.available.map((coupon: any) => (
-                                        <div key={coupon._id} className="p-4 border border-dashed border-gray-300 rounded-xl bg-gray-50 flex justify-between items-center px-4">
+                                        <div key={coupon._id} className="p-4 border border-dashed border-gray-300 dark:border-white/20 rounded-xl bg-gray-50 dark:bg-white/5 flex justify-between items-center px-4">
                                             <div>
-                                                <div className="font-black text-lg text-black">{coupon.code}</div>
+                                                <div className="font-black text-lg text-black dark:text-white">{coupon.code}</div>
                                                 <div className="text-xs text-gray-500 font-bold uppercase">{coupon.description}</div>
                                             </div>
                                             <Badge color="success" size="sm">Active</Badge>
@@ -368,7 +423,7 @@ export default function CustomerDetailPage() {
                                     <TableBody>
                                         {coupons.used.map((c: any, i: number) => (
                                             <TableRow key={i}>
-                                                <TableCell className="font-bold">{c.code}</TableCell>
+                                                <TableCell className="font-bold dark:text-white">{c.code}</TableCell>
                                                 <TableCell className="text-green-600 font-bold">₹{c.discountAmount}</TableCell>
                                                 <TableCell className="font-mono text-xs text-gray-400">{c.orderId.slice(-6).toUpperCase()}</TableCell>
                                                 <TableCell className="text-xs text-gray-500">{new Date(c.date).toLocaleDateString()}</TableCell>
@@ -391,13 +446,13 @@ export default function CustomerDetailPage() {
                             </div>
                         ) : (
                             addresses.map((addr: any) => (
-                                <div key={addr._id} className="p-6 border border-gray-100 rounded-2xl bg-gray-50/50">
+                                <div key={addr._id} className="p-6 border border-gray-100 dark:border-white/10 rounded-2xl bg-gray-50/50 dark:bg-white/5">
                                     <div className="flex justify-between items-start mb-4">
                                         <Badge size="sm" color="info" className="uppercase">{addr.addressType}</Badge>
                                         {addr.isDefault && <Badge size="sm" color="success">Default</Badge>}
                                     </div>
-                                    <p className="font-bold text-black">{addr.name}</p>
-                                    <p className="text-sm text-gray-600 mt-1">
+                                    <p className="font-bold text-black dark:text-white">{addr.name}</p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                         {addr.street}, {addr.city}<br />
                                         {addr.state}, {addr.country} - {addr.postalCode}
                                     </p>
@@ -419,19 +474,19 @@ export default function CustomerDetailPage() {
                         ) : (
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center mb-6">
-                                    <h3 className="font-bold">Current Cart Items</h3>
-                                    <span className="text-sm font-bold text-gray-400">Total: ₹{cart.totalAmount?.toLocaleString()}</span>
+                                    <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-sm">Cart Items ({cartCount})</h3>
+                                    <span className="text-lg font-black text-sking-pink">Total: ₹{cart.totalAmount?.toLocaleString()}</span>
                                 </div>
                                 {cart.items.map((item: any) => (
-                                    <div key={item._id} className="flex items-center gap-4 p-4 border border-gray-100 rounded-xl bg-gray-50">
-                                        <div className="w-16 h-16 bg-white rounded-lg border border-gray-200 overflow-hidden relative">
+                                    <div key={item._id} className="flex items-center gap-4 p-4 border border-gray-100 dark:border-white/10 rounded-2xl bg-gray-50 dark:bg-white/5">
+                                        <div className="w-16 h-16 bg-white dark:bg-black/20 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden relative">
                                             {item.product?.images?.[0] && <Image src={item.product.images[0]} alt="" fill className="object-cover" />}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-sm">{item.product?.name}</p>
+                                            <p className="font-bold text-sm text-gray-900 dark:text-white">{item.product?.name}</p>
                                             <p className="text-xs text-gray-500 font-black uppercase tracking-widest mt-1">Qty: {item.quantity}</p>
                                         </div>
-                                        <div className="ml-auto font-black text-sm">
+                                        <div className="ml-auto font-black text-sm text-gray-900 dark:text-white">
                                             ₹{(item.price * item.quantity).toLocaleString()}
                                         </div>
                                     </div>

@@ -17,6 +17,7 @@ import Pagination from "../../../../../components/admin/tables/Pagination";
 import Image from "next/image";
 import { Search, Filter, ArrowUpDown, User, MoreHorizontal, Eye, Ban, CheckCircle } from "lucide-react";
 import Button from "@/components/admin/ui/button/Button";
+import FormSelect from "@/components/admin/form/FormSelect";
 
 interface IUser {
     _id: string;
@@ -95,8 +96,8 @@ export default function CustomersPage() {
             </div>
 
             {/* Filters Bar */}
-            <div className="bg-white dark:bg-white/[0.03] p-4 rounded-3xl border border-gray-100 dark:border-white/[0.05] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-xl">
+            <div className="bg-white dark:bg-white/[0.03] p-6 rounded-3xl border border-gray-100 dark:border-white/[0.05] shadow-sm flex flex-col lg:flex-row gap-6">
+                <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-xl w-fit h-fit">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
@@ -104,9 +105,9 @@ export default function CustomersPage() {
                                 setActiveTab(tab.id as any);
                                 setFilters({ page: 1 });
                             }}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === tab.id
-                                    ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
-                                    : "text-gray-500 hover:text-black dark:hover:text-white"
+                            className={`px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === tab.id
+                                ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
+                                : "text-gray-500 hover:text-black dark:hover:text-white"
                                 }`}
                         >
                             {tab.label}
@@ -114,27 +115,31 @@ export default function CustomersPage() {
                     ))}
                 </div>
 
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="relative flex-grow md:flex-grow-0">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search customers..."
-                            className="pl-9 pr-4 py-2 w-full md:w-64 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all"
-                            defaultValue={filters.search}
-                            onChange={(e) => handleSearch(e.target.value)}
+                <div className="flex flex-col lg:flex-row gap-4 items-center flex-grow w-full">
+                    <div className="flex-grow w-full">
+                        <div className="relative group">
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-sking-pink transition-colors" size={20} />
+                            <input
+                                type="text"
+                                placeholder="SEARCH CUSTOMERS..."
+                                defaultValue={filters.search}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                className="w-full pl-14 pr-4 py-3.5 bg-gray-50 dark:bg-black/20 border-none rounded-2xl focus:ring-2 focus:ring-sking-pink/50 text-sm font-bold uppercase tracking-wide transition-all text-gray-800 dark:text-white placeholder:text-gray-400"
+                            />
+                        </div>
+                    </div>
+                    <div className="w-full lg:w-64">
+                        <FormSelect
+                            value={filters.sortBy}
+                            onChange={(value) => setFilters({ sortBy: value })}
+                            options={[
+                                { value: "newest", label: "Newest First" },
+                                { value: "oldest", label: "Oldest First" },
+                                { value: "a-z", label: "Name A-Z" },
+                                { value: "z-a", label: "Name Z-A" }
+                            ]}
                         />
                     </div>
-                    <select
-                        className="px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium focus:outline-none cursor-pointer"
-                        value={filters.sortBy}
-                        onChange={(e) => setFilters({ sortBy: e.target.value })}
-                    >
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="a-z">Name A-Z</option>
-                        <option value="z-a">Name Z-A</option>
-                    </select>
                 </div>
             </div>
 

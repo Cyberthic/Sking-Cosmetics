@@ -8,6 +8,19 @@ export class UserOrderRepository implements IUserOrderRepository {
         return await Order.find({ user: userId }).sort({ createdAt: -1 }).populate("items.product");
     }
 
+    async findByUserIdPaginated(userId: string, page: number, limit: number): Promise<{ orders: IOrder[], total: number }> {
+        const skip = (page - 1) * limit;
+        const orders = await Order.find({ user: userId })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("items.product");
+
+        const total = await Order.countDocuments({ user: userId });
+
+        return { orders, total };
+    }
+
     async findByIdAndUserId(orderId: string, userId: string): Promise<IOrder | null> {
         return await Order.findOne({ _id: orderId, user: userId }).populate("items.product");
     }

@@ -5,4 +5,5 @@ export interface IAdminCustomerController {
     getUserById(req: Request, res: Response): Promise<void>;
     banUser(req: Request, res: Response): Promise<void>;
     unbanUser(req: Request, res: Response): Promise<void>;
+    getCustomerOrders(req: Request, res: Response): Promise<void>;
 }

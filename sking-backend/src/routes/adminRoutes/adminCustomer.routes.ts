@@ -17,5 +17,6 @@ customerRouter.get("/", isAuthenticated, adminCustomerController.getAllUsers);
 customerRouter.get("/:id", isAuthenticated, adminCustomerController.getUserById);
 customerRouter.post("/:id/ban", isAuthenticated, adminCustomerController.banUser);
 customerRouter.post("/:id/unban", isAuthenticated, adminCustomerController.unbanUser);
+customerRouter.get("/:id/orders", isAuthenticated, adminCustomerController.getCustomerOrders);
 
 export default customerRouter;
