@@ -1,13 +1,14 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { adminCouponService } from "@/services/admin/adminCouponApiService";
 import { adminCustomerService } from "@/services/admin/adminCustomerApiService";
 import { createCouponSchema, type CreateCouponInput } from "@/validations/adminCoupon.validation";
 import Button from "@/components/admin/ui/button/Button";
 import Input from "@/components/admin/form/input/InputField";
+import FormSelect from "@/components/admin/form/FormSelect";
 import { ChevronLeft, Save, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { debounce } from "@/utils/debounce";
@@ -27,6 +28,7 @@ export default function EditCouponPage() {
         setValue,
         watch,
         reset,
+        control,
         formState: { errors, isSubmitting },
     } = useForm<CreateCouponInput>({
         resolver: zodResolver(createCouponSchema),
@@ -50,7 +52,6 @@ export default function EditCouponPage() {
 
     const watchedDiscountType = watch("discountType");
     const watchedCouponType = watch("couponType");
-    const watchedIsActive = watch("isActive");
 
     useEffect(() => {
         if (id) fetchCoupon();
@@ -212,19 +213,21 @@ export default function EditCouponPage() {
                             {...register("description")}
                             error={errors.description?.message}
                         />
-                        <div>
-                            <label className="block text-xs font-black uppercase text-gray-900 dark:text-gray-100 mb-2 tracking-widest">
-                                Status
-                            </label>
-                            <select
-                                value={watchedIsActive ? "true" : "false"}
-                                onChange={(e) => setValue('isActive', e.target.value === 'true', { shouldValidate: true })}
-                                className="w-full px-4 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-sking-pink/50 focus:border-transparent outline-none transition-all text-sm font-bold uppercase"
-                            >
-                                <option value="true">Active</option>
-                                <option value="false">Inactive</option>
-                            </select>
-                        </div>
+                        <Controller
+                            name="isActive"
+                            control={control}
+                            render={({ field }) => (
+                                <FormSelect
+                                    label="Status"
+                                    value={field.value ? "true" : "false"}
+                                    onChange={(val) => field.onChange(val === "true")}
+                                    options={[
+                                        { value: "true", label: "Active" },
+                                        { value: "false", label: "Inactive" }
+                                    ]}
+                                />
+                            )}
+                        />
                     </div>
                 </div>
 
@@ -232,19 +235,22 @@ export default function EditCouponPage() {
                 <div className="bg-white dark:bg-white/5 rounded-[40px] p-8 border border-gray-100 dark:border-white/10 shadow-sm space-y-6">
                     <h2 className="text-lg font-black uppercase tracking-tight dark:text-white mb-4">Discount Rules</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label className="block text-xs font-black uppercase text-gray-900 dark:text-gray-100 mb-2 tracking-widest">
-                                Discount Type
-                            </label>
-                            <select
-                                {...register("discountType")}
-                                className="w-full px-4 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-sking-pink/50 focus:border-transparent outline-none transition-all text-sm font-bold uppercase"
-                            >
-                                <option value="percentage">Percentage (%)</option>
-                                <option value="fixed">Fixed Amount (₹)</option>
-                            </select>
-                            {errors.discountType && <p className="text-red-500 text-xs mt-1">{errors.discountType.message}</p>}
-                        </div>
+                        <Controller
+                            name="discountType"
+                            control={control}
+                            render={({ field }) => (
+                                <FormSelect
+                                    label="Discount Type"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    options={[
+                                        { value: "percentage", label: "Percentage (%)" },
+                                        { value: "fixed", label: "Fixed Amount (₹)" }
+                                    ]}
+                                    error={errors.discountType?.message}
+                                />
+                            )}
+                        />
                         <Input
                             label="Discount Value"
                             type="number"
@@ -310,21 +316,24 @@ export default function EditCouponPage() {
                 <div className="bg-white dark:bg-white/5 rounded-[40px] p-8 border border-gray-100 dark:border-white/10 shadow-sm space-y-6">
                     <h2 className="text-lg font-black uppercase tracking-tight dark:text-white mb-4">Target Audience</h2>
                     <div className="space-y-6">
-                        <div>
-                            <label className="block text-xs font-black uppercase text-gray-900 dark:text-gray-100 mb-2 tracking-widest">
-                                Coupon Audience Type
-                            </label>
-                            <select
-                                {...register("couponType")}
-                                className="w-full px-4 py-3 bg-gray-50 dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-sking-pink/50 focus:border-transparent outline-none transition-all text-sm font-bold uppercase"
-                            >
-                                <option value="all">All Users</option>
-                                <option value="new_users">New Users Only</option>
-                                <option value="registered_after">Registered After Date</option>
-                                <option value="specific_users">Specific Users</option>
-                            </select>
-                            {errors.couponType && <p className="text-red-500 text-xs mt-1">{errors.couponType.message}</p>}
-                        </div>
+                        <Controller
+                            name="couponType"
+                            control={control}
+                            render={({ field }) => (
+                                <FormSelect
+                                    label="Coupon Audience Type"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    options={[
+                                        { value: "all", label: "All Users" },
+                                        { value: "new_users", label: "New Users Only" },
+                                        { value: "registered_after", label: "Registered After Date" },
+                                        { value: "specific_users", label: "Specific Users" }
+                                    ]}
+                                    error={errors.couponType?.message}
+                                />
+                            )}
+                        />
 
                         {watchedCouponType === 'registered_after' && (
                             <Input

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { adminCouponService } from "@/services/admin/adminCouponApiService";
 import Button from "@/components/admin/ui/button/Button";
 import Input from "@/components/admin/form/input/InputField";
+import FormSelect from "@/components/admin/form/FormSelect";
 import Badge from "@/components/admin/ui/badge/Badge";
 import Pagination from "@/components/admin/tables/Pagination";
 import { Plus, Search, Filter, Ticket, Trash2, Edit2, Copy, BarChart3, Users, Clock } from "lucide-react";
@@ -116,26 +117,28 @@ export default function CouponsPage() {
                     </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
-                    <select
+                    <FormSelect
                         value={filters.status}
-                        onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
-                        className="px-6 py-4 bg-gray-50 dark:bg-black/50 border-none rounded-2xl text-sm font-bold uppercase tracking-wide focus:ring-2 focus:ring-sking-pink/50 cursor-pointer"
-                    >
-                        <option value="">All Status</option>
-                        <option value="active">Active Now</option>
-                        <option value="upcoming">Scheduled</option>
-                        <option value="ended">Ended/Expired</option>
-                    </select>
-                    <select
+                        onChange={(value) => setFilters({ ...filters, status: value, page: 1 })}
+                        options={[
+                            { value: "", label: "All Status" },
+                            { value: "active", label: "Active Now" },
+                            { value: "upcoming", label: "Scheduled" },
+                            { value: "ended", label: "Ended/Expired" }
+                        ]}
+                        className="min-w-[180px]"
+                    />
+                    <FormSelect
                         value={filters.sort}
-                        onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
-                        className="px-6 py-4 bg-gray-50 dark:bg-black/50 border-none rounded-2xl text-sm font-bold uppercase tracking-wide focus:ring-2 focus:ring-sking-pink/50 cursor-pointer"
-                    >
-                        <option value="createdAt:desc">Newest First</option>
-                        <option value="createdAt:asc">Oldest First</option>
-                        <option value="endDate:asc">Expiring Soon</option>
-                        <option value="usageCount:desc">Most Used</option>
-                    </select>
+                        onChange={(value) => setFilters({ ...filters, sort: value })}
+                        options={[
+                            { value: "createdAt:desc", label: "Newest First" },
+                            { value: "createdAt:asc", label: "Oldest First" },
+                            { value: "endDate:asc", label: "Expiring Soon" },
+                            { value: "usageCount:desc", label: "Most Used" }
+                        ]}
+                        className="min-w-[180px]"
+                    />
                 </div>
             </div>
 
