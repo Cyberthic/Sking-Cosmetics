@@ -126,4 +126,36 @@ export class UserOrderRepository implements IUserOrderRepository {
 
         return stats.length > 0 ? stats[0] : { totalOrders: 0, totalRevenue: 0, totalUnitsSold: 0 };
     }
+
+    async findByCouponIdPaginated(couponId: string, page: number, limit: number): Promise<{ orders: IOrder[], total: number }> {
+        const skip = (page - 1) * limit;
+        const filter = { "coupon": couponId };
+
+        const orders = await Order.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("items.product")
+            .populate("shippingAddress");
+
+        const total = await Order.countDocuments(filter);
+
+        return { orders, total };
+    }
+
+    async findStatsByCouponId(couponId: string): Promise<{ totalUsage: number, totalDiscount: number, totalRevenue: number }> {
+        const stats = await Order.aggregate([
+            { $match: { "coupon": new mongoose.Types.ObjectId(couponId), "orderStatus": { $nin: ["cancelled", "payment_pending"] } } },
+            {
+                $group: {
+                    _id: null,
+                    totalUsage: { $sum: 1 },
+                    totalDiscount: { $sum: "$discountAmount" },
+                    totalRevenue: { $sum: "$finalAmount" } // Revenue after discount
+                }
+            }
+        ]);
+
+        return stats.length > 0 ? stats[0] : { totalUsage: 0, totalDiscount: 0, totalRevenue: 0 };
+    }
 }

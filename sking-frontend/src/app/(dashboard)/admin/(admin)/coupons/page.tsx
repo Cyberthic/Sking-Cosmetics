@@ -237,6 +237,13 @@ export default function CouponsPage() {
                                         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
                                             {coupon.isActive ? 'Active' : 'Inactive'}
                                         </span>
+                                        <button
+                                            onClick={() => router.push(`/admin/coupons/${coupon._id}`)}
+                                            className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all flex items-center justify-center"
+                                            title="View Analysis"
+                                        >
+                                            <BarChart3 size={14} />
+                                        </button>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button

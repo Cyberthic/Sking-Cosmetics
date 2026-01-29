@@ -6,4 +6,6 @@ export interface IAdminCouponController {
     getCouponById(req: Request, res: Response): Promise<Response>;
     updateCoupon(req: Request, res: Response): Promise<Response>;
     deleteCoupon(req: Request, res: Response): Promise<Response>;
+    getCouponOrders(req: Request, res: Response): Promise<Response>;
+    getCouponStats(req: Request, res: Response): Promise<Response>;
 }

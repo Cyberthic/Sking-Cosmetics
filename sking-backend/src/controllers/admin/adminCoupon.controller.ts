@@ -107,4 +107,40 @@ export class AdminCouponController implements IAdminCouponController {
             });
         }
     };
+
+    getCouponOrders = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const { id } = req.params;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const page = parseInt(req.query.page as string) || 1;
+            const result = await this._couponService.getCouponOrders(id, page, limit);
+            return res.status(StatusCode.OK).json({
+                success: true,
+                ...result
+            });
+        } catch (error: any) {
+            logger.error("Error fetching coupon orders:", error);
+            return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: error.message
+            });
+        }
+    };
+
+    getCouponStats = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const { id } = req.params;
+            const stats = await this._couponService.getCouponStats(id);
+            return res.status(StatusCode.OK).json({
+                success: true,
+                stats
+            });
+        } catch (error: any) {
+            logger.error("Error fetching coupon stats:", error);
+            return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: error.message
+            });
+        }
+    };
 }

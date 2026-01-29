@@ -9,4 +9,6 @@ export interface IUserOrderRepository {
     findByProductIdPaginated(productId: string, page: number, limit: number): Promise<{ orders: IOrder[], total: number }>;
     findTopCustomersByProductId(productId: string, limit: number): Promise<any[]>;
     findStatsByProductId(productId: string): Promise<{ totalOrders: number, totalRevenue: number, totalUnitsSold: number }>;
+    findByCouponIdPaginated(couponId: string, page: number, limit: number): Promise<{ orders: IOrder[], total: number }>;
+    findStatsByCouponId(couponId: string): Promise<{ totalUsage: number, totalDiscount: number, totalRevenue: number }>;
 }

@@ -5,11 +5,13 @@ import { IAdminCouponRepository } from "../../core/interfaces/repositories/admin
 import { ICoupon } from "../../models/coupon.model";
 import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
+import { IUserOrderRepository } from "../../core/interfaces/repositories/user/IUserOrder.repository";
 
 @injectable()
 export class AdminCouponService implements IAdminCouponService {
     constructor(
-        @inject(TYPES.IAdminCouponRepository) private _couponRepository: IAdminCouponRepository
+        @inject(TYPES.IAdminCouponRepository) private _couponRepository: IAdminCouponRepository,
+        @inject(TYPES.IUserOrderRepository) private _orderRepository: IUserOrderRepository
     ) { }
 
     async createCoupon(data: Partial<ICoupon>): Promise<ICoupon> {
@@ -67,5 +69,13 @@ export class AdminCouponService implements IAdminCouponService {
             throw new CustomError("Coupon not found", StatusCode.NOT_FOUND);
         }
         return true;
+    }
+
+    async getCouponStats(id: string): Promise<any> {
+        return await this._orderRepository.findStatsByCouponId(id);
+    }
+
+    async getCouponOrders(id: string, page: number, limit: number): Promise<{ orders: any[], total: number }> {
+        return await this._orderRepository.findByCouponIdPaginated(id, page, limit);
     }
 }

@@ -6,4 +6,6 @@ export interface IAdminCouponService {
     getCouponById(id: string): Promise<ICoupon | null>;
     updateCoupon(id: string, data: Partial<ICoupon>): Promise<ICoupon | null>;
     deleteCoupon(id: string): Promise<boolean>;
+    getCouponStats(id: string): Promise<any>;
+    getCouponOrders(id: string, page: number, limit: number): Promise<{ orders: any[], total: number }>;
 }

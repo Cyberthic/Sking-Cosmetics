@@ -31,5 +31,15 @@ export const adminCouponService = {
     delete: async (id: string) => {
         const response = await axiosInstance.delete(`/api/admin/coupons/${id}`);
         return response.data;
+    },
+
+    getCouponOrders: async (id: string, page: number = 1, limit: number = 10) => {
+        const response = await axiosInstance.get(`/api/admin/coupons/${id}/orders?page=${page}&limit=${limit}`);
+        return response.data;
+    },
+
+    getCouponStats: async (id: string) => {
+        const response = await axiosInstance.get(`/api/admin/coupons/${id}/stats`);
+        return response.data;
     }
 };

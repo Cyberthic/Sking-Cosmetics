@@ -14,5 +14,7 @@ router.get("/", (req, res) => adminCouponController.getCoupons(req, res));
 router.get("/:id", (req, res) => adminCouponController.getCouponById(req, res));
 router.put("/:id", (req, res) => adminCouponController.updateCoupon(req, res));
 router.delete("/:id", (req, res) => adminCouponController.deleteCoupon(req, res));
+router.get("/:id/orders", (req, res) => adminCouponController.getCouponOrders(req, res));
+router.get("/:id/stats", (req, res) => adminCouponController.getCouponStats(req, res));
 
 export default router;
