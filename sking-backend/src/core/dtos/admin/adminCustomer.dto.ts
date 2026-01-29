@@ -11,6 +11,11 @@ export class AdminCustomerListResponseDto {
 
 export class AdminCustomerDetailResponseDto {
     constructor(
-        public user: IUser
+        public user: IUser,
+        public orders: any[],
+        public addresses: any[],
+        public cart: any,
+        public coupons: any,
+        public stats: any
     ) { }
 }

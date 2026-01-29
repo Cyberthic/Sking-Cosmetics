@@ -18,8 +18,10 @@ export class AdminCustomerController implements IAdminCustomerController {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
             const search = req.query.search as string;
+            const status = req.query.status as string;
+            const sortBy = req.query.sortBy as string;
 
-            const result = await this._adminCustomerService.getAllUsers(page, limit, search);
+            const result = await this._adminCustomerService.getAllUsers(page, limit, search, status, sortBy);
             res.status(StatusCode.OK).json({
                 success: true,
                 data: result

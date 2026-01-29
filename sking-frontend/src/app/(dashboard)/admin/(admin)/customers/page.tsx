@@ -10,11 +10,13 @@ import {
     TableCell,
     TableHeader,
     TableRow,
-} from "../../../../../components/admin/ui/table"; // Adjusted path
-import Badge from "../../../../../components/admin/ui/badge/Badge"; // Adjusted path
+} from "../../../../../components/admin/ui/table";
+import Badge from "../../../../../components/admin/ui/badge/Badge";
 import { adminCustomerService } from "../../../../../services/admin/adminCustomerApiService";
 import Pagination from "../../../../../components/admin/tables/Pagination";
 import Image from "next/image";
+import { Search, Filter, ArrowUpDown, User, MoreHorizontal, Eye, Ban, CheckCircle } from "lucide-react";
+import Button from "@/components/admin/ui/button/Button";
 
 interface IUser {
     _id: string;
@@ -35,13 +37,24 @@ export default function CustomersPage() {
     const limit = 10;
     const [filters, setFilters] = useUrlState({
         page: 1,
-        search: ""
+        search: "",
+        status: "",
+        sortBy: "newest"
     });
+
+    const [activeTab, setActiveTab] = useState<'all' | 'active' | 'banned'>('all');
 
     const fetchUsers = useCallback(async (currentFilters: any) => {
         try {
             setLoading(true);
-            const data = await adminCustomerService.getAllUsers(currentFilters.page, limit, currentFilters.search);
+            const statusFilter = activeTab === 'all' ? '' : activeTab;
+            const data = await adminCustomerService.getAllUsers(
+                currentFilters.page,
+                limit,
+                currentFilters.search,
+                statusFilter,
+                currentFilters.sortBy
+            );
             if (data.success) {
                 setUsers(data.data.users);
                 setTotalPages(Math.ceil(data.data.total / limit));
@@ -51,11 +64,11 @@ export default function CustomersPage() {
         } finally {
             setLoading(false);
         }
-    }, [limit]);
+    }, [limit, activeTab]);
 
     useEffect(() => {
         fetchUsers(filters);
-    }, [filters, fetchUsers]);
+    }, [filters, fetchUsers, activeTab]);
 
     const handleSearch = useMemo(() =>
         debounce((val: string) => {
@@ -63,104 +76,155 @@ export default function CustomersPage() {
         }, 500)
         , [setFilters]);
 
-    if (loading && users.length === 0 && !filters.search) {
-        return <div className="p-6">Loading...</div>;
-    }
+    const tabs = [
+        { id: 'all', label: 'All Customers' },
+        { id: 'active', label: 'Active' },
+        { id: 'banned', label: 'Banned' },
+    ];
 
     return (
-        <div className="p-6">
-            <div className="mb-6 flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Customer Management</h1>
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Search customers..."
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
-                        defaultValue={filters.search}
-                        onChange={(e) => handleSearch(e.target.value)}
-                    />
-                    <svg
-                        className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                        fill="none"
-                        height="24"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        xmlns="http://www.w3.org/2000/svg"
+        <div className="p-6 space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Customer Management</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Manage and view your customer base</p>
+                </div>
+                <Link href="/admin/customers/create">
+                    {/* Optional: Add user button if needed, but usually users register themselves */}
+                </Link>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="bg-white dark:bg-white/[0.03] p-4 rounded-3xl border border-gray-100 dark:border-white/[0.05] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-xl">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => {
+                                setActiveTab(tab.id as any);
+                                setFilters({ page: 1 });
+                            }}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === tab.id
+                                    ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
+                                    : "text-gray-500 hover:text-black dark:hover:text-white"
+                                }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="relative flex-grow md:flex-grow-0">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search customers..."
+                            className="pl-9 pr-4 py-2 w-full md:w-64 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all"
+                            defaultValue={filters.search}
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
+                    </div>
+                    <select
+                        className="px-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium focus:outline-none cursor-pointer"
+                        value={filters.sortBy}
+                        onChange={(e) => setFilters({ sortBy: e.target.value })}
                     >
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" x2="16.65" y1="21" y2="16.65" />
-                    </svg>
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="a-z">Name A-Z</option>
+                        <option value="z-a">Name Z-A</option>
+                    </select>
                 </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <div className="overflow-hidden rounded-[32px] border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
                 <div className="max-w-full overflow-x-auto">
-                    <div className="min-w-[1000px]">
-                        <Table>
-                            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                    <Table>
+                        <TableHeader className="border-b border-gray-100 dark:border-white/[0.05] bg-gray-50/50 dark:bg-white/[0.02]">
+                            <TableRow>
+                                <TableCell isHeader className="px-8 py-4 font-black text-gray-400 text-start text-[10px] uppercase tracking-widest">User Details</TableCell>
+                                <TableCell isHeader className="px-8 py-4 font-black text-gray-400 text-start text-[10px] uppercase tracking-widest">Contact Info</TableCell>
+                                <TableCell isHeader className="px-8 py-4 font-black text-gray-400 text-start text-[10px] uppercase tracking-widest">Status</TableCell>
+                                <TableCell isHeader className="px-8 py-4 font-black text-gray-400 text-start text-[10px] uppercase tracking-widest">Joined</TableCell>
+                                <TableCell isHeader className="px-8 py-4 font-black text-gray-400 text-end text-[10px] uppercase tracking-widest">Actions</TableCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                            {loading ? (
                                 <TableRow>
-                                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">User</TableCell>
-                                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Email</TableCell>
-                                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Phone</TableCell>
-                                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Status</TableCell>
-                                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Joined Date</TableCell>
-                                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Actions</TableCell>
+                                    <TableCell colSpan={5} className="h-64 text-center">
+                                        <div className="flex flex-col items-center justify-center text-gray-400">
+                                            <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin mb-4" />
+                                            <p className="text-xs font-medium uppercase tracking-widest">Loading Customers...</p>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                {users.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="px-5 py-4 text-center text-gray-500 dark:text-gray-400">
-                                            No customers found.
+                            ) : users.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-64 text-center">
+                                        <div className="flex flex-col items-center justify-center text-gray-400">
+                                            <User size={48} strokeWidth={1} className="mb-4 opacity-20" />
+                                            <p className="text-sm font-bold text-gray-900 dark:text-white">No customers found</p>
+                                            <p className="text-xs mt-1">Try adjusting your filters or search terms</p>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                users.map((user) => (
+                                    <TableRow key={user._id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors group">
+                                        <TableCell className="px-8 py-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 overflow-hidden rounded-2xl bg-gray-100 border border-gray-200 dark:border-gray-700 relative">
+                                                    {user.profilePicture ? (
+                                                        <Image src={user.profilePicture} alt={user.name} fill className="object-cover" />
+                                                    ) : (
+                                                        <div className="flex items-center justify-center w-full h-full text-gray-400 font-black text-lg bg-gray-50">
+                                                            {user.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <span className="block font-bold text-gray-900 dark:text-white text-sm">{user.name}</span>
+                                                    <span className="block text-gray-400 text-[10px] uppercase tracking-wider font-medium mt-0.5">@{user.username}</span>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="px-8 py-4">
+                                            <div className="space-y-1">
+                                                <div className="text-xs font-medium text-gray-600 dark:text-gray-300">{user.email}</div>
+                                                <div className="text-[10px] font-mono text-gray-400">{user.phoneNumber || "-"}</div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="px-8 py-4">
+                                            {user.isBanned ? (
+                                                <Badge size="sm" color="error" className="uppercase tracking-widest text-[9px] font-black">Banned</Badge>
+                                            ) : (
+                                                <Badge size="sm" color="success" className="uppercase tracking-widest text-[9px] font-black">Active</Badge>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="px-8 py-4">
+                                            <div className="text-xs font-bold text-gray-600 dark:text-gray-300">
+                                                {new Date(user.createdAt).toLocaleDateString()}
+                                            </div>
+                                            <div className="text-[10px] text-gray-400 mt-0.5">
+                                                {new Date(user.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="px-8 py-4 text-end">
+                                            <Link href={`/admin/customers/${user._id}`}>
+                                                <Button size="sm" variant="outline" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    View Profile
+                                                </Button>
+                                            </Link>
                                         </TableCell>
                                     </TableRow>
-                                ) : (
-                                    users.map((user) => (
-                                        <TableRow key={user._id}>
-                                            <TableCell className="px-5 py-4 sm:px-6 text-start">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 overflow-hidden rounded-full bg-gray-200">
-                                                        {user.profilePicture ? (
-                                                            <Image src={user.profilePicture} alt={user.name} width={40} height={40} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="flex items-center justify-center w-full h-full text-gray-500">{user.name.charAt(0)}</div>
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">{user.name}</span>
-                                                        <span className="block text-gray-500 text-theme-xs dark:text-gray-400">{user.username}</span>
-                                                    </div>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">{user.email}</TableCell>
-                                            <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">{user.phoneNumber || "-"}</TableCell>
-                                            <TableCell className="px-4 py-3">
-                                                {user.isBanned ? (
-                                                    <Badge size="sm" color="error">Banned</Badge>
-                                                ) : (
-                                                    <Badge size="sm" color="success">Active</Badge>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                {new Date(user.createdAt).toLocaleDateString()}
-                                            </TableCell>
-                                            <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                                <Link href={`/admin/customers/${user._id}`} className="text-brand-500 hover:text-brand-600">
-                                                    View Details
-                                                </Link>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
-                <div className="p-4 border-t border-gray-100 dark:border-white/[0.05]">
+                <div className="p-4 border-t border-gray-100 dark:border-white/[0.05] bg-gray-50/50 dark:bg-white/[0.02]">
                     <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => setFilters({ page: p })} />
                 </div>
             </div>

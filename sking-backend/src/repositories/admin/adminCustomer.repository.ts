@@ -4,9 +4,15 @@ import { IAdminCustomerRepository } from "../../core/interfaces/repositories/adm
 
 @injectable()
 export class AdminCustomerRepository implements IAdminCustomerRepository {
-    async findAll(limit: number, skip: number, search?: string): Promise<{ users: IUser[]; total: number }> {
+    async findAll(limit: number, skip: number, search?: string, status?: string, sortBy?: string): Promise<{ users: IUser[]; total: number }> {
         // Filter for non-admin users (including those where isAdmin might be undefined)
         const filter: any = { isAdmin: { $ne: true } };
+
+        if (status === 'banned') {
+            filter.isBanned = true;
+        } else if (status === 'active') {
+            filter.isBanned = { $ne: true };
+        }
 
         if (search) {
             const searchRegex = new RegExp(search, "i");
@@ -17,8 +23,13 @@ export class AdminCustomerRepository implements IAdminCustomerRepository {
             ];
         }
 
+        let sort: any = { createdAt: -1 };
+        if (sortBy === 'oldest') sort = { createdAt: 1 };
+        if (sortBy === 'a-z') sort = { name: 1 };
+        if (sortBy === 'z-a') sort = { name: -1 };
+
         const users = await UserModel.find(filter)
-            .sort({ createdAt: -1 })
+            .sort(sort)
             .skip(skip)
             .limit(limit);
 
