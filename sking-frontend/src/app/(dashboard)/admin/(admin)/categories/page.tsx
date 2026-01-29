@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { useUrlState } from "@/hooks/useUrlState";
+import { debounce } from "@/utils/debounce";
 import Link from "next/link";
 import {
     Table,
@@ -27,16 +29,20 @@ interface ICategory {
 export default function CategoriesPage() {
     const [categories, setCategories] = useState<ICategory[]>([]);
     const [loading, setLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const limit = 10;
-    const [searchTerm, setSearchTerm] = useState("");
+
+    const [filters, setFilters] = useUrlState({
+        page: 1,
+        search: ""
+    });
+
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    const fetchCategories = async (page: number, search: string) => {
+    const fetchCategories = useCallback(async (currentFilters: any) => {
         try {
             setLoading(true);
-            const data = await adminCategoryService.getCategories(page, limit, search);
+            const data = await adminCategoryService.getCategories(currentFilters.page, limit, currentFilters.search);
             if (data.success) {
                 setCategories(data.categories);
                 setTotalPages(data.totalPages);
@@ -46,19 +52,22 @@ export default function CategoriesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [limit]);
 
     useEffect(() => {
-        const delay = setTimeout(() => {
-            fetchCategories(currentPage, searchTerm);
-        }, 500);
-        return () => clearTimeout(delay);
-    }, [searchTerm, currentPage]);
+        fetchCategories(filters);
+    }, [filters, fetchCategories]);
+
+    const handleSearch = useMemo(() =>
+        debounce((val: string) => {
+            setFilters({ search: val, page: 1 });
+        }, 500)
+        , [setFilters]);
 
     const handleAddCategory = async (data: { name: string; description: string }) => {
         try {
             await adminCategoryService.createCategory(data);
-            fetchCategories(currentPage, searchTerm);
+            fetchCategories(filters);
         } catch (error) {
             console.error("Failed to create category", error);
             alert("Failed to create category");
@@ -75,11 +84,8 @@ export default function CategoriesPage() {
                             type="text"
                             placeholder="Search categories..."
                             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setCurrentPage(1);
-                            }}
+                            defaultValue={filters.search}
+                            onChange={(e) => handleSearch(e.target.value)}
                         />
                         <svg
                             className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
@@ -138,7 +144,7 @@ export default function CategoriesPage() {
                     </Table>
                 </div>
                 <div className="p-4 border-t border-gray-100 dark:border-white/[0.05]">
-                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                    <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => setFilters({ page: p })} />
                 </div>
             </div>
 

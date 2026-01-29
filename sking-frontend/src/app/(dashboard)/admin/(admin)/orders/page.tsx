@@ -1,5 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { useUrlState } from "@/hooks/useUrlState";
+import { debounce } from "@/utils/debounce";
 import { adminOrderService } from "@/services/admin/adminOrderApiService";
 import Badge from "@/components/admin/ui/badge/Badge";
 import Button from "@/components/admin/ui/button/Button";
@@ -25,12 +27,17 @@ import FormSelect from "@/components/admin/form/FormSelect";
 export default function OrdersPage() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState("all");
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [refreshing, setRefreshing] = useState(false);
-    const [sortOrder, setSortOrder] = useState("desc");
+
+    // URL Persistence for Filters
+    const [filters, setFilters] = useUrlState({
+        page: 1,
+        status: "all",
+        search: "",
+        sort: "desc"
+    });
+
     const [view, setView] = useState<'grid' | 'list'>('grid');
 
     // Load view preference on mount
@@ -46,31 +53,15 @@ export default function OrdersPage() {
         localStorage.setItem('admin-orders-view', newView);
     };
 
-    useEffect(() => {
-        fetchOrders();
-    }, [currentPage, selectedStatus, sortOrder]);
-
-    // Debounced search
-    useEffect(() => {
-        const delay = setTimeout(() => {
-            if (currentPage === 1) {
-                fetchOrders();
-            } else {
-                setCurrentPage(1);
-            }
-        }, 500);
-        return () => clearTimeout(delay);
-    }, [searchTerm]);
-
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async (currentFilters: any) => {
         try {
             setLoading(true);
             const res = await adminOrderService.getOrders({
-                page: currentPage,
+                page: currentFilters.page,
                 limit: 10,
-                search: searchTerm,
-                status: selectedStatus,
-                sort: sortOrder
+                search: currentFilters.search,
+                status: currentFilters.status,
+                sort: currentFilters.sort
             });
             if (res.success) {
                 setOrders(res.orders);
@@ -83,11 +74,21 @@ export default function OrdersPage() {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchOrders(filters);
+    }, [filters, fetchOrders]);
+
+    const handleSearch = useMemo(() =>
+        debounce((val: string) => {
+            setFilters({ search: val, page: 1 });
+        }, 500)
+        , [setFilters]);
 
     const handleRefresh = () => {
         setRefreshing(true);
-        fetchOrders();
+        fetchOrders(filters);
     };
 
     const getStatusColor = (status: string) => {
@@ -147,18 +148,17 @@ export default function OrdersPage() {
                         <input
                             type="text"
                             placeholder="SEARCH BY ORDER ID, CUSTOMER..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            defaultValue={filters.search}
+                            onChange={(e) => handleSearch(e.target.value)}
                             className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/50 border-none rounded-2xl focus:ring-2 focus:ring-sking-pink/50 text-sm font-bold uppercase tracking-wide transition-all"
                         />
                     </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
                     <FormSelect
-                        value={selectedStatus}
+                        value={filters.status}
                         onChange={(value) => {
-                            setSelectedStatus(value);
-                            setCurrentPage(1);
+                            setFilters({ status: value, page: 1 });
                         }}
                         options={[
                             { value: "all", label: "All Status" },
@@ -171,8 +171,8 @@ export default function OrdersPage() {
                         className="min-w-[180px]"
                     />
                     <FormSelect
-                        value={sortOrder}
-                        onChange={(value) => setSortOrder(value)}
+                        value={filters.sort}
+                        onChange={(value) => setFilters({ sort: value })}
                         options={[
                             { value: "desc", label: "Newest First" },
                             { value: "asc", label: "Oldest First" }
@@ -339,9 +339,9 @@ export default function OrdersPage() {
             {!loading && totalPages > 1 && (
                 <div className="flex justify-center">
                     <Pagination
-                        currentPage={currentPage}
+                        currentPage={filters.page}
                         totalPages={totalPages}
-                        onPageChange={setCurrentPage}
+                        onPageChange={(p) => setFilters({ page: p })}
                     />
                 </div>
             )}

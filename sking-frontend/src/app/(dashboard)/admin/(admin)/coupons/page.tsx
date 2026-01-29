@@ -1,6 +1,8 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useUrlState } from "@/hooks/useUrlState";
+import { debounce } from "@/utils/debounce";
 import { adminCouponService } from "@/services/admin/adminCouponApiService";
 import Button from "@/components/admin/ui/button/Button";
 import Input from "@/components/admin/form/input/InputField";
@@ -16,9 +18,9 @@ export default function CouponsPage() {
     const router = useRouter();
     const [coupons, setCoupons] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState({
+    // URL Persistence for Filters
+    const [filters, setFilters] = useUrlState({
         page: 1,
-        limit: 9,
         search: "",
         status: "",
         sort: "createdAt:desc"
@@ -27,14 +29,13 @@ export default function CouponsPage() {
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [toggleCoupon, setToggleCoupon] = useState<any>(null);
 
-    useEffect(() => {
-        fetchCoupons();
-    }, [filters]);
-
-    const fetchCoupons = async () => {
+    const fetchCoupons = useCallback(async (currentFilters: any) => {
         try {
             setLoading(true);
-            const res = await adminCouponService.getCoupons(filters);
+            const res = await adminCouponService.getCoupons({
+                ...currentFilters,
+                limit: 9
+            });
             if (res.success) {
                 setCoupons(res.coupons);
                 setTotalPages(res.totalPages);
@@ -44,14 +45,24 @@ export default function CouponsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchCoupons(filters);
+    }, [filters, fetchCoupons]);
+
+    const handleSearch = useMemo(() =>
+        debounce((val: string) => {
+            setFilters({ search: val, page: 1 });
+        }, 500)
+        , [setFilters]);
 
     const handleDelete = async () => {
         if (!deleteId) return;
         try {
             await adminCouponService.delete(deleteId);
             toast.success("Coupon deleted successfully");
-            fetchCoupons();
+            fetchCoupons(filters);
             setDeleteId(null);
         } catch (error) {
             toast.error("Failed to delete coupon");
@@ -63,7 +74,7 @@ export default function CouponsPage() {
         try {
             await adminCouponService.update(toggleCoupon._id, { isActive: !toggleCoupon.isActive });
             toast.success(`Coupon ${!toggleCoupon.isActive ? 'activated' : 'deactivated'} successfully`);
-            fetchCoupons();
+            fetchCoupons(filters);
             setToggleCoupon(null);
         } catch (error) {
             toast.error("Failed to update coupon status");
@@ -124,8 +135,8 @@ export default function CouponsPage() {
                         <input
                             type="text"
                             placeholder="SEARCH COUPONS..."
-                            value={filters.search}
-                            onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
+                            defaultValue={filters.search}
+                            onChange={(e) => handleSearch(e.target.value)}
                             className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/50 border-none rounded-2xl focus:ring-2 focus:ring-sking-pink/50 text-sm font-bold uppercase tracking-wide transition-all"
                         />
                     </div>
@@ -253,7 +264,7 @@ export default function CouponsPage() {
                 <Pagination
                     currentPage={filters.page}
                     totalPages={totalPages}
-                    onPageChange={(page: number) => setFilters({ ...filters, page })}
+                    onPageChange={(page: number) => setFilters({ page })}
                 />
             )}
 

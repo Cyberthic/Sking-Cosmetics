@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { useUrlState } from "@/hooks/useUrlState";
+import { debounce } from "@/utils/debounce";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -39,21 +41,21 @@ export default function ProductsPage() {
     const [products, setProducts] = useState<IProduct[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const limit = 10;
-
-    // Filters
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("");
+    const [filters, setFilters] = useUrlState({
+        page: 1,
+        search: "",
+        category: ""
+    });
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [productToToggle, setProductToToggle] = useState<IProduct | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
 
-    const fetchProducts = async (page: number, search: string, catId: string) => {
+    const fetchProducts = useCallback(async (currentFilters: any) => {
         try {
             setLoading(true);
-            const data = await adminProductService.getProducts(page, limit, search, catId);
+            const data = await adminProductService.getProducts(currentFilters.page, limit, currentFilters.search, currentFilters.category);
             if (data.success) {
                 setProducts(data.products);
                 setTotalPages(data.totalPages);
@@ -63,7 +65,7 @@ export default function ProductsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [limit]);
 
     const fetchCategories = async () => {
         try {
@@ -81,11 +83,14 @@ export default function ProductsPage() {
     }, []);
 
     useEffect(() => {
-        const delay = setTimeout(() => {
-            fetchProducts(currentPage, searchTerm, selectedCategory);
-        }, 500);
-        return () => clearTimeout(delay);
-    }, [searchTerm, currentPage, selectedCategory]);
+        fetchProducts(filters);
+    }, [filters, fetchProducts]);
+
+    const handleSearch = useMemo(() =>
+        debounce((val: string) => {
+            setFilters({ search: val, page: 1 });
+        }, 500)
+        , [setFilters]);
 
     const handleToggleRequest = (product: IProduct) => {
         setProductToToggle(product);
@@ -99,7 +104,7 @@ export default function ProductsPage() {
             const res = await adminProductService.toggleProductStatus(productToToggle._id);
             if (res.success) {
                 toast.success(res.message);
-                fetchProducts(currentPage, searchTerm, selectedCategory);
+                fetchProducts(filters);
             }
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to update status");
@@ -121,11 +126,8 @@ export default function ProductsPage() {
                             type="text"
                             placeholder="Search products..."
                             className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:border-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setCurrentPage(1);
-                            }}
+                            defaultValue={filters.search}
+                            onChange={(e) => handleSearch(e.target.value)}
                         />
                         <svg
                             className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
@@ -140,10 +142,9 @@ export default function ProductsPage() {
                     {/* Category Filter */}
                     <select
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
-                        value={selectedCategory}
+                        value={filters.category}
                         onChange={(e) => {
-                            setSelectedCategory(e.target.value);
-                            setCurrentPage(1);
+                            setFilters({ category: e.target.value, page: 1 });
                         }}
                     >
                         <option value="">All Categories</option>
@@ -244,7 +245,7 @@ export default function ProductsPage() {
                     </Table>
                 </div>
                 <div className="p-4 border-t border-gray-100 dark:border-white/[0.05]">
-                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                    <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={(p) => setFilters({ page: p })} />
                 </div>
             </div>
 
