@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { User, MapPin, Package, Wallet, LogOut, LayoutDashboard } from 'lucide-react';
+import { User, MapPin, Package, Wallet, LogOut, LayoutDashboard, TicketPlus } from 'lucide-react';
 
 const sidebarItems = [
     {
@@ -17,6 +17,11 @@ const sidebarItems = [
         title: 'My Orders',
         href: '/orders',
         icon: Package,
+    },
+    {
+        title: 'My Coupons',
+        href: '/coupons',
+        icon: TicketPlus,
     },
     {
         title: 'Wallet',

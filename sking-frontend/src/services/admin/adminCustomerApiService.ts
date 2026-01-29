@@ -8,6 +8,12 @@ export const adminCustomerService = {
         return response.data;
     },
 
+    // Add this method to search users by name or email for dropdowns
+    searchUsers: async (search: string) => {
+        const response = await axiosInstance.get(`${API_URL}?search=${search}&limit=20`);
+        return response.data;
+    },
+
     getUserById: async (id: string) => {
         const response = await axiosInstance.get(`${API_URL}/${id}`);
         return response.data;

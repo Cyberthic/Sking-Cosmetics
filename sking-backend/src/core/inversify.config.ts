@@ -60,6 +60,14 @@ import { AdminOrderRepository } from "../repositories/admin/adminOrder.repositor
 import { AdminOrderService } from "../services/admin/adminOrder.service";
 import { AdminOrderController } from "../controllers/admin/adminOrder.controller";
 
+// Admin Coupon
+import { IAdminCouponRepository } from "./interfaces/repositories/admin/IAdminCoupon.repository";
+import { IAdminCouponService } from "./interfaces/services/admin/IAdminCoupon.service";
+import { IAdminCouponController } from "./interfaces/controllers/admin/IAdminCoupon.controller";
+import { AdminCouponRepository } from "../repositories/admin/adminCoupon.repository";
+import { AdminCouponService } from "../services/admin/adminCoupon.service";
+import { AdminCouponController } from "../controllers/admin/adminCoupon.controller";
+
 const container = new Container();
 
 // Repositories
@@ -97,6 +105,11 @@ container.bind<IAdminProductController>(TYPES.IAdminProductController).to(AdminP
 container.bind<IAdminOrderRepository>(TYPES.IAdminOrderRepository).to(AdminOrderRepository);
 container.bind<IAdminOrderService>(TYPES.IAdminOrderService).to(AdminOrderService);
 container.bind<IAdminOrderController>(TYPES.IAdminOrderController).to(AdminOrderController);
+
+// Admin Coupon
+container.bind<IAdminCouponRepository>(TYPES.IAdminCouponRepository).to(AdminCouponRepository);
+container.bind<IAdminCouponService>(TYPES.IAdminCouponService).to(AdminCouponService);
+container.bind<IAdminCouponController>(TYPES.IAdminCouponController).to(AdminCouponController);
 
 
 
