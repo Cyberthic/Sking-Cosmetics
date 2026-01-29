@@ -8,7 +8,7 @@ export class AdminProductRepository implements IAdminProductRepository {
         return await ProductModel.create(data);
     }
 
-    async findAll(limit: number, skip: number, search?: string, categoryId?: string): Promise<{ products: IProduct[]; total: number }> {
+    async findAll(limit: number, skip: number, search?: string, categoryId?: string, sortBy?: string): Promise<{ products: IProduct[]; total: number }> {
         const filter: any = {};
         if (search) {
             filter.name = { $regex: search, $options: "i" };
@@ -17,9 +17,22 @@ export class AdminProductRepository implements IAdminProductRepository {
             filter.category = categoryId;
         }
 
+        let sort: any = { createdAt: -1 };
+        if (sortBy) {
+            switch (sortBy) {
+                case 'price-asc': sort = { price: 1 }; break;
+                case 'price-desc': sort = { price: -1 }; break;
+                case 'name-asc': sort = { name: 1 }; break;
+                case 'name-desc': sort = { name: -1 }; break;
+                case 'sold-desc': sort = { soldCount: -1 }; break;
+                case 'oldest': sort = { createdAt: 1 }; break;
+                case 'newest': sort = { createdAt: -1 }; break;
+            }
+        }
+
         const products = await ProductModel.find(filter)
             .populate("category")
-            .sort({ createdAt: -1 })
+            .sort(sort)
             .skip(skip)
             .limit(limit);
 

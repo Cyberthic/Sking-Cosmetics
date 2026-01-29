@@ -19,5 +19,7 @@ productRouter.get("/", isAuthenticated, adminProductController.getProducts);
 productRouter.get("/:id", isAuthenticated, adminProductController.getProductById);
 productRouter.put("/:id", isAuthenticated, adminProductController.updateProduct);
 productRouter.patch("/:id/toggle-status", isAuthenticated, adminProductController.toggleProductStatus);
+productRouter.get("/:id/orders", isAuthenticated, adminProductController.getProductOrders);
+productRouter.get("/:id/stats", isAuthenticated, adminProductController.getProductStats);
 
 export default productRouter;

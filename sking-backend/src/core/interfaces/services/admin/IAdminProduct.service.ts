@@ -9,9 +9,13 @@ export interface IProductWithOffer extends IProduct {
 
 export interface IAdminProductService {
     createProduct(data: CreateProductDto): Promise<IProduct>;
-    getProducts(limit: number, page: number, search?: string, categoryId?: string): Promise<{ products: any[]; total: number; totalPages: number }>;
+    getProducts(limit: number, page: number, search?: string, categoryId?: string, sortBy?: string): Promise<{ products: any[]; total: number; totalPages: number }>;
     getProductById(id: string): Promise<any | null>; // Returns product with calculated price
     updateProduct(id: string, data: UpdateProductDto): Promise<IProduct | null>;
     toggleProductStatus(id: string): Promise<IProduct | null>;
     uploadProductImage(file: any): Promise<string>;
+
+    getProductOrders(productId: string, page: number, limit: number): Promise<{ orders: any[], total: number }>;
+    getProductStats(productId: string): Promise<any>;
+    getTopCustomers(productId: string, limit: number): Promise<any[]>;
 }

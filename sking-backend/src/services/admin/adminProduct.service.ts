@@ -7,13 +7,15 @@ import { CreateProductDto, UpdateProductDto } from "../../core/dtos/admin/adminP
 import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
 import cloudinary from "../../config/cloudinary";
+import { IUserOrderRepository } from "../../core/interfaces/repositories/user/IUserOrder.repository";
 import streamifier from "streamifier";
 import logger from "../../utils/logger";
 
 @injectable()
 export class AdminProductService implements IAdminProductService {
     constructor(
-        @inject(TYPES.IAdminProductRepository) private _repo: IAdminProductRepository
+        @inject(TYPES.IAdminProductRepository) private _repo: IAdminProductRepository,
+        @inject(TYPES.IUserOrderRepository) private _orderRepo: IUserOrderRepository
     ) { }
 
     private calculateEffectivePrice(product: IProduct): any {
@@ -57,9 +59,9 @@ export class AdminProductService implements IAdminProductService {
         return await this._repo.create(productData);
     }
 
-    async getProducts(limit: number, page: number, search?: string, categoryId?: string): Promise<{ products: any[]; total: number; totalPages: number }> {
+    async getProducts(limit: number, page: number, search?: string, categoryId?: string, sortBy?: string): Promise<{ products: any[]; total: number; totalPages: number }> {
         const skip = (page - 1) * limit;
-        const { products, total } = await this._repo.findAll(limit, skip, search, categoryId);
+        const { products, total } = await this._repo.findAll(limit, skip, search, categoryId, sortBy);
 
         const productsWithPrice = products.map(p => this.calculateEffectivePrice(p));
 
@@ -143,5 +145,38 @@ export class AdminProductService implements IAdminProductService {
             );
             streamifier.createReadStream(file.buffer).pipe(uploadStream);
         });
+    }
+
+    private async resolveProductId(idOrSlug: string): Promise<string> {
+        if (idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
+            // It looks like an ObjectId, but let's ensure it exists if strict is needed. 
+            // However, assume it's an ID if it matches format to save a DB call if possible, 
+            // but for slug vs ID ambiguity, we should probably check DB if we want to be safe,
+            // or rely on the repository to handle it. 
+            // BUT, findByProductIdPaginated expects a string ID.
+            return idOrSlug;
+        }
+
+        // Try to find by slug
+        const product = await this._repo.findBySlug(idOrSlug);
+        if (!product) {
+            throw new CustomError("Product not found", StatusCode.NOT_FOUND);
+        }
+        return product._id.toString();
+    }
+
+    async getProductOrders(idOrSlug: string, page: number, limit: number): Promise<{ orders: any[], total: number }> {
+        const productId = await this.resolveProductId(idOrSlug);
+        return await this._orderRepo.findByProductIdPaginated(productId, page, limit);
+    }
+
+    async getProductStats(idOrSlug: string): Promise<any> {
+        const productId = await this.resolveProductId(idOrSlug);
+        return await this._orderRepo.findStatsByProductId(productId);
+    }
+
+    async getTopCustomers(idOrSlug: string, limit: number): Promise<any[]> {
+        const productId = await this.resolveProductId(idOrSlug);
+        return await this._orderRepo.findTopCustomersByProductId(productId, limit);
     }
 }

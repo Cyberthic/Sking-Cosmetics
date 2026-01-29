@@ -28,8 +28,18 @@ interface ProductData {
 }
 
 export const adminProductService = {
-    getProducts: async (page: number = 1, limit: number = 10, search: string = '', categoryId: string = '') => {
-        const response = await axiosInstance.get(`${API_URL}?page=${page}&limit=${limit}&search=${search}&category=${categoryId}`);
+    getProducts: async (page: number = 1, limit: number = 10, search: string = '', categoryId: string = '', sortBy: string = '') => {
+        const response = await axiosInstance.get(`${API_URL}?page=${page}&limit=${limit}&search=${search}&category=${categoryId}&sortBy=${sortBy}`);
+        return response.data;
+    },
+
+    getProductOrders: async (id: string, page: number = 1, limit: number = 10) => {
+        const response = await axiosInstance.get(`${API_URL}/${id}/orders?page=${page}&limit=${limit}`);
+        return response.data;
+    },
+
+    getProductStats: async (id: string) => {
+        const response = await axiosInstance.get(`${API_URL}/${id}/stats`);
         return response.data;
     },
 

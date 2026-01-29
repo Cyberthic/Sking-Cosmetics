@@ -32,11 +32,38 @@ export class AdminProductController implements IAdminProductController {
             const limit = parseInt(req.query.limit as string) || 10;
             const search = req.query.search as string;
             const categoryId = req.query.category as string;
+            const sortBy = req.query.sortBy as string;
 
-            const result = await this._service.getProducts(limit, page, search, categoryId);
+            const result = await this._service.getProducts(limit, page, search, categoryId, sortBy);
             return res.status(StatusCode.OK).json({ success: true, ...result });
         } catch (error: any) {
             logger.error("Error fetching products:", error);
+            return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
+        }
+    }
+
+    getProductOrders = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const { id } = req.params;
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+
+            const result = await this._service.getProductOrders(id, page, limit);
+            return res.status(StatusCode.OK).json({ success: true, data: result });
+        } catch (error: any) {
+            logger.error("Error fetching product orders:", error);
+            return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
+        }
+    }
+
+    getProductStats = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const { id } = req.params;
+            const stats = await this._service.getProductStats(id);
+            const topCustomers = await this._service.getTopCustomers(id, 5); // Limit 5 top customers
+            return res.status(StatusCode.OK).json({ success: true, stats, topCustomers });
+        } catch (error: any) {
+            logger.error("Error fetching product stats:", error);
             return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
         }
     }

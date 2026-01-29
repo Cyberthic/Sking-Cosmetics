@@ -201,6 +201,9 @@ export default function CustomerDetailPage() {
                     </div>
 
                     <div className="flex gap-3">
+                        <Link href="/admin/customers" className="px-6 py-3 bg-white dark:bg-white/10 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white rounded-xl font-bold uppercase tracking-wider text-xs hover:bg-gray-50 dark:hover:bg-white/20 transition-all flex items-center gap-2">
+                            <ArrowRight className="rotate-180" size={16} /> Back
+                        </Link>
                         {user.isBanned ? (
                             <button onClick={handleUnban} className="px-6 py-3 bg-green-500 text-white rounded-xl font-bold uppercase tracking-wider text-xs hover:bg-green-600 transition-all shadow-lg shadow-green-500/20">
                                 Unban Customer

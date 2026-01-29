@@ -19,7 +19,8 @@ import Pagination from "../../../../../components/admin/tables/Pagination";
 import Button from "../../../../../components/admin/ui/button/Button";
 import { ConfirmationModal } from "../../../../../components/common/ConfirmationModal";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Search } from "lucide-react";
+import FormSelect from "../../../../../components/admin/form/FormSelect";
 
 interface IProduct {
     _id: string;
@@ -46,7 +47,8 @@ export default function ProductsPage() {
     const [filters, setFilters] = useUrlState({
         page: 1,
         search: "",
-        category: ""
+        category: "",
+        sortBy: "newest"
     });
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [productToToggle, setProductToToggle] = useState<IProduct | null>(null);
@@ -55,7 +57,7 @@ export default function ProductsPage() {
     const fetchProducts = useCallback(async (currentFilters: any) => {
         try {
             setLoading(true);
-            const data = await adminProductService.getProducts(currentFilters.page, limit, currentFilters.search, currentFilters.category);
+            const data = await adminProductService.getProducts(currentFilters.page, limit, currentFilters.search, currentFilters.category, currentFilters.sortBy);
             if (data.success) {
                 setProducts(data.products);
                 setTotalPages(data.totalPages);
@@ -117,45 +119,58 @@ export default function ProductsPage() {
 
     return (
         <div className="p-6">
-            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Product Management</h1>
-                <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                    {/* Search */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search products..."
-                            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:border-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
-                            defaultValue={filters.search}
-                            onChange={(e) => handleSearch(e.target.value)}
-                        />
-                        <svg
-                            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+            <div className="mb-8 flex flex-col items-start gap-4">
+                <div className="flex justify-between items-center w-full">
+                    <div>
+                        <h1 className="text-3xl font-black uppercase tracking-tight dark:text-white">Products</h1>
+                        <p className="text-sm text-gray-500 font-medium uppercase tracking-widest mt-1">Manage your product inventory</p>
                     </div>
-
-                    {/* Category Filter */}
-                    <select
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
-                        value={filters.category}
-                        onChange={(e) => {
-                            setFilters({ category: e.target.value, page: 1 });
-                        }}
-                    >
-                        <option value="">All Categories</option>
-                        {categories.map((cat) => (
-                            <option key={cat._id} value={cat._id}>{cat.name}</option>
-                        ))}
-                    </select>
-
                     <Button href="/admin/products/add">
                         Add New Product
                     </Button>
+                </div>
+
+                <div className="bg-white dark:bg-white/5 p-6 rounded-[30px] border border-gray-100 dark:border-white/10 shadow-sm w-full flex flex-col lg:flex-row gap-4">
+                    <div className="flex-grow w-full">
+                        <div className="relative group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-sking-pink transition-colors" size={20} />
+                            <input
+                                type="text"
+                                placeholder="SEARCH PRODUCTS..."
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/50 border-none rounded-2xl focus:ring-2 focus:ring-sking-pink/50 text-sm font-bold uppercase tracking-wide transition-all"
+                                defaultValue={filters.search}
+                                onChange={(e) => handleSearch(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                        <FormSelect
+                            className="w-full sm:w-64"
+                            value={filters.category}
+                            onChange={(val) => setFilters({ category: val, page: 1 })}
+                            options={[
+                                { value: "", label: "All Categories" },
+                                ...categories.map(cat => ({ value: cat._id, label: cat.name }))
+                            ]}
+                            placeholder="Filter Category"
+                        />
+                        <FormSelect
+                            className="w-full sm:w-64"
+                            value={filters.sortBy}
+                            onChange={(val) => setFilters({ sortBy: val, page: 1 })}
+                            options={[
+                                { value: "newest", label: "Newest First" },
+                                { value: "oldest", label: "Oldest First" },
+                                { value: "price-asc", label: "Price: Low to High" },
+                                { value: "price-desc", label: "Price: High to Low" },
+                                { value: "name-asc", label: "Name: A-Z" },
+                                { value: "name-desc", label: "Name: Z-A" },
+                                { value: "sold-desc", label: "Best Selling" }
+                            ]}
+                            placeholder="Sort By"
+                        />
+                    </div>
                 </div>
             </div>
 
