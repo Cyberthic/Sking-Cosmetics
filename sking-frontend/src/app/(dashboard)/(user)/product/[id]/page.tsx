@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { userProductService } from "@/services/user/userProductApiService";
@@ -53,6 +53,8 @@ export default function ProductDetail() {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [vouchers, setVouchers] = useState<any[]>([]);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
+    const [hasAddedToCart, setHasAddedToCart] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         if (id) fetchData(id as string);
@@ -108,6 +110,25 @@ export default function ProductDetail() {
     const dispatch = useDispatch<AppDispatch>();
     const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const isInWishlist = product ? wishlistItems.includes(product._id) : false;
+
+    const handleBuyNow = async () => {
+        if (hasAddedToCart) {
+            router.push('/cart');
+            return;
+        }
+
+        if (!product) return;
+        try {
+            const response = await userCartService.addToCart(product._id, selectedVariant?.size, quantity);
+            if (response.success) {
+                dispatch(updateCartLocally(response.cart));
+                toast.success("Added to Cart");
+                setHasAddedToCart(true);
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to add to cart");
+        }
+    };
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -388,8 +409,13 @@ export default function ProductDetail() {
                             >
                                 Add to Bag
                             </button>
-                            <button className="flex-1 bg-sking-pink text-white font-bold uppercase tracking-widest text-sm rounded hover:bg-pink-600 transition-colors shadow-lg shadow-pink-200">
-                                Buy Now
+                            <button
+                                onClick={handleBuyNow}
+                                className={`flex-1 font-bold uppercase tracking-widest text-sm rounded transition-all shadow-lg ${hasAddedToCart
+                                    ? "bg-black text-white hover:bg-gray-900 shadow-gray-200"
+                                    : "bg-sking-pink text-white hover:bg-pink-600 shadow-pink-200"}`}
+                            >
+                                {hasAddedToCart ? "View In Cart" : "Buy Now"}
                             </button>
                             <button
                                 onClick={handleAddToWishlist}
