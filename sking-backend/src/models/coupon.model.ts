@@ -12,8 +12,9 @@ export interface ICoupon extends Document {
     usageLimit: number; // Total usage limit
     usageCount: number; // Current usage count
     userLimit: number; // Limit per user
-    couponType: 'all' | 'new_users' | 'specific_users' | 'registered_after';
+    couponType: 'all' | 'new_users' | 'specific_users' | 'specific_products' | 'registered_after';
     specificUsers: Types.ObjectId[];
+    specificProducts: Types.ObjectId[];
     registeredAfter?: Date;
     isActive: boolean;
     createdAt: Date;
@@ -32,8 +33,9 @@ const CouponSchema: Schema = new Schema({
     usageLimit: { type: Number, default: 0 }, // 0 means unlimited
     usageCount: { type: Number, default: 0 },
     userLimit: { type: Number, default: 1 },
-    couponType: { type: String, enum: ['all', 'new_users', 'specific_users', 'registered_after'], default: 'all' },
+    couponType: { type: String, enum: ['all', 'new_users', 'specific_users', 'specific_products', 'registered_after'], default: 'all' },
     specificUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    specificProducts: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     registeredAfter: { type: Date },
     isActive: { type: Boolean, default: true }
 }, { timestamps: true });

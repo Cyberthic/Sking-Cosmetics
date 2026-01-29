@@ -43,13 +43,16 @@ export class AdminCouponRepository implements IAdminCouponRepository {
             .sort(sortOptions)
             .skip(skip)
             .limit(limit)
-            .populate('specificUsers', 'name email');
+            .populate('specificUsers', 'name email')
+            .populate('specificProducts', 'name images');
 
         return { coupons, total };
     }
 
     async findById(id: string): Promise<ICoupon | null> {
-        return await Coupon.findById(id).populate('specificUsers', 'name email');
+        return await Coupon.findById(id)
+            .populate('specificUsers', 'name email')
+            .populate('specificProducts', 'name images');
     }
 
     async findByCode(code: string): Promise<ICoupon | null> {
@@ -57,7 +60,9 @@ export class AdminCouponRepository implements IAdminCouponRepository {
     }
 
     async update(id: string, data: Partial<ICoupon>): Promise<ICoupon | null> {
-        return await Coupon.findByIdAndUpdate(id, data, { new: true }).populate('specificUsers', 'name email');
+        return await Coupon.findByIdAndUpdate(id, data, { new: true })
+            .populate('specificUsers', 'name email')
+            .populate('specificProducts', 'name images');
     }
 
     async delete(id: string): Promise<boolean> {

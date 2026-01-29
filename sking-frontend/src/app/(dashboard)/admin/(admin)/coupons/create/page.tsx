@@ -5,11 +5,12 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { adminCouponService } from "@/services/admin/adminCouponApiService";
 import { adminCustomerService } from "@/services/admin/adminCustomerApiService";
+import { adminProductService } from "@/services/admin/adminProductApiService";
 import { createCouponSchema, type CreateCouponInput } from "@/validations/adminCoupon.validation";
 import Button from "@/components/admin/ui/button/Button";
 import Input from "@/components/admin/form/input/InputField";
 import FormSelect from "@/components/admin/form/FormSelect";
-import { ChevronLeft, Save, Loader2, X } from "lucide-react";
+import { ChevronLeft, Save, Loader2, X, Package } from "lucide-react";
 import { toast } from "sonner";
 import { debounce } from "@/utils/debounce";
 
@@ -19,6 +20,11 @@ export default function CreateCouponPage() {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
     const [searchingUsers, setSearchingUsers] = useState(false);
+
+    const [productSearch, setProductSearch] = useState("");
+    const [productResults, setProductResults] = useState<any[]>([]);
+    const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+    const [searchingProducts, setSearchingProducts] = useState(false);
 
     const getDefaultDates = () => {
         const now = new Date();
@@ -57,6 +63,7 @@ export default function CreateCouponPage() {
             userLimit: 1,
             couponType: "all",
             specificUsers: [],
+            specificProducts: [],
             registeredAfter: "",
             isActive: true
         }
@@ -70,6 +77,7 @@ export default function CreateCouponPage() {
             const couponData = {
                 ...values,
                 specificUsers: selectedUsers.map(u => u._id),
+                specificProducts: selectedProducts.map(p => p._id),
             };
 
             // Cleanup optional fields based on type
@@ -80,6 +88,10 @@ export default function CreateCouponPage() {
             if (values.couponType !== 'specific_users') {
                 // @ts-ignore
                 delete couponData.specificUsers;
+            }
+            if (values.couponType !== 'specific_products') {
+                // @ts-ignore
+                delete couponData.specificProducts;
             }
             if (values.couponType !== 'registered_after') {
                 // @ts-ignore
@@ -116,10 +128,34 @@ export default function CreateCouponPage() {
         }
     }, 500);
 
+    const debouncedProductSearch = debounce(async (query: string) => {
+        if (!query) {
+            setProductResults([]);
+            return;
+        }
+        try {
+            setSearchingProducts(true);
+            const res = await adminProductService.getProducts(1, 10, query);
+            if (res.success) {
+                const products = res.data?.products || res.products || [];
+                setProductResults(products.filter((product: any) => !selectedProducts.find(p => p._id === product._id)));
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSearchingProducts(false);
+        }
+    }, 500);
+
     useEffect(() => {
         debouncedUserSearch(userSearch);
         return () => debouncedUserSearch.cancel();
     }, [userSearch]);
+
+    useEffect(() => {
+        debouncedProductSearch(productSearch);
+        return () => debouncedProductSearch.cancel();
+    }, [productSearch]);
 
     const addUser = (user: any) => {
         const newSelected = [...selectedUsers, user];
@@ -133,6 +169,20 @@ export default function CreateCouponPage() {
         const newSelected = selectedUsers.filter(u => u._id !== userId);
         setSelectedUsers(newSelected);
         setValue('specificUsers', newSelected.map(u => u._id), { shouldValidate: true });
+    };
+
+    const addProduct = (product: any) => {
+        const newSelected = [...selectedProducts, product];
+        setSelectedProducts(newSelected);
+        setProductResults([]);
+        setProductSearch("");
+        setValue('specificProducts', newSelected.map(p => p._id), { shouldValidate: true });
+    };
+
+    const removeProduct = (productId: string) => {
+        const newSelected = selectedProducts.filter(p => p._id !== productId);
+        setSelectedProducts(newSelected);
+        setValue('specificProducts', newSelected.map(p => p._id), { shouldValidate: true });
     };
 
     // Helper to hook register with custom onChange logic
@@ -308,10 +358,11 @@ export default function CreateCouponPage() {
                                         { value: "all", label: "All Users" },
                                         { value: "new_users", label: "New Users Only" },
                                         { value: "registered_after", label: "Registered After Date" },
-                                        { value: "specific_users", label: "Specific Users" }
+                                        { value: "specific_users", label: "Specific Users" },
+                                        { value: "specific_products", label: "Specific Products" }
                                     ]}
                                     error={errors.couponType?.message}
-                                    tooltip="Restrict this coupon to a specific group of people."
+                                    tooltip="Restrict this coupon to a specific group of people or products."
                                 />
                             )}
                         />
@@ -324,6 +375,64 @@ export default function CreateCouponPage() {
                                 error={errors.registeredAfter?.message}
                                 tooltip="Only users who joined after this date can use the coupon."
                             />
+                        )}
+
+                        {watchedCouponType === 'specific_products' && (
+                            <div className="space-y-4">
+                                <div className="relative">
+                                    <Input
+                                        label="Search Products"
+                                        placeholder="Type product name..."
+                                        value={productSearch}
+                                        onChange={(e) => setProductSearch(e.target.value)}
+                                        tooltip="Search and select specific products for this discount."
+                                    />
+                                    {searchingProducts && <Loader2 className="absolute right-4 top-[38px] animate-spin text-gray-400" size={16} />}
+
+                                    {productResults.length > 0 && (
+                                        <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-white/10 rounded-2xl shadow-xl max-h-60 overflow-y-auto">
+                                            {productResults.map(product => (
+                                                <div
+                                                    key={product._id}
+                                                    onClick={() => addProduct(product)}
+                                                    className="p-3 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer border-b border-gray-50 dark:border-white/5 last:border-0 flex justify-between items-center"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        {product.images?.[0] ? (
+                                                            <img src={product.images[0]} alt="" className="w-8 h-8 rounded-lg object-cover bg-gray-100" />
+                                                        ) : (
+                                                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                                                                <Package size={14} className="text-gray-400" />
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <p className="text-sm font-bold dark:text-white">{product.name}</p>
+                                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">₹{product.price}</p>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-sking-pink">Select</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {selectedProducts.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10">
+                                        {selectedProducts.map(product => (
+                                            <div key={product._id} className="bg-white dark:bg-gray-800 pl-3 pr-2 py-1 rounded-xl border border-gray-200 dark:border-white/10 flex items-center gap-2 shadow-sm">
+                                                <span className="text-xs font-bold dark:text-white">{product.name}</span>
+                                                <button type="button" onClick={() => removeProduct(product._id)} className="text-red-500 hover:text-red-700">
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {errors.specificProducts && (
+                                    <div className="text-red-500 text-xs font-bold mt-1 uppercase tracking-wider">{errors.specificProducts.message}</div>
+                                )}
+                            </div>
                         )}
 
                         {watchedCouponType === 'specific_users' && (

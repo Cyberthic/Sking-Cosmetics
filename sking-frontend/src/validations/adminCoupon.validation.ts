@@ -18,11 +18,12 @@ export const createCouponSchema = z.object({
     usageLimit: z.coerce.number().min(0, "Limit cannot be negative").optional(),
     userLimit: z.coerce.number().min(1, "User limit must be at least 1").optional(),
     couponType: z.enum(
-        ["all", "new_users", "specific_users", "registered_after"],
+        ["all", "new_users", "specific_users", "specific_products", "registered_after"],
         { errorMap: () => ({ message: "Invalid coupon type" }) }
     ),
     registeredAfter: z.string().optional(),
     specificUsers: z.array(z.string()).optional(),
+    specificProducts: z.array(z.string()).optional(),
 }).superRefine((data, ctx) => {
     if (data.couponType === 'registered_after' && !data.registeredAfter) {
         ctx.addIssue({
@@ -37,6 +38,14 @@ export const createCouponSchema = z.object({
             code: z.ZodIssueCode.custom,
             message: "Select at least one user",
             path: ["specificUsers"],
+        });
+    }
+
+    if (data.couponType === 'specific_products' && (!data.specificProducts || data.specificProducts.length === 0)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Select at least one product",
+            path: ["specificProducts"],
         });
     }
 
