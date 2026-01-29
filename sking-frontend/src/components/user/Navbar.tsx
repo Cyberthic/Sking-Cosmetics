@@ -137,8 +137,8 @@ export default function Navbar() {
                                                 <p className="text-sm font-medium uppercase tracking-wide truncate">{user?.username || 'User'}</p>
                                                 <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>
                                             </div>
-                                            <Link href="/profile" className="block px-5 py-3 hover:bg-gray-50 text-sm font-medium transition-colors">Profile</Link>
-                                            <Link href="/orders" className="block px-5 py-3 hover:bg-gray-50 text-sm font-medium transition-colors">Orders</Link>
+                                            <Link href="/profile" onClick={() => setShowUserMenu(false)} className="block px-5 py-3 hover:bg-gray-50 text-sm font-medium transition-colors">Profile</Link>
+                                            <Link href="/orders" onClick={() => setShowUserMenu(false)} className="block px-5 py-3 hover:bg-gray-50 text-sm font-medium transition-colors">Orders</Link>
                                             <div className="h-px bg-gray-100 my-1"></div>
                                             <button onClick={handleLogout} className="block w-full text-left px-5 py-3 hover:bg-red-50 text-red-600 text-sm font-medium transition-colors">Logout</button>
                                         </div>
@@ -302,7 +302,7 @@ export default function Navbar() {
 
                 {/* Overlay for user menu click-outside */}
                 {showUserMenu && (
-                    <div className="fixed inset-0 z-[55] lg:hidden" onClick={() => setShowUserMenu(false)} />
+                    <div className="fixed inset-0 z-[55]" onClick={() => setShowUserMenu(false)} />
                 )}
 
                 <CartDrawer isOpen={isDrawerOpen} onClose={() => setIsCartOpen(false)} />
