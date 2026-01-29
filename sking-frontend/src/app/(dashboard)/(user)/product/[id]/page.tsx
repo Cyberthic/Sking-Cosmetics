@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { userProductService } from "@/services/user/userProductApiService";
+import { userCouponApiService } from "@/services/user/userCouponApiService";
 import ProductCard from "@/components/user/ProductCard";
 import { userCartService } from "@/services/user/userCartApiService";
 import { userWishlistService } from "@/services/user/userWishlistApiService";
@@ -12,13 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
 import { toggleWishlist } from "@/redux/features/wishlistSlice";
 import { RootState, AppDispatch } from "@/redux/store";
-import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check } from "lucide-react";
-
-// Mock Data for UI elements that might not be in API yet
-const MOCK_VOUCHERS = [
-    { code: "GLOW15", discount: "5% off", desc: "for your entire purchase" },
-    { code: "BEAUTY20", discount: "20% off", desc: "skincare essential" }
-];
+import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check, Info, Ticket, ExternalLink } from "lucide-react";
 
 const REVIEWS_SUMMARY = {
     total: 143,
@@ -56,6 +51,8 @@ export default function ProductDetail() {
     const [activeTab, setActiveTab] = useState("description");
     const [zoomed, setZoomed] = useState(false);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const [vouchers, setVouchers] = useState<any[]>([]);
+    const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
     useEffect(() => {
         if (id) fetchData(id as string);
@@ -64,18 +61,48 @@ export default function ProductDetail() {
     const fetchData = async (productId: string) => {
         setLoading(true);
         try {
-            const data = await userProductService.getProductById(productId);
-            if (data.success) {
-                setProduct(data.product);
-                setRelated(data.related || []);
-                if (data.product.images?.length > 0) setMainImage(data.product.images[0]);
-                if (data.product.variants?.length > 0) setSelectedVariant(data.product.variants[0]);
+            const [productRes, couponRes] = await Promise.all([
+                userProductService.getProductById(productId),
+                userCouponApiService.getMyCoupons()
+            ]);
+
+            if (productRes.success) {
+                setProduct(productRes.product);
+                setRelated(productRes.related || []);
+                if (productRes.product.images?.length > 0) setMainImage(productRes.product.images[0]);
+                if (productRes.product.variants?.length > 0) setSelectedVariant(productRes.product.variants[0]);
+            }
+
+            if (couponRes.success) {
+                const allVouchers = couponRes.data.active || [];
+                // Filter and Prioritize
+                const filtered = allVouchers.filter((v: any) => {
+                    if (v.couponType === 'specific_products') {
+                        return v.specificProducts?.some((p: any) => p._id === productId || p === productId);
+                    }
+                    return true;
+                });
+
+                const sorted = filtered.sort((a: any, b: any) => {
+                    const priority = { 'specific_products': 1, 'specific_users': 2, 'new_users': 3, 'registered_after': 4, 'all': 5 };
+                    // @ts-ignore
+                    return (priority[a.couponType] || 99) - (priority[b.couponType] || 99);
+                });
+
+                setVouchers(sorted);
             }
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
         }
+    };
+
+    const copyToClipboard = (code: string) => {
+        navigator.clipboard.writeText(code);
+        setCopiedCode(code);
+        toast.success("Coupon code copied!");
+        setTimeout(() => setCopiedCode(null), 2000);
     };
 
     const dispatch = useDispatch<AppDispatch>();
@@ -271,29 +298,61 @@ export default function ProductDetail() {
                     )}
 
                     {/* Vouchers */}
-                    <div className="mb-8">
-                        <div className="flex items-center gap-2 mb-3 text-gray-500">
-                            <span className="p-1 bg-gray-200 rounded-full font-bold text-[10px]">%</span>
-                            <span className="text-xs font-bold text-black">Voucher Promo</span>
-                            <span className="text-xs">there are {MOCK_VOUCHERS.length} promo codes for you</span>
-                        </div>
-                        <div className="flex gap-4 overflow-x-auto pb-2">
-                            {MOCK_VOUCHERS.map((voucher, idx) => (
-                                <div key={idx} className="flex-shrink-0 bg-pink-50 border border-pink-100 p-3 rounded-lg flex justify-between items-center w-64">
-                                    <div>
-                                        <p className="text-red-500 font-bold text-lg">{voucher.discount}</p>
-                                        <p className="text-gray-500 text-xs">{voucher.desc}</p>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-1">
-                                        <span className="text-xs font-bold text-gray-400">{voucher.code}</span>
-                                        <button className="text-red-500 hover:text-red-700">
-                                            <Copy size={16} />
-                                        </button>
-                                    </div>
+                    {vouchers.length > 0 && (
+                        <div className="mb-8">
+                            <div className="flex items-center justify-between mb-3 text-gray-500">
+                                <div className="flex items-center gap-2">
+                                    <span className="p-1 bg-gray-200 rounded-full font-bold text-[10px]">%</span>
+                                    <span className="text-xs font-bold text-black uppercase tracking-tight">Active Offers</span>
+                                    <span className="text-[10px] font-medium font-mono bg-gray-100 px-1.5 py-0.5 rounded uppercase">Applicable</span>
                                 </div>
-                            ))}
+                                <Link
+                                    href="/coupons"
+                                    className="text-[10px] font-black uppercase tracking-widest text-sking-pink hover:underline flex items-center gap-1"
+                                >
+                                    View More <ExternalLink size={10} />
+                                </Link>
+                            </div>
+                            <div className="flex flex-col gap-3">
+                                {vouchers.slice(0, 2).map((voucher, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`relative overflow-hidden flex items-center justify-between p-4 rounded-2xl border transition-all ${voucher.couponType === 'specific_products' || voucher.couponType === 'specific_users'
+                                            ? "bg-pink-50/50 border-pink-100 shadow-sm"
+                                            : "bg-gray-50 border-gray-100"
+                                            }`}
+                                    >
+                                        {/* Decorative side punch hole */}
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-6 bg-white border border-l-0 border-pink-100/50 rounded-r-full" />
+
+                                        <div className="pl-3">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-xl font-black text-black italic">
+                                                    {voucher.discountType === 'percentage' ? `${voucher.discountValue}%` : `₹${voucher.discountValue}`}
+                                                </span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-sking-pink">OFF</span>
+                                                {(voucher.couponType === 'specific_products' || voucher.couponType === 'specific_users') && (
+                                                    <span className="px-1.5 py-0.5 bg-sking-pink text-white text-[8px] font-black uppercase tracking-tighter rounded">Exclusive</span>
+                                                )}
+                                            </div>
+                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider line-clamp-1">{voucher.description}</p>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-1 px-3 border-l border-gray-200 border-dashed ml-4">
+                                            <span className="text-[10px] font-mono font-black text-black uppercase tracking-widest">{voucher.code}</span>
+                                            <button
+                                                onClick={() => copyToClipboard(voucher.code)}
+                                                className="p-1.5 hover:bg-white rounded-lg transition-colors text-gray-400 hover:text-sking-pink"
+                                                title="Copy Code"
+                                            >
+                                                {copiedCode === voucher.code ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Actions */}
                     <div className="space-y-6">
