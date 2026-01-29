@@ -12,7 +12,6 @@ import { StatusCode } from "../../enums/statusCode.enums";
 import crypto from "crypto";
 import logger from "../../utils/logger";
 import mongoose from "mongoose";
-
 import razorpay from "../../config/razorpay";
 
 @injectable()
@@ -27,9 +26,8 @@ export class UserOrderService implements IUserOrderService {
 
     async getUserOrders(userId: string): Promise<IOrder[]> {
         const orders = await this._orderRepository.findByUserId(userId);
-
-        // Auto-expire pending orders
         const now = new Date();
+
         const updatedOrders = await Promise.all(orders.map(async (order) => {
             if (order.orderStatus === "payment_pending" && now > order.paymentExpiresAt) {
                 await this._cancelOrderInternal(order);
@@ -44,13 +42,9 @@ export class UserOrderService implements IUserOrderService {
 
     async getOrderDetail(orderId: string, userId: string): Promise<IOrder> {
         let order: IOrder | null = null;
-
-        // 1. Try finding by ObjectId if it's a valid ObjectId
         if (mongoose.Types.ObjectId.isValid(orderId)) {
             order = await this._orderRepository.findByIdAndUserId(orderId, userId);
         }
-
-        // 2. If not found or not a valid ObjectId, try finding by displayId
         if (!order) {
             order = await this._orderRepository.findByDisplayIdAndUserId(orderId, userId);
         }
@@ -59,7 +53,6 @@ export class UserOrderService implements IUserOrderService {
             throw new CustomError("Order not found", StatusCode.NOT_FOUND);
         }
 
-        // Auto-expire if pending and expired
         if (order.orderStatus === "payment_pending" && new Date() > order.paymentExpiresAt) {
             await this._cancelOrderInternal(order);
             const refreshedOrder = await this._orderRepository.findByIdAndUserId(order._id!.toString(), userId);
@@ -83,25 +76,19 @@ export class UserOrderService implements IUserOrderService {
             .update(body.toString())
             .digest("hex");
 
-        const isVerified = expectedSignature === razorpay_signature;
-
-        if (isVerified) {
+        if (expectedSignature === razorpay_signature) {
             return await this.processPaymentSuccess(order, razorpay_payment_id, razorpay_signature);
         } else {
-            await this._orderRepository.updateOrder(order._id!.toString(), {
-                paymentStatus: "failed"
-            });
+            await this._orderRepository.updateOrder(order._id!.toString(), { paymentStatus: "failed" });
             throw new CustomError("Payment verification failed", StatusCode.BAD_REQUEST);
         }
     }
 
     async retryPayment(orderId: string, userId: string): Promise<IOrder> {
         let order: IOrder | null = null;
-
         if (mongoose.Types.ObjectId.isValid(orderId)) {
             order = await this._orderRepository.findByIdAndUserId(orderId, userId);
         }
-
         if (!order) {
             order = await this._orderRepository.findByDisplayIdAndUserId(orderId, userId);
         }
@@ -118,14 +105,11 @@ export class UserOrderService implements IUserOrderService {
             throw new CustomError("Order is cancelled", StatusCode.BAD_REQUEST);
         }
 
-        // Check if expired
         if (new Date() > order.paymentExpiresAt) {
-            // Mark as cancelled if expired during retry attempt
             await this._cancelOrderInternal(order);
-            throw new CustomError("Order payment window has expired. Please place a new order.", StatusCode.BAD_REQUEST);
+            throw new CustomError("Order payment window has expired.", StatusCode.BAD_REQUEST);
         }
 
-        // Create a new Razorpay order for retry
         try {
             const razorpayOrder = await razorpay.orders.create({
                 amount: Math.round(order.finalAmount * 100),
@@ -134,10 +118,7 @@ export class UserOrderService implements IUserOrderService {
             });
 
             const updatedOrder = await this._orderRepository.updateOrder(order._id!.toString(), {
-                paymentDetails: {
-                    ...order.paymentDetails,
-                    gatewayOrderId: razorpayOrder.id
-                }
+                paymentDetails: { ...order.paymentDetails, gatewayOrderId: razorpayOrder.id }
             });
 
             return updatedOrder as IOrder;
@@ -149,11 +130,9 @@ export class UserOrderService implements IUserOrderService {
 
     async cancelOrder(orderId: string, userId: string): Promise<void> {
         let order: IOrder | null = null;
-
         if (mongoose.Types.ObjectId.isValid(orderId)) {
             order = await this._orderRepository.findByIdAndUserId(orderId, userId);
         }
-
         if (!order) {
             order = await this._orderRepository.findByDisplayIdAndUserId(orderId, userId);
         }
@@ -166,9 +145,7 @@ export class UserOrderService implements IUserOrderService {
             throw new CustomError("Cannot cancel a paid order", StatusCode.BAD_REQUEST);
         }
 
-        if (order.orderStatus === "cancelled") {
-            return; // Already cancelled
-        }
+        if (order.orderStatus === "cancelled") return;
 
         await this._cancelOrderInternal(order);
     }
@@ -197,15 +174,19 @@ export class UserOrderService implements IUserOrderService {
         } else if (event === "payment.failed") {
             const order = await this._orderRepository.findByGatewayOrderId(orderId);
             if (order && order.paymentStatus === "pending") {
-                await this._orderRepository.updateOrder(order._id!.toString(), {
-                    paymentStatus: "failed"
-                });
+                await this._orderRepository.updateOrder(order._id!.toString(), { paymentStatus: "failed" });
             }
         }
     }
 
     private async processPaymentSuccess(order: IOrder, paymentId: string, signature: string): Promise<IOrder> {
-        const updatedOrder = (await this._orderRepository.updateOrder(order._id!.toString(), {
+        // Idempotency check
+        const freshOrder = await this._orderRepository.findByIdAndUserId(order._id!.toString(), order.user.toString());
+        if (!freshOrder || freshOrder.paymentStatus === "completed") {
+            return freshOrder || order;
+        }
+
+        const updatedOrder = await this._orderRepository.updateOrder(order._id!.toString(), {
             paymentStatus: "completed",
             orderStatus: "processing",
             paymentDetails: {
@@ -214,54 +195,33 @@ export class UserOrderService implements IUserOrderService {
                 gatewaySignature: signature,
                 paidAt: new Date()
             }
-        })) as IOrder;
+        });
 
-        // Clear Cart
-        try {
-            await this._cartRepository.clearCart(order.user.toString());
-        } catch (error) {
-            logger.error("Error clearing cart after payment for order: " + updatedOrder._id, error);
-            // Don't fail the whole request if cart clearing fails
-        }
+        if (!updatedOrder) throw new Error("Failed to update order");
 
-        // Mark Coupon as used
+        try { await this._cartRepository.clearCart(order.user.toString()); } catch (e) { logger.error(e); }
         if (updatedOrder.discountCode) {
+            try { await this._couponService.markCouponUsed(updatedOrder.discountCode, updatedOrder.user.toString()); } catch (e) { logger.error(e); }
+        }
+
+        for (const item of updatedOrder.items) {
             try {
-                await this._couponService.markCouponUsed(updatedOrder.discountCode, updatedOrder.user.toString());
-            } catch (error) {
-                logger.error("Error marking coupon as used for order: " + updatedOrder._id, error);
-            }
+                await this._productRepository.commitStock(item.product.toString(), item.variantName, item.quantity);
+            } catch (e) { logger.error(e); }
         }
 
-        // Commit stock (move from reserved to sold)
-        try {
-            for (const item of updatedOrder.items) {
-                await this._productRepository.commitStock(
-                    item.product.toString(),
-                    item.variantName,
-                    item.quantity
-                );
-            }
-        } catch (error) {
-            logger.error("Error committing stock for order: " + updatedOrder._id, error);
-        }
-
-        // Create Transaction
         try {
             await this._transactionRepository.create({
                 user: order.user as any,
                 order: order._id as any,
                 amount: order.finalAmount,
-                type: 'debit', // User pays = Debit from User Wallet/Account
+                type: 'debit',
                 status: 'completed',
                 paymentMethod: 'online',
                 transactionId: paymentId || `txn_${order._id}`,
-                description: `Payment for Order #${order._id.toString().slice(-6).toUpperCase()}`
+                description: `Payment for Order #${order.displayId}`
             });
-        } catch (error) {
-            logger.error("Error creating transaction record for order: " + updatedOrder._id, error);
-            // Don't fail the whole request if transaction log fails, but log it critical
-        }
+        } catch (e) { logger.error(e); }
 
         return updatedOrder;
     }
@@ -272,17 +232,10 @@ export class UserOrderService implements IUserOrderService {
             paymentStatus: "cancelled"
         });
 
-        // Release stock back to inventory
-        try {
-            for (const item of order.items) {
-                await this._productRepository.releaseStock(
-                    item.product.toString(),
-                    item.variantName,
-                    item.quantity
-                );
-            }
-        } catch (error) {
-            logger.error("Error releasing stock for order: " + order._id, error);
+        for (const item of order.items) {
+            try {
+                await this._productRepository.releaseStock(item.product.toString(), item.variantName, item.quantity);
+            } catch (e) { logger.error(e); }
         }
     }
 }

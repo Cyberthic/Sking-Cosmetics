@@ -126,11 +126,12 @@ export class UserCouponService implements IUserCouponService {
         };
     }
 
-    async markCouponUsed(code: string, userId: string): Promise<void> {
+    async markCouponUsed(code: string, userId: string, session?: any): Promise<void> {
         const couponModel = await import("../../models/coupon.model").then(m => m.default);
         await couponModel.findOneAndUpdate(
             { code: code },
-            { $inc: { usageCount: 1 } }
+            { $inc: { usageCount: 1 } },
+            { session }
         );
     }
 }

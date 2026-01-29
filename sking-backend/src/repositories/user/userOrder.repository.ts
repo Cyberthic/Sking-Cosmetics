@@ -40,14 +40,13 @@ export class UserOrderRepository implements IUserOrderRepository {
 
     async updateOrder(orderId: string, updateData: any): Promise<IOrder | null> {
         if (updateData.orderStatus) {
-            updateData.$push = {
-                statusHistory: {
-                    status: updateData.orderStatus,
-                    timestamp: new Date(),
-                    message: updateData.orderStatus === 'processing' ? 'Payment confirmed, order is being processed' :
-                        updateData.orderStatus === 'cancelled' ? 'Order cancelled due to payment expiry or user action' :
-                            `Status updated to ${updateData.orderStatus}`
-                }
+            if (!updateData.$push) updateData.$push = {};
+            updateData.$push.statusHistory = {
+                status: updateData.orderStatus,
+                timestamp: new Date(),
+                message: updateData.orderStatus === 'processing' ? 'Payment confirmed, order is being processed' :
+                    updateData.orderStatus === 'cancelled' ? 'Order cancelled due to payment expiry or user action' :
+                        `Status updated to ${updateData.orderStatus}`
             };
         }
         return await Order.findByIdAndUpdate(orderId, updateData, { new: true });
@@ -55,14 +54,13 @@ export class UserOrderRepository implements IUserOrderRepository {
 
     async updateOrderByDisplayId(displayId: string, updateData: any): Promise<IOrder | null> {
         if (updateData.orderStatus) {
-            updateData.$push = {
-                statusHistory: {
-                    status: updateData.orderStatus,
-                    timestamp: new Date(),
-                    message: updateData.orderStatus === 'processing' ? 'Payment confirmed, order is being processed' :
-                        updateData.orderStatus === 'cancelled' ? 'Order cancelled due to payment expiry or user action' :
-                            `Status updated to ${updateData.orderStatus}`
-                }
+            if (!updateData.$push) updateData.$push = {};
+            updateData.$push.statusHistory = {
+                status: updateData.orderStatus,
+                timestamp: new Date(),
+                message: updateData.orderStatus === 'processing' ? 'Payment confirmed, order is being processed' :
+                    updateData.orderStatus === 'cancelled' ? 'Order cancelled due to payment expiry or user action' :
+                        `Status updated to ${updateData.orderStatus}`
             };
         }
         return await Order.findOneAndUpdate({ displayId }, updateData, { new: true });
@@ -77,7 +75,7 @@ export class UserOrderRepository implements IUserOrderRepository {
             .skip(skip)
             .limit(limit)
             .populate("items.product")
-            .populate("shippingAddress"); // Populate shipping address for customer name
+            .populate("shippingAddress");
 
         const total = await Order.countDocuments(filter);
 
@@ -86,7 +84,7 @@ export class UserOrderRepository implements IUserOrderRepository {
 
     async findTopCustomersByProductId(productId: string, limit: number): Promise<any[]> {
         return await Order.aggregate([
-            { $match: { "items.product": new mongoose.Types.ObjectId(productId), "paymentDetails.paymentStatus": "paid" } }, // Only paid/completed orders usually
+            { $match: { "items.product": new mongoose.Types.ObjectId(productId), "paymentDetails.paymentStatus": "paid" } },
             { $unwind: "$items" },
             { $match: { "items.product": new mongoose.Types.ObjectId(productId) } },
             {

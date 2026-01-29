@@ -1,6 +1,5 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../core/types";
-import { IUserCheckoutController } from "../../core/interfaces/controllers/user/IUserCheckout.controller";
 import { IUserCheckoutService } from "../../core/interfaces/services/user/IUserCheckout.service";
 import { IUserCheckoutRepository } from "../../core/interfaces/repositories/user/IUserCheckout.repository";
 import { ICartRepository } from "../../core/interfaces/repositories/user/ICart.repository";
@@ -12,7 +11,6 @@ import { StatusCode } from "../../enums/statusCode.enums";
 import razorpay from "../../config/razorpay";
 import logger from "../../utils/logger";
 import { IUserCouponService } from "../../core/interfaces/services/user/IUserCoupon.service";
-
 import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
 
 @injectable()
@@ -49,8 +47,6 @@ export class UserCheckoutService implements IUserCheckoutService {
                 if (variant.stock < item.quantity) {
                     throw new CustomError(`Insufficient stock for ${product.name} (${item.variantName}). Available: ${variant.stock}`, StatusCode.BAD_REQUEST);
                 }
-            } else {
-                // If we had base stock, we would check it here
             }
         }
 
@@ -62,31 +58,20 @@ export class UserCheckoutService implements IUserCheckoutService {
 
         let discountAmount = 0;
         let couponId = null;
-        let finalAmount = totalAmount; // Init with total
 
-        // Apply Coupon logic if present
         if (data.couponCode) {
-            // Re-validate and Calculate
             const couponResult = await this._couponService.applyCoupon(userId, data.couponCode, totalAmount, cart.items);
             discountAmount = couponResult.discountAmount;
             couponId = couponResult.coupon._id;
         }
 
-        const shippingFee = totalAmount > 1000 ? 0 : 49; // Logic applied on original total or discounted? Usually discounted total determines shipping, but requirement says > 1000. Let's stick to totalAmount for now or move slightly. 
-        // Logic: if total > 1000 free shipping. If coupon brings it below, do we charge? Usually yes. 
-        // I will use totalAmount (pre-discount) for shipping threshold to be generous, or finalAmount? 
-        // Standard is post-discount. Let's look at previous code: `totalAmount > 1000`. 
-        // I will keep it as `totalAmount > 1000` (pre-discount) for user friendliness unless specified.
-
-        finalAmount = Math.max(0, totalAmount + shippingFee - discountAmount);
+        const shippingFee = totalAmount > 1000 ? 0 : 49;
+        const finalAmount = Math.max(0, totalAmount + shippingFee - discountAmount);
 
         const expiryTime = new Date();
         expiryTime.setMinutes(expiryTime.getMinutes() + 15);
 
-        // Generate a display ID (Human readable)
-        const timestamp = Date.now().toString().slice(-6);
-        const random = Math.floor(1000 + Math.random() * 9000);
-        const displayId = `SKN-${timestamp}${random}`;
+        const displayId = `SKN-${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
 
         // 5. Create Order
         const orderData: any = {
@@ -101,12 +86,9 @@ export class UserCheckoutService implements IUserCheckoutService {
             totalAmount,
             shippingFee,
             finalAmount,
-
-            // Coupon Details
             coupon: couponId,
             discountCode: data.couponCode,
             discountAmount: discountAmount,
-
             shippingAddress: {
                 name: address.name,
                 email: address.email,
@@ -121,20 +103,15 @@ export class UserCheckoutService implements IUserCheckoutService {
             paymentMethod: data.paymentMethod,
             paymentStatus: "pending",
             orderStatus: "payment_pending",
-            paymentDetails: {
-                paymentGateway: "razorpay"
-            },
-            statusHistory: [
-                {
-                    status: "payment_pending",
-                    timestamp: new Date(),
-                    message: "Order initiated. Awaiting payment confirmation."
-                }
-            ],
+            paymentDetails: { paymentGateway: "razorpay" },
+            statusHistory: [{
+                status: "payment_pending",
+                timestamp: new Date(),
+                message: "Order initiated. Awaiting payment confirmation."
+            }],
             paymentExpiresAt: expiryTime
         };
 
-        // Create Razorpay order if payment method is online
         if (data.paymentMethod === "online") {
             try {
                 const razorpayOrder = await razorpay.orders.create({
@@ -142,10 +119,7 @@ export class UserCheckoutService implements IUserCheckoutService {
                     currency: "INR",
                     receipt: `order_rcptid_${displayId}`
                 });
-
-                if (orderData.paymentDetails) {
-                    orderData.paymentDetails.gatewayOrderId = razorpayOrder.id;
-                }
+                orderData.paymentDetails.gatewayOrderId = razorpayOrder.id;
             } catch (error: any) {
                 logger.error("Razorpay Order Creation Error", error);
                 throw new CustomError("Failed to initiate payment: " + error.message, StatusCode.INTERNAL_SERVER_ERROR);
@@ -165,19 +139,7 @@ export class UserCheckoutService implements IUserCheckoutService {
             }
         } catch (error) {
             logger.error("Error reserving stock for order: " + order._id, error);
-            // In a production system, we might want to rollback the order creation here
         }
-
-        // 7. Update Coupon Usage - REMOVED: ONLY MARK AS USED ON SUCCESSFUL PAYMENT
-        /*
-        if (couponId && data.couponCode) {
-            // @ts-ignore
-            await this._couponService.markCouponUsed(data.couponCode, userId);
-        }
-        */
-
-        // 8. Clear Cart - REMOVED: ONLY CLEAR ON SUCCESSFUL PAYMENT
-        // await this._cartRepository.clearCart(userId);
 
         return order;
     }
