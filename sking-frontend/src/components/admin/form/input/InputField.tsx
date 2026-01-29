@@ -1,10 +1,12 @@
 import React, { FC, forwardRef } from "react";
+import Tooltip from "../../ui/tooltip/Tooltip";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string; // Add label support if used in your forms, based on create/page.tsx usage
   error?: boolean | string; // Allow string error message or boolean
   success?: boolean;
   hint?: string;
+  tooltip?: string;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({
@@ -15,6 +17,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   error = false,
   hint,
   label,
+  tooltip,
   ...props
 }, ref) => {
   // Determine input styles based on state (disabled, success, error)
@@ -34,8 +37,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   return (
     <div className="relative w-full">
       {label && (
-        <label htmlFor={props.id} className="block text-xs font-black uppercase text-gray-900 dark:text-gray-100 mb-2 tracking-widest">
+        <label htmlFor={props.id} className="flex items-center text-xs font-black uppercase text-gray-900 dark:text-gray-100 mb-2 tracking-widest">
           {label}
+          {tooltip && <Tooltip content={tooltip} />}
         </label>
       )}
       <input
@@ -50,10 +54,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       {hint && (
         <p
           className={`mt-1.5 text-xs ${error
-              ? "text-error-500"
-              : success
-                ? "text-success-500"
-                : "text-gray-500"
+            ? "text-error-500"
+            : success
+              ? "text-success-500"
+              : "text-gray-500"
             }`}
         >
           {hint}

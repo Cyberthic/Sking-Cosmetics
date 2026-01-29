@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, forwardRef } from "react";
 import { ChevronDown, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Tooltip from "../ui/tooltip/Tooltip";
 
 interface Option {
     value: string;
@@ -17,6 +18,7 @@ interface FormSelectProps {
     error?: string;
     className?: string;
     disabled?: boolean;
+    tooltip?: string;
 }
 
 const FormSelect = forwardRef<HTMLDivElement, FormSelectProps>(({
@@ -28,6 +30,7 @@ const FormSelect = forwardRef<HTMLDivElement, FormSelectProps>(({
     error,
     className = "",
     disabled = false,
+    tooltip,
 }, ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -53,8 +56,9 @@ const FormSelect = forwardRef<HTMLDivElement, FormSelectProps>(({
     return (
         <div className={`relative w-full ${className}`} ref={containerRef}>
             {label && (
-                <label className="block text-xs font-black uppercase text-gray-900 dark:text-gray-100 mb-2 tracking-widest">
+                <label className="flex items-center text-xs font-black uppercase text-gray-900 dark:text-gray-100 mb-2 tracking-widest">
                     {label}
+                    {tooltip && <Tooltip content={tooltip} />}
                 </label>
             )}
 

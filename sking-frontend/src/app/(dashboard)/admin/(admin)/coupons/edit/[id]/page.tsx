@@ -206,6 +206,7 @@ export default function EditCouponPage() {
                                 placeholder="e.g. SUMMER2024"
                                 {...registerWithTransform("code", (val) => val.toUpperCase())}
                                 error={errors.code?.message}
+                                tooltip="The unique code customers will enter at checkout."
                             />
                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">Code will be auto-capitalized</p>
                         </div>
@@ -214,6 +215,7 @@ export default function EditCouponPage() {
                             placeholder="Brief description of the offer"
                             {...register("description")}
                             error={errors.description?.message}
+                            tooltip="Internal notes about what this coupon is for."
                         />
                         <Controller
                             name="isActive"
@@ -227,6 +229,7 @@ export default function EditCouponPage() {
                                         { value: "true", label: "Active" },
                                         { value: "false", label: "Inactive" }
                                     ]}
+                                    tooltip="Active coupons can be used by customers immediately."
                                 />
                             )}
                         />
@@ -250,6 +253,7 @@ export default function EditCouponPage() {
                                         { value: "fixed", label: "Fixed Amount (₹)" }
                                     ]}
                                     error={errors.discountType?.message}
+                                    tooltip="Percentage off vs a flat currency amount."
                                 />
                             )}
                         />
@@ -259,6 +263,7 @@ export default function EditCouponPage() {
                             placeholder="0"
                             {...register("discountValue")}
                             error={errors.discountValue?.message}
+                            tooltip="The amount or percentage to deduct."
                         />
                         {watchedDiscountType === 'percentage' && (
                             <Input
@@ -267,6 +272,7 @@ export default function EditCouponPage() {
                                 placeholder="Leave empty for unlimited"
                                 {...register("maxDiscountAmount")}
                                 error={errors.maxDiscountAmount?.message}
+                                tooltip="The maximum rupee amount a percentage discount can reach."
                             />
                         )}
                     </div>
@@ -277,6 +283,7 @@ export default function EditCouponPage() {
                             placeholder="0"
                             {...register("minOrderAmount")}
                             error={errors.minOrderAmount?.message}
+                            tooltip="Customers must spend at least this much to use the code."
                         />
                     </div>
                 </div>
@@ -290,12 +297,14 @@ export default function EditCouponPage() {
                             type="datetime-local"
                             {...register("startDate")}
                             error={errors.startDate?.message}
+                            tooltip="The exact moment the coupon becomes valid."
                         />
                         <Input
                             label="End Date & Time"
                             type="datetime-local"
                             {...register("endDate")}
                             error={errors.endDate?.message}
+                            tooltip="The moment the coupon expires."
                         />
                         <Input
                             label="Total Usage Limit"
@@ -303,6 +312,7 @@ export default function EditCouponPage() {
                             placeholder="0 for unlimited"
                             {...register("usageLimit")}
                             error={errors.usageLimit?.message}
+                            tooltip="Total number of times this coupon can be used store-wide."
                         />
                         <Input
                             label="Limit Per User"
@@ -310,6 +320,7 @@ export default function EditCouponPage() {
                             placeholder="1"
                             {...register("userLimit")}
                             error={errors.userLimit?.message}
+                            tooltip="How many times a single customer can use this code."
                         />
                     </div>
                 </div>
@@ -333,6 +344,7 @@ export default function EditCouponPage() {
                                         { value: "specific_users", label: "Specific Users" }
                                     ]}
                                     error={errors.couponType?.message}
+                                    tooltip="Restrict this coupon to a specific group of people."
                                 />
                             )}
                         />
@@ -343,6 +355,7 @@ export default function EditCouponPage() {
                                 type="date"
                                 {...register("registeredAfter")}
                                 error={errors.registeredAfter?.message}
+                                tooltip="Only users who joined after this date can use the coupon."
                             />
                         )}
 
@@ -354,6 +367,7 @@ export default function EditCouponPage() {
                                         placeholder="Type name or email..."
                                         value={userSearch}
                                         onChange={(e) => setUserSearch(e.target.value)}
+                                        tooltip="Search and select specific customers for this offer."
                                     />
                                     {searchingUsers && <Loader2 className="absolute right-4 top-[38px] animate-spin text-gray-400" size={16} />}
 
