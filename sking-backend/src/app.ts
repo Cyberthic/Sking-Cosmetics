@@ -46,4 +46,7 @@ app.get("/health", (_req, res) => {
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
 
+import { errorHandler } from "./middlewares/error.middleware";
+app.use(errorHandler);
+
 export default app;

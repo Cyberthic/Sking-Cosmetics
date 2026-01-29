@@ -3,6 +3,7 @@ import axiosInstance from "../../lib/axios";
 export interface CheckoutPayload {
     addressId: string;
     paymentMethod: "online";
+    couponCode?: string;
 }
 
 export const userCheckoutService = {

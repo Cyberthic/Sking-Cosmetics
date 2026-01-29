@@ -16,8 +16,14 @@ import {
     ShieldCheck,
     Truck,
     Clock,
-    ShoppingBag
+    ShoppingBag,
+    Ticket,
+    X,
+    Gift,
+    BadgePercent,
+    ExternalLink
 } from "lucide-react";
+import { userCouponApiService } from "@/services/user/userCouponApiService";
 import { userAddressService, Address } from "@/services/user/userAddressApiService";
 import { userCheckoutService } from "@/services/user/userCheckoutApiService";
 import { userOrderService } from "@/services/user/userOrderApiService";
@@ -34,9 +40,30 @@ function CheckoutPageContent() {
     const [isLoading, setIsLoading] = useState(true);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-    // Mock shipping fee logic from CartDrawer
+    // Coupon State
+    const [coupons, setCoupons] = useState<any[]>([]);
+    const [couponCode, setCouponCode] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null);
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+    const [couponError, setCouponError] = useState("");
+
+    // Shipping & Total Logic
     const shippingFee = totalAmount > 1000 ? 0 : 49;
-    const finalTotal = totalAmount + shippingFee;
+    const finalTotal = Math.max(0, totalAmount + shippingFee - discountAmount);
+
+    useEffect(() => {
+        // Redirection if cart is empty, but NOT while we are placing an order
+        if (items.length === 0 && !isPlacingOrder) {
+            toast.error("Your cart is empty. Add items to checkout.");
+            router.push("/cart");
+        }
+    }, [items.length, isPlacingOrder, router]);
+
+    useEffect(() => {
+        fetchAddresses();
+        fetchCoupons();
+    }, []);
 
     const fetchAddresses = async () => {
         try {
@@ -58,17 +85,45 @@ function CheckoutPageContent() {
         }
     };
 
-    useEffect(() => {
-        // Redirection if cart is empty, but NOT while we are placing an order
-        if (items.length === 0 && !isPlacingOrder) {
-            toast.error("Your cart is empty. Add items to checkout.");
-            router.push("/cart");
-        }
-    }, [items.length, isPlacingOrder, router]);
+    const fetchCoupons = async () => {
+        try {
+            const res = await userCouponApiService.getMyCoupons();
+            if (res.data && res.data.active) {
+                setCoupons(res.data.active);
+            }
+        } catch (e) { }
+    };
 
-    useEffect(() => {
-        fetchAddresses();
-    }, []);
+    const handleApplyCoupon = async (code: string = couponCode) => {
+        setCouponError("");
+        if (!code) {
+            setCouponError("Please enter a code");
+            return;
+        }
+        try {
+            const res = await userCouponApiService.applyCoupon(code, totalAmount, items);
+            if (res.success && res.data) {
+                setDiscountAmount(res.data.discountAmount);
+                setAppliedCoupon(res.data.coupon);
+                setCouponCode(code); // Ensure input matches
+                toast.success(`Coupon ${code} applied! Saved ₹${res.data.discountAmount}`);
+                setIsCouponModalOpen(false);
+            }
+        } catch (error: any) {
+            const msg = error.message || error.error || "Invalid Coupon";
+            setCouponError(msg);
+            toast.error(msg);
+            setAppliedCoupon(null);
+            setDiscountAmount(0);
+        }
+    };
+
+    const removeCoupon = () => {
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        setCouponCode("");
+        toast.info("Coupon removed");
+    };
 
     const loadRazorpayScript = () => {
         return new Promise((resolve) => {
@@ -90,7 +145,8 @@ function CheckoutPageContent() {
             setIsPlacingOrder(true);
             const response = await userCheckoutService.placeOrder({
                 addressId: selectedAddressId,
-                paymentMethod: "online"
+                paymentMethod: "online",
+                couponCode: appliedCoupon?.code
             });
 
             if (response.success) {
@@ -289,6 +345,75 @@ function CheckoutPageContent() {
 
                     {/* Right Side: Order Summary */}
                     <div className="lg:col-span-4 space-y-6">
+
+                        {/* Coupon Section */}
+                        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-8 h-8 bg-pink-50 text-sking-pink rounded-lg flex items-center justify-center">
+                                    <BadgePercent className="w-4 h-4" />
+                                </div>
+                                <h2 className="text-sm font-bold uppercase tracking-tight">Offers & Coupons</h2>
+                            </div>
+
+                            {/* Input */}
+                            <div className="flex gap-2 relative mb-4">
+                                <input
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                    placeholder="Enter Promo Code"
+                                    disabled={!!appliedCoupon}
+                                    className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold placeholder:text-gray-400 focus:outline-none focus:border-black uppercase ${appliedCoupon ? 'text-green-600 border-green-200 bg-green-50' : ''}`}
+                                />
+                                {appliedCoupon ? (
+                                    <button onClick={removeCoupon} className="absolute right-2 top-2 p-1.5 bg-white text-gray-400 hover:text-red-500 rounded-lg shadow-sm">
+                                        <X size={16} />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleApplyCoupon()}
+                                        className="px-6 bg-black text-white rounded-xl font-bold uppercase text-xs tracking-wider hover:bg-neutral-800"
+                                    >
+                                        Apply
+                                    </button>
+                                )}
+                            </div>
+                            {couponError && <p className="text-red-500 text-xs font-bold mb-4">{couponError}</p>}
+
+                            {/* Best Coupons */}
+                            {!appliedCoupon && coupons.length > 0 && (
+                                <div className="space-y-3">
+                                    {coupons.slice(0, 2).map((coupon, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3 bg-white border border-dashed border-gray-200 rounded-xl hover:border-pink-200 hover:bg-pink-50/50 transition-all group cursor-pointer" onClick={() => handleApplyCoupon(coupon.code)}>
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-sking-pink/10 p-2 rounded-lg text-sking-pink">
+                                                    <Ticket size={16} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-black uppercase tracking-wider">{coupon.code}</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 line-clamp-1">{coupon.description || `Save ${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ' flat'}`}</p>
+                                                </div>
+                                            </div>
+                                            <button className="text-xs font-bold text-sking-pink uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Apply</button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => setIsCouponModalOpen(true)} className="w-full py-2 text-xs font-bold text-gray-400 hover:text-black uppercase tracking-widest flex items-center justify-center gap-1">
+                                        View All Coupons <ChevronRight size={12} />
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Applied Coupon Info */}
+                            {appliedCoupon && (
+                                <div className="p-3 bg-green-50 border border-green-100 rounded-xl flex items-center gap-3">
+                                    <div className="bg-green-500 text-white p-1.5 rounded-full"><Check size={12} /></div>
+                                    <div>
+                                        <p className="text-xs font-bold text-green-700 uppercase tracking-wide">Code {appliedCoupon.code} Applied</p>
+                                        <p className="text-[10px] font-bold text-green-600">You saved ₹{discountAmount.toFixed(2)}!</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-100 sticky top-24">
                             <h2 className="text-xl font-bold uppercase tracking-tight mb-8">Order Summary</h2>
 
@@ -327,6 +452,12 @@ function CheckoutPageContent() {
                                         {shippingFee === 0 ? 'FREE' : `₹${shippingFee.toFixed(2)}`}
                                     </span>
                                 </div>
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between items-center text-green-600">
+                                        <span className="text-xs font-bold uppercase tracking-widest">Discount</span>
+                                        <span className="text-sm font-black">-₹{discountAmount.toFixed(2)}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between items-center pt-4 border-t border-gray-900">
                                     <span className="text-sm font-black uppercase tracking-widest text-black">Grand Total</span>
                                     <span className="text-xl font-black text-black">₹{finalTotal.toFixed(2)}</span>
@@ -368,7 +499,7 @@ function CheckoutPageContent() {
                         {/* Back to Cart */}
                         <button
                             onClick={() => router.push('/cart')}
-                            className="w-full py-4 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-4 mt-6 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors flex items-center justify-center gap-2"
                         >
                             <ShoppingBag className="w-3 h-3" />
                             Return to Cart
@@ -384,6 +515,75 @@ function CheckoutPageContent() {
                 address={null} // Always add new in checkout
                 refresh={fetchAddresses}
             />
+
+            {/* Coupon Modal */}
+            <AnimatePresence>
+                {isCouponModalOpen && (
+                    <div className="fixed inset-0 z-[2000] flex items-center justify-center px-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsCouponModalOpen(false)}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-3xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl relative z-10 flex flex-col"
+                        >
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+                                <h3 className="text-lg font-black uppercase tracking-tight">Available Coupons</h3>
+                                <button onClick={() => setIsCouponModalOpen(false)} className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center hover:bg-black hover:text-white transition-colors">
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 overflow-y-auto bg-gray-50 custom-scrollbar flex-1">
+                                {coupons.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {coupons.map((coupon, idx) => (
+                                            <div key={idx} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                                <div className="p-4 flex gap-4">
+                                                    <div className="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center text-sking-pink shrink-0">
+                                                        <Gift size={20} />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between items-start mb-1">
+                                                            <h4 className="font-black text-sm uppercase tracking-wider">{coupon.code}</h4>
+                                                            <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Active</span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 font-medium mb-3">{coupon.description || 'Special discount for you'}</p>
+                                                        <button
+                                                            onClick={() => handleApplyCoupon(coupon.code)}
+                                                            className="w-full py-2 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-neutral-800 transition-colors"
+                                                        >
+                                                            Apply Coupon
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                                            <Ticket size={32} />
+                                        </div>
+                                        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">No coupons available right now</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="p-4 border-t border-gray-100 bg-white shrink-0">
+                                <a href="/coupons" target="_blank" className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-sking-pink hover:text-black transition-colors">
+                                    View Full Coupon Page <ExternalLink size={12} />
+                                </a>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

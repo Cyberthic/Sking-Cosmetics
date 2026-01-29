@@ -23,4 +23,27 @@ export class UserCouponController implements IUserCouponController {
             next(error);
         }
     };
+
+    applyCoupon = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            // @ts-ignore
+            const userId = req.user.id;
+            const { code, cartTotal, cartItems } = req.body;
+
+            if (!code || !cartTotal) {
+                // @ts-ignore
+                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "Missing required fields" });
+                return;
+            }
+
+            const result = await this.userCouponService.applyCoupon(userId, code, cartTotal, cartItems || []);
+
+            res.status(StatusCode.OK).json({
+                success: true,
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
 }

@@ -42,6 +42,12 @@ export interface IOrder extends Document {
         paymentGateway?: string;
         paidAt?: Date;
     };
+
+    // Coupon fields
+    coupon?: mongoose.Types.ObjectId;
+    discountCode?: string;
+    discountAmount: number;
+
     statusHistory: IStatusHistory[];
     createdAt: Date;
     updatedAt: Date;
@@ -82,6 +88,11 @@ const OrderSchema: Schema = new Schema({
         paymentGateway: { type: String },
         paidAt: { type: Date }
     },
+
+    coupon: { type: Schema.Types.ObjectId, ref: "Coupon" },
+    discountCode: { type: String },
+    discountAmount: { type: Number, default: 0 },
+
     statusHistory: [
         {
             status: { type: String, required: true },

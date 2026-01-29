@@ -8,5 +8,6 @@ const userCouponRouter = Router();
 const userCouponController = container.get<IUserCouponController>(TYPES.IUserCouponController);
 
 userCouponRouter.get("/", isAuthenticated, userCouponController.getMyCoupons);
+userCouponRouter.post("/apply", isAuthenticated, userCouponController.applyCoupon);
 
 export default userCouponRouter;
