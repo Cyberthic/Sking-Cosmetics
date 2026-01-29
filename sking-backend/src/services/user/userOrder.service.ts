@@ -3,6 +3,7 @@ import { TYPES } from "../../core/types";
 import { IUserOrderService } from "../../core/interfaces/services/user/IUserOrder.service";
 import { IUserOrderRepository } from "../../core/interfaces/repositories/user/IUserOrder.repository";
 import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
+import { IAdminTransactionRepository } from "../../core/interfaces/repositories/admin/IAdminTransaction.repository";
 import { IOrder } from "../../models/order.model";
 import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
@@ -15,7 +16,8 @@ import razorpay from "../../config/razorpay";
 export class UserOrderService implements IUserOrderService {
     constructor(
         @inject(TYPES.IUserOrderRepository) private _orderRepository: IUserOrderRepository,
-        @inject(TYPES.IUserProductRepository) private _productRepository: IUserProductRepository
+        @inject(TYPES.IUserProductRepository) private _productRepository: IUserProductRepository,
+        @inject(TYPES.IAdminTransactionRepository) private _transactionRepository: IAdminTransactionRepository
     ) { }
 
     async getUserOrders(userId: string): Promise<IOrder[]> {
@@ -174,6 +176,23 @@ export class UserOrderService implements IUserOrderService {
             }
         } catch (error) {
             logger.error("Error committing stock for order: " + updatedOrder._id, error);
+        }
+
+        // Create Transaction
+        try {
+            await this._transactionRepository.create({
+                user: order.user as any,
+                order: order._id as any,
+                amount: order.finalAmount,
+                type: 'debit', // User pays = Debit from User Wallet/Account
+                status: 'completed',
+                paymentMethod: 'online',
+                transactionId: paymentId || `txn_${order._id}`,
+                description: `Payment for Order #${order._id.toString().slice(-6).toUpperCase()}`
+            });
+        } catch (error) {
+            logger.error("Error creating transaction record for order: " + updatedOrder._id, error);
+            // Don't fail the whole request if transaction log fails, but log it critical
         }
 
         return updatedOrder;

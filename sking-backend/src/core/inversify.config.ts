@@ -111,6 +111,18 @@ container.bind<IAdminCouponRepository>(TYPES.IAdminCouponRepository).to(AdminCou
 container.bind<IAdminCouponService>(TYPES.IAdminCouponService).to(AdminCouponService);
 container.bind<IAdminCouponController>(TYPES.IAdminCouponController).to(AdminCouponController);
 
+// Admin Transaction
+import { IAdminTransactionRepository } from "./interfaces/repositories/admin/IAdminTransaction.repository";
+import { IAdminTransactionService } from "./interfaces/services/admin/IAdminTransaction.service";
+import { IAdminTransactionController } from "./interfaces/controllers/admin/IAdminTransaction.controller";
+import { AdminTransactionRepository } from "../repositories/admin/adminTransaction.repository";
+import { AdminTransactionService } from "../services/admin/adminTransaction.service";
+import { AdminTransactionController } from "../controllers/admin/adminTransaction.controller";
+
+container.bind<IAdminTransactionRepository>(TYPES.IAdminTransactionRepository).to(AdminTransactionRepository);
+container.bind<IAdminTransactionService>(TYPES.IAdminTransactionService).to(AdminTransactionService);
+container.bind<IAdminTransactionController>(TYPES.IAdminTransactionController).to(AdminTransactionController);
+
 
 
 // User Product

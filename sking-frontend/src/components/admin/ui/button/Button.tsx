@@ -4,7 +4,7 @@ import Link from "next/link";
 interface ButtonProps {
   children: ReactNode; // Button text or content
   size?: "sm" | "md"; // Button size
-  variant?: "primary" | "outline" | "success" | "warning" | "error"; // Button variant
+  variant?: "primary" | "outline" | "success" | "warning" | "error" | "ghost"; // Button variant
   startIcon?: ReactNode; // Icon before the text
   endIcon?: ReactNode; // Icon after the text
   onClick?: () => void; // Click handler
@@ -46,6 +46,8 @@ const Button: React.FC<ButtonProps> = ({
       "bg-amber-500 text-white shadow-theme-xs hover:bg-amber-600 disabled:bg-amber-300",
     error:
       "bg-red-600 text-white shadow-theme-xs hover:bg-red-700 disabled:bg-red-300",
+    ghost:
+      "text-gray-500 hover:text-gray-900 bg-transparent hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10",
   };
 
   const combinedClasses = `inline-flex items-center justify-center font-medium gap-2 rounded-lg transition ${className} ${sizeClasses[size]} ${variantClasses[variant]} ${(disabled || isLoading) ? "cursor-not-allowed opacity-50" : ""}`;

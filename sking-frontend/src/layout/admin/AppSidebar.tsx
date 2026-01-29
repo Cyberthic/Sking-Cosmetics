@@ -16,8 +16,9 @@ import {
   ShieldCheck,
   ChevronDown,
   MoreHorizontal,
-  Settings,  
-  TicketSlash
+  Settings,
+  TicketSlash,
+  ArrowRightLeft
 } from "lucide-react";
 import SidebarWidget from "@/layout/admin/SidebarWidget";
 
@@ -69,7 +70,11 @@ const navItems: NavItem[] = [
     name: "Coupons Management",
     path: "/admin/coupons"
   },
-  
+  {
+    icon: <ArrowRightLeft size={20} />,
+    name: "Transactions",
+    path: "/admin/transactions"
+  },
 ];
 
 const othersItems: NavItem[] = [

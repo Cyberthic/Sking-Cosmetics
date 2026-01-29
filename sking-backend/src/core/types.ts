@@ -53,6 +53,9 @@ const TYPES = {
     IUserCouponRepository: Symbol.for("IUserCouponRepository"),
     IUserCouponService: Symbol.for("IUserCouponService"),
     IUserCouponController: Symbol.for("IUserCouponController"),
+    IAdminTransactionRepository: Symbol.for("IAdminTransactionRepository"),
+    IAdminTransactionService: Symbol.for("IAdminTransactionService"),
+    IAdminTransactionController: Symbol.for("IAdminTransactionController"),
 };
 
 export { TYPES };
