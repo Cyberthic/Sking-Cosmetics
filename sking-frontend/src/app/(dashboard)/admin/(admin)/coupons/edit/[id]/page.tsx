@@ -312,7 +312,7 @@ export default function EditCouponPage() {
                             placeholder="0 for unlimited"
                             {...register("usageLimit")}
                             error={errors.usageLimit?.message}
-                            tooltip="Total number of times this coupon can be used store-wide."
+                            tooltip="Total number of times this coupon can be used store-wide. Set to 0 for unlimited usage."
                         />
                         <Input
                             label="Limit Per User"

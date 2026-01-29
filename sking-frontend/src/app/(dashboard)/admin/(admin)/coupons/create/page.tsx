@@ -20,6 +20,21 @@ export default function CreateCouponPage() {
     const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
     const [searchingUsers, setSearchingUsers] = useState(false);
 
+    const getDefaultDates = () => {
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        now.setMinutes(0);
+        const start = now.toISOString().slice(0, 16);
+
+        const nextMonth = new Date(now);
+        nextMonth.setDate(nextMonth.getDate() + 30);
+        const end = nextMonth.toISOString().slice(0, 16);
+
+        return { start, end };
+    };
+
+    const { start: defaultStart, end: defaultEnd } = getDefaultDates();
+
     const {
         register,
         handleSubmit,
@@ -36,8 +51,8 @@ export default function CreateCouponPage() {
             discountValue: 0,
             minOrderAmount: 0,
             maxDiscountAmount: 0,
-            startDate: "",
-            endDate: "",
+            startDate: defaultStart,
+            endDate: defaultEnd,
             usageLimit: 0,
             userLimit: 1,
             couponType: "all",
@@ -264,7 +279,7 @@ export default function CreateCouponPage() {
                             placeholder="0 for unlimited"
                             {...register("usageLimit")}
                             error={errors.usageLimit?.message}
-                            tooltip="Total number of times this coupon can be used store-wide."
+                            tooltip="Total number of times this coupon can be used store-wide. Set to 0 for unlimited usage."
                         />
                         <Input
                             label="Limit Per User"

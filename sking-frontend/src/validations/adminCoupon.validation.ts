@@ -40,18 +40,37 @@ export const createCouponSchema = z.object({
         });
     }
 
-    if (data.discountType === 'percentage' && data.discountValue > 100) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Percentage cannot exceed 100%",
-            path: ["discountValue"],
-        });
+    if (data.discountType === 'percentage') {
+        if (data.discountValue <= 0 || data.discountValue >= 100) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Percentage must be between 1 and 99",
+                path: ["discountValue"],
+            });
+        }
+        if (data.maxDiscountAmount && data.minOrderAmount && data.minOrderAmount <= data.maxDiscountAmount) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Minimum order must be greater than max discount",
+                path: ["minOrderAmount"],
+            });
+        }
+    }
+
+    if (data.discountType === 'fixed') {
+        if (data.minOrderAmount && data.discountValue >= data.minOrderAmount) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Discount must be less than minimum order amount",
+                path: ["discountValue"],
+            });
+        }
     }
 
     if (data.startDate && data.endDate && new Date(data.endDate) <= new Date(data.startDate)) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "End date cannot be before start date",
+            message: "End date must be after start date",
             path: ["endDate"],
         });
     }
