@@ -79,7 +79,7 @@ export default function EditCouponPage() {
                     isActive: coupon.isActive
                 });
                 if (coupon.specificUsers) {
-                    setSelectedUsers(coupon.specificUsers);
+                    setSelectedUsers(coupon.specificUsers || []);
                 }
             }
         } catch (error) {
@@ -131,7 +131,8 @@ export default function EditCouponPage() {
             setSearchingUsers(true);
             const res = await adminCustomerService.searchUsers(query);
             if (res.success) {
-                setSearchResults(res.users.filter((user: any) => !selectedUsers.find(u => u._id === user._id)));
+                const users = res.data?.users || res.users || [];
+                setSearchResults(users.filter((user: any) => !selectedUsers.find(u => u._id === user._id)));
             }
         } catch (error) {
             console.error(error);
@@ -148,7 +149,8 @@ export default function EditCouponPage() {
     const addUser = (user: any) => {
         const newSelected = [...selectedUsers, user];
         setSelectedUsers(newSelected);
-        setSearchResults(searchResults.filter(u => u._id !== user._id));
+        setSearchResults([]);
+        setUserSearch("");
         setValue('specificUsers', newSelected.map(u => u._id), { shouldValidate: true });
     };
 
