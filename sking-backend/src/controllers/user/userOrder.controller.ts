@@ -81,6 +81,23 @@ export class UserOrderController implements IUserOrderController {
         }
     }
 
+    cancelOrder = async (req: Request, res: Response): Promise<void> => {
+        try {
+            // @ts-ignore
+            const userId = req.user.id;
+            const orderId = req.params.orderId;
+            await this._orderService.cancelOrder(orderId, userId);
+            res.status(StatusCode.OK).json({
+                success: true,
+                message: "Order cancelled successfully"
+            });
+        } catch (error: any) {
+            logger.error("Cancel Order Error", error);
+            const statusCode = error instanceof CustomError ? error.statusCode : StatusCode.INTERNAL_SERVER_ERROR;
+            res.status(statusCode).json({ success: false, error: error.message || "Failed to cancel order" });
+        }
+    }
+
     handleWebhook = async (req: Request, res: Response): Promise<void> => {
         try {
             const signature = req.headers["x-razorpay-signature"] as string;

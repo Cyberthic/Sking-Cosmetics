@@ -89,7 +89,7 @@ function OrderSuccessContent() {
                         <div className="bg-gray-50 rounded-3xl p-6 mb-10 text-left border border-gray-100">
                             <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Order ID</span>
-                                <span className="text-sm font-black text-black">#{order._id.slice(-8).toUpperCase()}</span>
+                                <span className="text-sm font-black text-black">#{order.displayId}</span>
                             </div>
                             <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Total Paid</span>

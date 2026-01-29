@@ -48,6 +48,9 @@ export interface IOrder extends Document {
     discountCode?: string;
     discountAmount: number;
 
+    // Display IDs
+    displayId: string;
+
     statusHistory: IStatusHistory[];
     createdAt: Date;
     updatedAt: Date;
@@ -92,6 +95,8 @@ const OrderSchema: Schema = new Schema({
     coupon: { type: Schema.Types.ObjectId, ref: "Coupon" },
     discountCode: { type: String },
     discountAmount: { type: Number, default: 0 },
+
+    displayId: { type: String, required: true, unique: true },
 
     statusHistory: [
         {

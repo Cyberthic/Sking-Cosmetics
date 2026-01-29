@@ -26,6 +26,14 @@ export class UserOrderRepository implements IUserOrderRepository {
         return await Order.findOne({ _id: orderId, user: userId }).populate("items.product");
     }
 
+    async findByDisplayId(displayId: string): Promise<IOrder | null> {
+        return await Order.findOne({ displayId }).populate("items.product");
+    }
+
+    async findByDisplayIdAndUserId(displayId: string, userId: string): Promise<IOrder | null> {
+        return await Order.findOne({ displayId, user: userId }).populate("items.product");
+    }
+
     async findByGatewayOrderId(gatewayOrderId: string): Promise<IOrder | null> {
         return await Order.findOne({ "paymentDetails.gatewayOrderId": gatewayOrderId }).populate("items.product");
     }
@@ -43,6 +51,21 @@ export class UserOrderRepository implements IUserOrderRepository {
             };
         }
         return await Order.findByIdAndUpdate(orderId, updateData, { new: true });
+    }
+
+    async updateOrderByDisplayId(displayId: string, updateData: any): Promise<IOrder | null> {
+        if (updateData.orderStatus) {
+            updateData.$push = {
+                statusHistory: {
+                    status: updateData.orderStatus,
+                    timestamp: new Date(),
+                    message: updateData.orderStatus === 'processing' ? 'Payment confirmed, order is being processed' :
+                        updateData.orderStatus === 'cancelled' ? 'Order cancelled due to payment expiry or user action' :
+                            `Status updated to ${updateData.orderStatus}`
+                }
+            };
+        }
+        return await Order.findOneAndUpdate({ displayId }, updateData, { new: true });
     }
 
     async findByProductIdPaginated(productId: string, page: number, limit: number): Promise<{ orders: IOrder[], total: number }> {
@@ -70,8 +93,8 @@ export class UserOrderRepository implements IUserOrderRepository {
                 $group: {
                     _id: "$user",
                     totalQuantity: { $sum: "$items.quantity" },
-                    totalSpent: { $sum: "$items.price" }, // Assuming price stored is per unit * qty or just per unit? Usually price is per unit.
-                    addressId: { $first: "$shippingAddress" }, // To get user name later if needed, or we can look up User
+                    totalSpent: { $sum: "$items.price" },
+                    addressId: { $first: "$shippingAddress" },
                     lastOrderDate: { $max: "$createdAt" }
                 }
             },
@@ -102,15 +125,13 @@ export class UserOrderRepository implements IUserOrderRepository {
 
     async findStatsByProductId(productId: string): Promise<{ totalOrders: number, totalRevenue: number, totalUnitsSold: number }> {
         const stats = await Order.aggregate([
-            { $match: { "items.product": new mongoose.Types.ObjectId(productId), "orderStatus": { $nin: ["cancelled", "payment_pending"] } } }, // Exclude cancelled/pending
+            { $match: { "items.product": new mongoose.Types.ObjectId(productId), "orderStatus": { $nin: ["cancelled", "payment_pending"] } } },
             { $unwind: "$items" },
             { $match: { "items.product": new mongoose.Types.ObjectId(productId) } },
             {
                 $group: {
                     _id: null,
-                    totalOrders: { $addToSet: "$_id" }, // Using addToSet to count unique orders, but we unwound items.
-                    // Wait, if we unwind, we duplicate orders. So just counting rows here is wrong for "Total Orders".
-                    // But we can count unique _id for Total Orders.
+                    totalOrders: { $addToSet: "$_id" },
                     totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
                     totalUnitsSold: { $sum: "$items.quantity" }
                 }
@@ -151,7 +172,7 @@ export class UserOrderRepository implements IUserOrderRepository {
                     _id: null,
                     totalUsage: { $sum: 1 },
                     totalDiscount: { $sum: "$discountAmount" },
-                    totalRevenue: { $sum: "$finalAmount" } // Revenue after discount
+                    totalRevenue: { $sum: "$finalAmount" }
                 }
             }
         ]);

@@ -104,7 +104,7 @@ function OrderFailureContent() {
 
                             if (verificationResponse.success) {
                                 toast.success("Payment successful!");
-                                router.push(`/checkout/success?orderId=${orderId}`);
+                                router.push(`/checkout/success?orderId=${retryOrder.displayId}`);
                             }
                         } catch (error: any) {
                             toast.error("Verification failed");

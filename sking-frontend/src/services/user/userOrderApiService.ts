@@ -16,5 +16,9 @@ export const userOrderService = {
     async retryPayment(orderId: string) {
         const response = await axiosInstance.post(`/api/users/orders/retry-payment/${orderId}`);
         return response.data;
+    },
+    async cancelOrder(orderId: string) {
+        const response = await axiosInstance.post(`/api/users/orders/cancel-order/${orderId}`);
+        return response.data;
     }
 };

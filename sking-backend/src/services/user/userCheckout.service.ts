@@ -83,8 +83,14 @@ export class UserCheckoutService implements IUserCheckoutService {
         const expiryTime = new Date();
         expiryTime.setMinutes(expiryTime.getMinutes() + 15);
 
+        // Generate a display ID (Human readable)
+        const timestamp = Date.now().toString().slice(-6);
+        const random = Math.floor(1000 + Math.random() * 9000);
+        const displayId = `SKN-${timestamp}${random}`;
+
         // 5. Create Order
         const orderData: any = {
+            displayId,
             user: userId,
             items: cart.items.map((item: any) => ({
                 product: item.product._id,
@@ -134,7 +140,7 @@ export class UserCheckoutService implements IUserCheckoutService {
                 const razorpayOrder = await razorpay.orders.create({
                     amount: Math.round(finalAmount * 100),
                     currency: "INR",
-                    receipt: `order_rcptid_${Date.now()}`
+                    receipt: `order_rcptid_${displayId}`
                 });
 
                 if (orderData.paymentDetails) {
@@ -162,16 +168,16 @@ export class UserCheckoutService implements IUserCheckoutService {
             // In a production system, we might want to rollback the order creation here
         }
 
-        // 7. Update Coupon Usage
+        // 7. Update Coupon Usage - REMOVED: ONLY MARK AS USED ON SUCCESSFUL PAYMENT
+        /*
         if (couponId && data.couponCode) {
-            // We should mark it as used. 
-            // I'll assume markCouponUsed exists on service. I'll add it momentarily.
             // @ts-ignore
             await this._couponService.markCouponUsed(data.couponCode, userId);
         }
+        */
 
-        // 8. Clear Cart
-        await this._cartRepository.clearCart(userId);
+        // 8. Clear Cart - REMOVED: ONLY CLEAR ON SUCCESSFUL PAYMENT
+        // await this._cartRepository.clearCart(userId);
 
         return order;
     }

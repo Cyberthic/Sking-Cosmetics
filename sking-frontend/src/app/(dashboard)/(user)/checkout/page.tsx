@@ -26,7 +26,6 @@ import {
 import { userCouponApiService } from "@/services/user/userCouponApiService";
 import { userAddressService, Address } from "@/services/user/userAddressApiService";
 import { userCheckoutService } from "@/services/user/userCheckoutApiService";
-import { userOrderService } from "@/services/user/userOrderApiService";
 import { AddressModal } from "@/components/user/modals/AddressModal";
 
 function CheckoutPageContent() {
@@ -125,15 +124,7 @@ function CheckoutPageContent() {
         toast.info("Coupon removed");
     };
 
-    const loadRazorpayScript = () => {
-        return new Promise((resolve) => {
-            const script = document.createElement("script");
-            script.src = "https://checkout.razorpay.com/v1/checkout.js";
-            script.onload = () => resolve(true);
-            script.onerror = () => resolve(false);
-            document.body.appendChild(script);
-        });
-    };
+
 
     const handlePlaceOrder = async () => {
         if (!selectedAddressId) {
@@ -151,71 +142,8 @@ function CheckoutPageContent() {
 
             if (response.success) {
                 const order = response.data;
-                const res = await loadRazorpayScript();
-
-                if (!res) {
-                    toast.error("Razorpay SDK failed to load. Are you online?");
-                    setIsPlacingOrder(false);
-                    dispatch(clearCartLocally());
-                    router.push(`/checkout/failure?orderId=${order._id}`);
-                    return;
-                }
-
-                const options = {
-                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-                    amount: Math.round(order.finalAmount * 100),
-                    currency: "INR",
-                    name: "SKING COSMETICS",
-                    description: "Order Payment",
-                    image: "/logo.png", // Replace with your actual logo path
-                    order_id: order.paymentDetails.gatewayOrderId,
-                    handler: async function (response: any) {
-                        try {
-                            const verificationData = {
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature,
-                            };
-
-                            const verificationResponse = await userOrderService.verifyPayment(verificationData);
-
-                            if (verificationResponse.success) {
-                                toast.success("Payment successful!");
-                                dispatch(clearCartLocally());
-                                router.push(`/checkout/success?orderId=${order._id}`);
-                            }
-                        } catch (error: any) {
-                            console.error("Verification Error:", error);
-                            toast.error(error.response?.data?.error || "Payment verification failed");
-                            dispatch(clearCartLocally());
-                            router.push(`/checkout/failure?orderId=${order._id}`);
-                        }
-                    },
-                    prefill: {
-                        name: order.shippingAddress.name,
-                        email: order.shippingAddress.email,
-                        contact: order.shippingAddress.phoneNumber
-                    },
-                    theme: {
-                        color: "#FF1493" // Hot pink color
-                    },
-                    modal: {
-                        ondismiss: function () {
-                            setIsPlacingOrder(false);
-                            dispatch(clearCartLocally());
-                            router.push(`/checkout/failure?orderId=${order._id}`);
-                        }
-                    }
-                };
-
-                const paymentObject = new (window as any).Razorpay(options);
-                paymentObject.open();
-
-                paymentObject.on('payment.failed', function (response: any) {
-                    toast.error("Payment failed: " + response.error.description);
-                    dispatch(clearCartLocally());
-                    router.push(`/checkout/failure?orderId=${order._id}`);
-                });
+                // Redirect to the new payment page using displayId
+                router.push(`/checkout/payment/${order.displayId}`);
             }
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to place order");

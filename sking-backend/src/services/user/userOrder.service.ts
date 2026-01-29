@@ -3,12 +3,15 @@ import { TYPES } from "../../core/types";
 import { IUserOrderService } from "../../core/interfaces/services/user/IUserOrder.service";
 import { IUserOrderRepository } from "../../core/interfaces/repositories/user/IUserOrder.repository";
 import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
+import { ICartRepository } from "../../core/interfaces/repositories/user/ICart.repository";
+import { IUserCouponService } from "../../core/interfaces/services/user/IUserCoupon.service";
 import { IAdminTransactionRepository } from "../../core/interfaces/repositories/admin/IAdminTransaction.repository";
 import { IOrder } from "../../models/order.model";
 import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
 import crypto from "crypto";
 import logger from "../../utils/logger";
+import mongoose from "mongoose";
 
 import razorpay from "../../config/razorpay";
 
@@ -17,6 +20,8 @@ export class UserOrderService implements IUserOrderService {
     constructor(
         @inject(TYPES.IUserOrderRepository) private _orderRepository: IUserOrderRepository,
         @inject(TYPES.IUserProductRepository) private _productRepository: IUserProductRepository,
+        @inject(TYPES.ICartRepository) private _cartRepository: ICartRepository,
+        @inject(TYPES.IUserCouponService) private _couponService: IUserCouponService,
         @inject(TYPES.IAdminTransactionRepository) private _transactionRepository: IAdminTransactionRepository
     ) { }
 
@@ -27,7 +32,7 @@ export class UserOrderService implements IUserOrderService {
         const now = new Date();
         const updatedOrders = await Promise.all(orders.map(async (order) => {
             if (order.orderStatus === "payment_pending" && now > order.paymentExpiresAt) {
-                await this.cancelOrder(order);
+                await this._cancelOrderInternal(order);
                 const refreshedOrder = await this._orderRepository.findByIdAndUserId(order._id!.toString(), userId);
                 return refreshedOrder || order;
             }
@@ -38,15 +43,26 @@ export class UserOrderService implements IUserOrderService {
     }
 
     async getOrderDetail(orderId: string, userId: string): Promise<IOrder> {
-        let order = await this._orderRepository.findByIdAndUserId(orderId, userId);
+        let order: IOrder | null = null;
+
+        // 1. Try finding by ObjectId if it's a valid ObjectId
+        if (mongoose.Types.ObjectId.isValid(orderId)) {
+            order = await this._orderRepository.findByIdAndUserId(orderId, userId);
+        }
+
+        // 2. If not found or not a valid ObjectId, try finding by displayId
+        if (!order) {
+            order = await this._orderRepository.findByDisplayIdAndUserId(orderId, userId);
+        }
+
         if (!order) {
             throw new CustomError("Order not found", StatusCode.NOT_FOUND);
         }
 
         // Auto-expire if pending and expired
         if (order.orderStatus === "payment_pending" && new Date() > order.paymentExpiresAt) {
-            await this.cancelOrder(order);
-            const refreshedOrder = await this._orderRepository.findByIdAndUserId(orderId, userId);
+            await this._cancelOrderInternal(order);
+            const refreshedOrder = await this._orderRepository.findByIdAndUserId(order._id!.toString(), userId);
             if (refreshedOrder) order = refreshedOrder;
         }
 
@@ -80,7 +96,16 @@ export class UserOrderService implements IUserOrderService {
     }
 
     async retryPayment(orderId: string, userId: string): Promise<IOrder> {
-        const order = await this._orderRepository.findByIdAndUserId(orderId, userId);
+        let order: IOrder | null = null;
+
+        if (mongoose.Types.ObjectId.isValid(orderId)) {
+            order = await this._orderRepository.findByIdAndUserId(orderId, userId);
+        }
+
+        if (!order) {
+            order = await this._orderRepository.findByDisplayIdAndUserId(orderId, userId);
+        }
+
         if (!order) {
             throw new CustomError("Order not found", StatusCode.NOT_FOUND);
         }
@@ -96,7 +121,7 @@ export class UserOrderService implements IUserOrderService {
         // Check if expired
         if (new Date() > order.paymentExpiresAt) {
             // Mark as cancelled if expired during retry attempt
-            await this.cancelOrder(order);
+            await this._cancelOrderInternal(order);
             throw new CustomError("Order payment window has expired. Please place a new order.", StatusCode.BAD_REQUEST);
         }
 
@@ -105,7 +130,7 @@ export class UserOrderService implements IUserOrderService {
             const razorpayOrder = await razorpay.orders.create({
                 amount: Math.round(order.finalAmount * 100),
                 currency: "INR",
-                receipt: `retry_rcptid_${order._id}`
+                receipt: `retry_rcptid_${order.displayId}`
             });
 
             const updatedOrder = await this._orderRepository.updateOrder(order._id!.toString(), {
@@ -120,6 +145,32 @@ export class UserOrderService implements IUserOrderService {
             logger.error("Razorpay Retry Order Creation Error", error);
             throw new CustomError("Failed to initiate payment retry", StatusCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    async cancelOrder(orderId: string, userId: string): Promise<void> {
+        let order: IOrder | null = null;
+
+        if (mongoose.Types.ObjectId.isValid(orderId)) {
+            order = await this._orderRepository.findByIdAndUserId(orderId, userId);
+        }
+
+        if (!order) {
+            order = await this._orderRepository.findByDisplayIdAndUserId(orderId, userId);
+        }
+
+        if (!order) {
+            throw new CustomError("Order not found", StatusCode.NOT_FOUND);
+        }
+
+        if (order.paymentStatus === "completed") {
+            throw new CustomError("Cannot cancel a paid order", StatusCode.BAD_REQUEST);
+        }
+
+        if (order.orderStatus === "cancelled") {
+            return; // Already cancelled
+        }
+
+        await this._cancelOrderInternal(order);
     }
 
     async handleWebhook(payload: any, signature: string): Promise<void> {
@@ -165,6 +216,23 @@ export class UserOrderService implements IUserOrderService {
             }
         })) as IOrder;
 
+        // Clear Cart
+        try {
+            await this._cartRepository.clearCart(order.user.toString());
+        } catch (error) {
+            logger.error("Error clearing cart after payment for order: " + updatedOrder._id, error);
+            // Don't fail the whole request if cart clearing fails
+        }
+
+        // Mark Coupon as used
+        if (updatedOrder.discountCode) {
+            try {
+                await this._couponService.markCouponUsed(updatedOrder.discountCode, updatedOrder.user.toString());
+            } catch (error) {
+                logger.error("Error marking coupon as used for order: " + updatedOrder._id, error);
+            }
+        }
+
         // Commit stock (move from reserved to sold)
         try {
             for (const item of updatedOrder.items) {
@@ -198,10 +266,10 @@ export class UserOrderService implements IUserOrderService {
         return updatedOrder;
     }
 
-    private async cancelOrder(order: IOrder): Promise<void> {
+    private async _cancelOrderInternal(order: IOrder): Promise<void> {
         await this._orderRepository.updateOrder(order._id!.toString(), {
             orderStatus: "cancelled",
-            paymentStatus: "expired"
+            paymentStatus: "cancelled"
         });
 
         // Release stock back to inventory

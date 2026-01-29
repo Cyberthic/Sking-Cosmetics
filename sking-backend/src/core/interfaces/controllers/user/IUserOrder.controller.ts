@@ -5,5 +5,6 @@ export interface IUserOrderController {
     getOrderDetail(req: Request, res: Response): Promise<void>;
     verifyPayment(req: Request, res: Response): Promise<void>;
     retryPayment(req: Request, res: Response): Promise<void>;
+    cancelOrder(req: Request, res: Response): Promise<void>;
     handleWebhook(req: Request, res: Response): Promise<void>;
 }
