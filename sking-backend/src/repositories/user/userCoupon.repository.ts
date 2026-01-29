@@ -16,11 +16,14 @@ export class UserCouponRepository implements IUserCouponRepository {
             isActive: true,
             $or: [
                 { couponType: 'all' },
-                { couponType: 'new_users', _id: { $exists: isNewUser } }, // Simple check, better handled in code
+                { couponType: 'new_users' },
+                { couponType: 'specific_products' },
                 { couponType: 'specific_users', specificUsers: userId },
-                { couponType: 'registered_after', registeredAfter: { $lte: registrationDate } }
+                { couponType: 'registered_after' }
             ]
-        }).sort({ createdAt: -1 });
+        })
+            .sort({ createdAt: -1 })
+            .populate('specificProducts', 'name images price');
 
         // Filter more accurately in JS since some logic like "new_users" depends on external state (orders)
         return coupons.filter(coupon => {
