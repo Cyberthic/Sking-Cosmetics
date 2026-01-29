@@ -202,5 +202,17 @@ container.bind<IUserOrderRepository>(TYPES.IUserOrderRepository).to(UserOrderRep
 container.bind<IUserOrderService>(TYPES.IUserOrderService).to(UserOrderService);
 container.bind<IUserOrderController>(TYPES.IUserOrderController).to(UserOrderController);
 
+// User Coupon
+import { IUserCouponRepository } from "./interfaces/repositories/user/IUserCoupon.repository";
+import { IUserCouponService } from "./interfaces/services/user/IUserCoupon.service";
+import { IUserCouponController } from "./interfaces/controllers/user/IUserCoupon.controller";
+import { UserCouponRepository } from "../repositories/user/userCoupon.repository";
+import { UserCouponService } from "../services/user/userCoupon.service";
+import { UserCouponController } from "../controllers/user/userCoupon.controller";
+
+container.bind<IUserCouponRepository>(TYPES.IUserCouponRepository).to(UserCouponRepository);
+container.bind<IUserCouponService>(TYPES.IUserCouponService).to(UserCouponService);
+container.bind<IUserCouponController>(TYPES.IUserCouponController).to(UserCouponController);
+
 export { container };
 export default container;
