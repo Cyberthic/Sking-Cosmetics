@@ -13,6 +13,8 @@ import logger from "../../utils/logger";
 import { IUserCouponService } from "../../core/interfaces/services/user/IUserCoupon.service";
 import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
 
+const ORDER_EXPIRY_MINUTES = 15;
+
 @injectable()
 export class UserCheckoutService implements IUserCheckoutService {
     constructor(
@@ -69,7 +71,7 @@ export class UserCheckoutService implements IUserCheckoutService {
         const finalAmount = Math.max(0, totalAmount + shippingFee - discountAmount);
 
         const expiryTime = new Date();
-        expiryTime.setMinutes(expiryTime.getMinutes() + 15);
+        expiryTime.setMinutes(expiryTime.getMinutes() + ORDER_EXPIRY_MINUTES);
 
         const displayId = `SKN-${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
 
