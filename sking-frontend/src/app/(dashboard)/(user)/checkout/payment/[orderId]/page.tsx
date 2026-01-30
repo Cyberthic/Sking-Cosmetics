@@ -86,7 +86,34 @@ export default function OrderPaymentPage() {
         fetchOrder();
     }, [orderId]);
 
+    const checkOrderState = async () => {
+        try {
+            const response = await userOrderService.getOrderDetail(orderId as string);
+            const orderData = response.data;
+
+            if (orderData.paymentStatus === "completed") {
+                toast.success("Order already paid!");
+                router.push(`/checkout/success?orderId=${orderData.displayId}`);
+                return true;
+            }
+
+            if (orderData.orderStatus === "cancelled") {
+                toast.error("This order has been cancelled");
+                router.push("/checkout");
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error("Check Order State Error:", error);
+            return false;
+        }
+    };
+
     const initiatePayment = async (orderData: any) => {
+        // Double check state before opening Razorpay
+        const isSettled = await checkOrderState();
+        if (isSettled) return;
+
         if (!orderData || !orderData.paymentDetails?.gatewayOrderId) {
             toast.error("Invalid payment details. Please contact support.");
             return;
@@ -115,7 +142,7 @@ export default function OrderPaymentPage() {
 
                     if (verificationResponse.success) {
                         setPaymentStatus("success");
-                        toast.success("Payment successful!");
+                        toast.success(verificationResponse.message || "Payment successful!");
                         dispatch(clearCartLocally());
                         router.push(`/checkout/success?orderId=${orderData.displayId}`);
                     }
@@ -123,6 +150,8 @@ export default function OrderPaymentPage() {
                     console.error("Verification Error:", error);
                     setPaymentStatus("failed");
                     toast.error(error.response?.data?.error || "Payment verification failed");
+                    // Refresh order state on failure to see if it was already paid/cancelled
+                    fetchOrder();
                 } finally {
                     setIsVerifying(false);
                 }
@@ -153,6 +182,9 @@ export default function OrderPaymentPage() {
     };
 
     const handleRetry = async () => {
+        const isSettled = await checkOrderState();
+        if (isSettled) return;
+
         try {
             setIsLoading(true);
             const response = await userOrderService.retryPayment(orderId as string);
@@ -167,6 +199,9 @@ export default function OrderPaymentPage() {
     };
 
     const handleCancelOrder = async () => {
+        const isSettled = await checkOrderState();
+        if (isSettled) return;
+
         try {
             setIsCancelling(true);
             await userOrderService.cancelOrder(orderId as string);

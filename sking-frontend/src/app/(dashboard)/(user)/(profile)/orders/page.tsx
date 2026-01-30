@@ -73,11 +73,11 @@ export default function OrdersPage() {
                             });
 
                             if (verificationResponse.success) {
-                                toast.success("Payment successful!");
+                                toast.success(verificationResponse.message || "Payment successful!");
                                 fetchOrders(); // Refresh list
                             }
                         } catch (error: any) {
-                            toast.error("Verification failed");
+                            toast.error(error.response?.data?.error || "Verification failed");
                         }
                     },
                     prefill: {

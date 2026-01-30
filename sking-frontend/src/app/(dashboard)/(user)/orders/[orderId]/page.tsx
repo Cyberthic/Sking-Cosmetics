@@ -116,11 +116,11 @@ export default function OrderDetailPage() {
                             });
 
                             if (verificationResponse.success) {
-                                toast.success("Payment successful!");
+                                toast.success(verificationResponse.message || "Payment successful!");
                                 fetchOrderDetail();
                             }
                         } catch (error: any) {
-                            toast.error("Verification failed");
+                            toast.error(error.response?.data?.error || "Verification failed");
                             setIsRetrying(false);
                         }
                     },

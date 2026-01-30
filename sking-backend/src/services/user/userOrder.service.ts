@@ -67,7 +67,20 @@ export class UserOrderService implements IUserOrderService {
 
         const order = await this._orderRepository.findByGatewayOrderId(razorpay_order_id);
         if (!order) {
-            throw new CustomError("Order not found", StatusCode.NOT_FOUND);
+            logger.error(`Order not found for gatewayOrderId: ${razorpay_order_id}`);
+            throw new CustomError("Order not found or already processed", StatusCode.NOT_FOUND);
+        }
+
+        if (order.user.toString() !== userId) {
+            throw new CustomError("Unauthorized", StatusCode.FORBIDDEN);
+        }
+
+        if (order.paymentStatus === "completed") {
+            return order;
+        }
+
+        if (order.orderStatus === "cancelled") {
+            throw new CustomError("This order has been cancelled and cannot be paid", StatusCode.BAD_REQUEST);
         }
 
         const body = razorpay_order_id + "|" + razorpay_payment_id;
@@ -118,7 +131,10 @@ export class UserOrderService implements IUserOrderService {
             });
 
             const updatedOrder = await this._orderRepository.updateOrder(order._id!.toString(), {
-                paymentDetails: { ...order.paymentDetails, gatewayOrderId: razorpayOrder.id }
+                paymentDetails: {
+                    ...(order.toObject().paymentDetails || {}),
+                    gatewayOrderId: razorpayOrder.id
+                }
             });
 
             return updatedOrder as IOrder;
@@ -190,7 +206,7 @@ export class UserOrderService implements IUserOrderService {
             paymentStatus: "completed",
             orderStatus: "processing",
             paymentDetails: {
-                ...order.paymentDetails,
+                ...(order.toObject().paymentDetails || {}),
                 gatewayPaymentId: paymentId,
                 gatewaySignature: signature,
                 paidAt: new Date()
@@ -229,7 +245,7 @@ export class UserOrderService implements IUserOrderService {
     private async _cancelOrderInternal(order: IOrder): Promise<void> {
         await this._orderRepository.updateOrder(order._id!.toString(), {
             orderStatus: "cancelled",
-            paymentStatus: "cancelled"
+            paymentStatus: "expired"
         });
 
         for (const item of order.items) {
