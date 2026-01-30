@@ -19,10 +19,13 @@ import { motion } from "framer-motion";
 import { userOrderService } from "@/services/user/userOrderApiService";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { clearCartLocally } from "@/redux/features/cartSlice";
 
 export default function OrderDetailPage() {
     const { orderId } = useParams();
     const router = useRouter();
+    const dispatch = useDispatch();
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [timeLeft, setTimeLeft] = useState<string>("");
@@ -117,6 +120,7 @@ export default function OrderDetailPage() {
 
                             if (verificationResponse.success) {
                                 toast.success(verificationResponse.message || "Payment successful!");
+                                dispatch(clearCartLocally());
                                 fetchOrderDetail();
                             }
                         } catch (error: any) {
@@ -162,7 +166,7 @@ export default function OrderDetailPage() {
             <div className="min-h-screen bg-[#fcfcfc] flex items-center justify-center p-4">
                 <div className="text-center">
                     <h2 className="text-2xl font-black uppercase mb-4">Order not found</h2>
-                    <Link href="/profile/orders" className="text-sking-pink font-bold uppercase tracking-widest text-xs underline">
+                    <Link href="/orders" className="text-sking-pink font-bold uppercase tracking-widest text-xs underline">
                         Back to Orders
                     </Link>
                 </div>
@@ -184,7 +188,7 @@ export default function OrderDetailPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => router.back()}
+                            onClick={() => router.push('/orders')}
                             className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center border border-gray-100 hover:border-black transition-all shadow-sm group"
                         >
                             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />

@@ -7,9 +7,12 @@ import { userOrderService } from '@/services/user/userOrderApiService';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useDispatch } from 'react-redux';
+import { clearCartLocally } from '@/redux/features/cartSlice';
 
 export default function OrdersPage() {
     const router = useRouter();
+    const dispatch = useDispatch();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -74,6 +77,7 @@ export default function OrdersPage() {
 
                             if (verificationResponse.success) {
                                 toast.success(verificationResponse.message || "Payment successful!");
+                                dispatch(clearCartLocally());
                                 fetchOrders(); // Refresh list
                             }
                         } catch (error: any) {

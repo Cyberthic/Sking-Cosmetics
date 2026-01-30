@@ -47,12 +47,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         };
     }, [isOpen]);
 
-    // Fetch cart when drawer opens if items are empty
+    // Fetch cart whenever drawer opens to ensure fresh state
     useEffect(() => {
-        if (isOpen && items.length === 0) {
+        if (isOpen) {
             dispatch(fetchCartThunk() as any);
         }
-    }, [isOpen, dispatch, items.length]);
+    }, [isOpen, dispatch]);
 
     const handleRemove = async (productId: string, variantName?: string) => {
         try {
