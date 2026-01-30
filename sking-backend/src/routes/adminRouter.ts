@@ -6,6 +6,7 @@ import productRouter from "./adminRoutes/adminProduct.routes";
 import adminOrderRouter from "./adminRoutes/adminOrder.routes";
 import adminCouponRoutes from "./adminRoutes/adminCoupon.routes";
 import adminTransactionRoutes from "./adminRoutes/adminTransaction.routes";
+import adminReviewRouter from "./adminRoutes/adminReview.routes";
 
 const adminRouter = Router();
 
@@ -16,5 +17,6 @@ adminRouter.use("/products", productRouter);
 adminRouter.use("/orders", adminOrderRouter);
 adminRouter.use("/coupons", adminCouponRoutes);
 adminRouter.use("/transactions", adminTransactionRoutes);
+adminRouter.use("/reviews", adminReviewRouter);
 
 export default adminRouter;

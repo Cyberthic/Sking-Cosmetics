@@ -8,6 +8,9 @@ export interface IReview extends Document {
     comment: string;
     images?: string[];
     isVerified: boolean;
+    isBlocked: boolean;
+    blockedUntil?: Date;
+    blockReason?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -21,6 +24,9 @@ const ReviewSchema: Schema = new Schema(
         comment: { type: String, required: true },
         images: [{ type: String }],
         isVerified: { type: Boolean, default: true },
+        isBlocked: { type: Boolean, default: false },
+        blockedUntil: { type: Date },
+        blockReason: { type: String },
     },
     { timestamps: true }
 );

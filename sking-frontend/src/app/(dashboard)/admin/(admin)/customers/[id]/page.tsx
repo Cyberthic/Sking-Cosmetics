@@ -3,8 +3,9 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { User, Package, MapPin, Wallet, ShoppingBag, Tag, CreditCard, Calendar, Mail, Phone, Clock, ArrowRight, Ban, CheckCircle } from "lucide-react";
+import { User, Package, MapPin, Wallet, ShoppingBag, Tag, CreditCard, Calendar, Mail, Phone, Clock, ArrowRight, Ban, CheckCircle, Star, MessageSquare } from "lucide-react";
 import { adminCustomerService } from "@/services/admin/adminCustomerApiService";
+import { adminReviewService } from "@/services/admin/adminReviewApiService";
 import Badge from "@/components/admin/ui/badge/Badge";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 import Link from "next/link";
@@ -15,7 +16,9 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/admin/ui/table";
-import Pagination from "@/components/admin/tables/Pagination"; // Check if this exists, usually it does in this project
+import Pagination from "@/components/admin/tables/Pagination";
+import ReviewDetailsModal from "@/components/admin/reviews/ReviewDetailsModal";
+import { toast } from "sonner";
 
 export default function CustomerDetailPage() {
     const params = useParams();
@@ -48,6 +51,14 @@ export default function CustomerDetailPage() {
     const [ordersPage, setOrdersPage] = useState(1);
     const [ordersTotalPages, setOrdersTotalPages] = useState(1);
     const [ordersLoading, setOrdersLoading] = useState(false);
+
+    // Reviews State
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [reviewsPage, setReviewsPage] = useState(1);
+    const [reviewsTotalPages, setReviewsTotalPages] = useState(1);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+    const [selectedReview, setSelectedReview] = useState<any>(null);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
     const fetchDetails = async () => {
         if (!id) return;
@@ -86,6 +97,62 @@ export default function CustomerDetailPage() {
         }
     }, [id, ordersPage]);
 
+    const fetchReviews = useCallback(async () => {
+        if (!id) return;
+        try {
+            reviewsLoading || setReviewsLoading(true);
+            const res = await adminReviewService.getReviewsByUser(id, { page: reviewsPage, limit: 10 });
+            if (res.success) {
+                setReviews(res.reviews);
+                setReviewsTotalPages(res.totalPages);
+            }
+        } catch (error) {
+            console.error("Failed to fetch reviews", error);
+        } finally {
+            setReviewsLoading(false);
+        }
+    }, [id, reviewsPage]);
+
+    const handleBlockReview = async (duration: string) => {
+        if (!selectedReview) return;
+        try {
+            await adminReviewService.blockReview({
+                reviewId: selectedReview._id,
+                duration,
+                reason: "Administrative block"
+            });
+            toast.success(`Review blocked for ${duration}`);
+            fetchReviews();
+            setIsReviewModalOpen(false);
+        } catch (error) {
+            toast.error("Failed to block review");
+        }
+    };
+
+    const handleUnblockReview = async () => {
+        if (!selectedReview) return;
+        try {
+            await adminReviewService.unblockReview(selectedReview._id);
+            toast.success("Review unblocked");
+            fetchReviews();
+            setIsReviewModalOpen(false);
+        } catch (error) {
+            toast.error("Failed to unblock review");
+        }
+    };
+
+    const handleDeleteReview = async () => {
+        if (!selectedReview) return;
+        try {
+            await adminReviewService.deleteReview(selectedReview._id);
+            toast.success("Review deleted successfully");
+            fetchReviews();
+            setIsReviewModalOpen(false);
+        } catch (error) {
+            toast.error("Failed to delete review");
+        }
+    };
+
     useEffect(() => {
         fetchDetails();
     }, [id]);
@@ -95,6 +162,12 @@ export default function CustomerDetailPage() {
             fetchOrders();
         }
     }, [activeTab, ordersPage, fetchOrders]);
+
+    useEffect(() => {
+        if (activeTab === 'reviews') {
+            fetchReviews();
+        }
+    }, [activeTab, reviewsPage, fetchReviews]);
 
 
     const handleBan = () => {
@@ -160,6 +233,7 @@ export default function CustomerDetailPage() {
         { id: "addresses", label: `Addresses (${addresses.length})`, icon: MapPin },
         { id: "coupons", label: "Coupons", icon: Tag },
         { id: "cart", label: `Cart (${cartCount})`, icon: ShoppingBag },
+        { id: "reviews", label: "Reviews", icon: MessageSquare },
     ];
 
     return (
@@ -499,7 +573,103 @@ export default function CustomerDetailPage() {
                     </div>
                 )}
 
+                {/* REVIEWS TAB */}
+                {activeTab === 'reviews' && (
+                    <div>
+                        {reviewsLoading ? (
+                            <div className="text-center py-20">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+                                <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading reviews...</p>
+                            </div>
+                        ) : reviews.length === 0 ? (
+                            <div className="text-center py-20 text-gray-400">
+                                <MessageSquare size={48} className="mx-auto mb-4 opacity-20" />
+                                <p className="font-bold">No reviews posted yet</p>
+                            </div>
+                        ) : (
+                            <>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Product</TableCell>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Rating</TableCell>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Comment</TableCell>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Date</TableCell>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Status</TableCell>
+                                            <TableCell isHeader className="font-black uppercase text-[10px] tracking-widest text-gray-400">Action</TableCell>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {reviews.map((review: any) => (
+                                            <TableRow key={review._id}>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-800 overflow-hidden relative border border-gray-100 dark:border-gray-700">
+                                                            <Image
+                                                                src={review.product?.images?.[0] || '/images/product/product-01.png'}
+                                                                alt=""
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[120px]">{review.product?.name}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-1">
+                                                        <Star size={12} className="text-yellow-400 fill-current" />
+                                                        <span className="text-xs font-black italic text-gray-900 dark:text-white">{review.rating}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <p className="text-[11px] text-gray-600 dark:text-gray-400 line-clamp-1 max-w-[200px]">{review.comment}</p>
+                                                </TableCell>
+                                                <TableCell className="text-[11px] font-bold text-gray-500 dark:text-gray-500">
+                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {review.isBlocked ? (
+                                                        <Badge color="error" size="sm" className="text-[8px] uppercase tracking-tighter">Blocked</Badge>
+                                                    ) : (
+                                                        <Badge color="success" size="sm" className="text-[8px] uppercase tracking-tighter">Active</Badge>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <button
+                                                        onClick={() => { setSelectedReview(review); setIsReviewModalOpen(true); }}
+                                                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-gray-400 dark:text-gray-500 hover:text-sking-pink"
+                                                    >
+                                                        <ArrowRight size={14} />
+                                                    </button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                {reviewsTotalPages > 1 && (
+                                    <div className="mt-4 flex justify-end">
+                                        <Pagination
+                                            currentPage={reviewsPage}
+                                            totalPages={reviewsTotalPages}
+                                            onPageChange={(p) => setReviewsPage(p)}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+
             </div>
+
+            <ReviewDetailsModal
+                isOpen={isReviewModalOpen}
+                onClose={() => setIsReviewModalOpen(false)}
+                review={selectedReview}
+                onBlock={handleBlockReview}
+                onUnblock={handleUnblockReview}
+                onDelete={handleDeleteReview}
+            />
 
             <ConfirmationModal
                 isOpen={confirmModal.isOpen}

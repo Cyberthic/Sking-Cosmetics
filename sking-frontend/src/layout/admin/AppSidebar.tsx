@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
     name: "Customers",
     subItems: [
       { name: "Customer Management", path: "/admin/customers", pro: false },
-      { name: "Reviews & Ratings", path: "/reviews", pro: false },
+      { name: "Reviews & Ratings", path: "/admin/reviews", pro: false },
     ],
   },
   {

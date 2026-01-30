@@ -238,5 +238,17 @@ container.bind<IUserReviewRepository>(TYPES.IUserReviewRepository).to(UserReview
 container.bind<IUserReviewService>(TYPES.IUserReviewService).to(UserReviewService);
 container.bind<IUserReviewController>(TYPES.IUserReviewController).to(UserReviewController);
 
+// Admin Review
+import { IAdminReviewRepository } from "./interfaces/repositories/admin/IAdminReview.repository";
+import { IAdminReviewService } from "./interfaces/services/admin/IAdminReview.service";
+import { IAdminReviewController } from "./interfaces/controllers/admin/IAdminReview.controller";
+import { AdminReviewRepository } from "../repositories/admin/adminReview.repository";
+import { AdminReviewService } from "../services/admin/adminReview.service";
+import { AdminReviewController } from "../controllers/admin/adminReview.controller";
+
+container.bind<IAdminReviewRepository>(TYPES.IAdminReviewRepository).to(AdminReviewRepository);
+container.bind<IAdminReviewService>(TYPES.IAdminReviewService).to(AdminReviewService);
+container.bind<IAdminReviewController>(TYPES.IAdminReviewController).to(AdminReviewController);
+
 export { container };
 export default container;

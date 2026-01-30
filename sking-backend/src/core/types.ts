@@ -60,6 +60,9 @@ const TYPES = {
     IUserReviewRepository: Symbol.for("IUserReviewRepository"),
     IUserReviewService: Symbol.for("IUserReviewService"),
     IUserReviewController: Symbol.for("IUserReviewController"),
+    IAdminReviewRepository: Symbol.for("IAdminReviewRepository"),
+    IAdminReviewService: Symbol.for("IAdminReviewService"),
+    IAdminReviewController: Symbol.for("IAdminReviewController"),
 };
 
 export { TYPES };
