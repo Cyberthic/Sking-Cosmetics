@@ -68,15 +68,21 @@ export class UserReviewRepository implements IUserReviewRepository {
         return {
             reviews: reviews.map(r => ({
                 id: r._id.toString(),
-                user: {
+                user: r.user ? {
                     id: (r.user as any)._id.toString(),
                     name: (r.user as any).name,
                     profileImage: (r.user as any).profileImage
+                } : {
+                    id: 'admin',
+                    name: 'Sking Cosmetics Team',
+                    profileImage: '/images/logo/logo-icon.png' // Or generic admin avatar
                 },
                 rating: r.rating,
                 comment: r.comment,
                 images: r.images,
                 isVerified: r.isVerified,
+                isPinned: r.isPinned,
+                isAdminReview: r.isAdminReview,
                 createdAt: r.createdAt
             })),
             totalReviews,

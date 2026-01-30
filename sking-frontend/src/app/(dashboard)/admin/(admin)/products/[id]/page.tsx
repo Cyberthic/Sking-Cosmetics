@@ -51,6 +51,7 @@ export default function ProductDetailPage() {
     const [selectedReview, setSelectedReview] = useState<any>(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [isAddReviewModalOpen, setIsAddReviewModalOpen] = useState(false);
+    const [reviewsStatus, setReviewsStatus] = useState('all');
 
     useEffect(() => {
         if (id) {
@@ -66,7 +67,7 @@ export default function ProductDetailPage() {
         } else if (id && activeTab === 'reviews') {
             fetchReviews();
         }
-    }, [id, activeTab, ordersPage, reviewsPage]);
+    }, [id, activeTab, ordersPage, reviewsPage, reviewsStatus]);
 
     const fetchProduct = async () => {
         try {
@@ -114,7 +115,12 @@ export default function ProductDetailPage() {
     const fetchReviews = useCallback(async () => {
         try {
             setReviewsLoading(true);
-            const data = await adminReviewService.getReviewsByProduct(id, { page: reviewsPage, limit: 10 });
+            const data = await adminReviewService.getReviewsByProduct(id, {
+                page: reviewsPage,
+                limit: 10,
+                status: reviewsStatus === 'all' ? undefined : reviewsStatus,
+                sortBy: 'product_rank'
+            });
             if (data.success) {
                 setReviews(data.reviews);
                 setReviewsTotalPages(data.totalPages);
@@ -124,7 +130,7 @@ export default function ProductDetailPage() {
         } finally {
             setReviewsLoading(false);
         }
-    }, [id, reviewsPage]);
+    }, [id, reviewsPage, reviewsStatus]);
 
     const handleBlockReview = async (duration: string) => {
         if (!selectedReview) return;
@@ -500,10 +506,24 @@ export default function ProductDetailPage() {
                 {/* REVIEWS TAB */}
                 {activeTab === 'reviews' && (
                     <div>
-                        <div className="flex justify-end mb-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                            <div className="flex bg-white dark:bg-black/20 p-1 rounded-xl border border-gray-100 dark:border-white/10 shadow-sm w-fit">
+                                {['all', 'active', 'blocked', 'pinned'].map((s) => (
+                                    <button
+                                        key={s}
+                                        onClick={() => { setReviewsStatus(s); setReviewsPage(1); }}
+                                        className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${reviewsStatus === s
+                                            ? "bg-black text-white dark:bg-white dark:text-black shadow-md scale-105"
+                                            : "text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5"
+                                            }`}
+                                    >
+                                        {s}
+                                    </button>
+                                ))}
+                            </div>
                             <Button
                                 onClick={() => setIsAddReviewModalOpen(true)}
-                                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-gray-800"
+                                className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                             >
                                 <Plus size={14} /> Add Review
                             </Button>

@@ -14,6 +14,8 @@ export class AdminReviewRepository implements IAdminReviewRepository {
             query.isBlocked = true;
         } else if (status === 'active') {
             query.isBlocked = { $ne: true };
+        } else if (status === 'pinned') {
+            query.isPinned = true;
         }
 
         if (productId && mongoose.Types.ObjectId.isValid(productId)) {
@@ -30,11 +32,17 @@ export class AdminReviewRepository implements IAdminReviewRepository {
             query.comment = { $regex: search, $options: 'i' };
         }
 
+        let sortQuery: any = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+
+        if (sortBy === 'product_rank') {
+            sortQuery = { isPinned: -1, isBlocked: 1, createdAt: -1 };
+        }
+
         const total = await Review.countDocuments(query);
         const reviews = await Review.find(query)
             .populate('user', 'username email profilePicture')
             .populate('product', 'name images slug')
-            .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+            .sort(sortQuery)
             .skip((page - 1) * limit)
             .limit(limit);
 

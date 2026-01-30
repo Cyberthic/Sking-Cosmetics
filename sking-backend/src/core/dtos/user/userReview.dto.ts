@@ -17,6 +17,8 @@ export interface IReviewResponseDTO {
     comment: string;
     images?: string[];
     isVerified: boolean;
+    isPinned?: boolean;
+    isAdminReview?: boolean;
     createdAt: Date;
 }
 

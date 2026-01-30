@@ -21,6 +21,7 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
     const [submitting, setSubmitting] = useState(false);
     const [products, setProducts] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
+    const [isPostingAsAdmin, setIsPostingAsAdmin] = useState(true);
 
     const [formData, setFormData] = useState({
         productId: preselectedProductId || "",
@@ -62,7 +63,7 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
             }
         } catch (error) {
             console.error("Failed to fetch initial data", error);
-            toast.error("Failed to load products or users");
+            toast.error("Failed to load data");
         } finally {
             setLoading(false);
         }
@@ -75,22 +76,17 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
             return;
         }
 
+        if (!isPostingAsAdmin && !formData.userId) {
+            toast.error("Please select a user for the review");
+            return;
+        }
+
         try {
             setSubmitting(true);
-            // If userId is empty, it might be an admin review without specific user, 
-            // but schema requires user. 
-            // If admin doesn't select user, we might need to handle it. 
-            // For now, let's require user selection or pick the first one (admin?) 
-            // Assuming admin selects a user for testimonial. 
-            // If no user selected, we can't submit unless we have a default admin user ID.
-
-            if (!formData.userId) {
-                toast.error("Please select a user for the review");
-                return;
-            }
 
             await adminReviewService.createReview({
                 ...formData,
+                userId: isPostingAsAdmin ? "" : formData.userId,
                 isPinned: false
             });
 
@@ -105,6 +101,7 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
                 comment: "",
                 images: []
             });
+            setIsPostingAsAdmin(true);
         } catch (error: any) {
             console.error("Failed to create review", error);
             toast.error(error.response?.data?.message || "Failed to create review");
@@ -122,64 +119,102 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-md"
                     />
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+                        className="relative w-full max-w-2xl bg-white dark:bg-black border border-gray-100 dark:border-white/10 rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                     >
-                        <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Add Review</h3>
-                            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                                <X size={20} className="text-gray-400" />
+                        <div className="p-8 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.02]">
+                            <div>
+                                <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900 dark:text-white">Add Review</h3>
+                                <p className="text-sm text-gray-500 font-medium">Create a new review for a product</p>
+                            </div>
+                            <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-full transition-colors">
+                                <X size={24} className="text-gray-500" />
                             </button>
                         </div>
 
-                        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-                            <form id="add-review-form" onSubmit={handleSubmit} className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Product</label>
-                                        <SearchableSelect
-                                            options={products}
-                                            value={formData.productId}
-                                            onChange={(val) => setFormData({ ...formData, productId: val })}
-                                            placeholder="Select Product"
-                                            disabled={loading || !!preselectedProductId}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500">User</label>
-                                        <SearchableSelect
-                                            options={users}
-                                            value={formData.userId}
-                                            onChange={(val) => setFormData({ ...formData, userId: val })}
-                                            placeholder="Select User"
-                                            disabled={loading}
-                                        />
-                                    </div>
+                        <div className="p-8 overflow-y-auto flex-1 custom-scrollbar">
+                            <form id="add-review-form" onSubmit={handleSubmit} className="space-y-8">
+                                <div className="p-1 bg-gray-100 dark:bg-white/5 rounded-xl flex gap-1 w-fit">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPostingAsAdmin(true)}
+                                        className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${isPostingAsAdmin
+                                                ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
+                                                : "text-gray-500 hover:text-black dark:hover:text-white"
+                                            }`}
+                                    >
+                                        Post as Admin
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPostingAsAdmin(false)}
+                                        className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${!isPostingAsAdmin
+                                                ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
+                                                : "text-gray-500 hover:text-black dark:hover:text-white"
+                                            }`}
+                                    >
+                                        Post as User
+                                    </button>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Rating</label>
-                                    <div className="flex items-center gap-2">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <button
-                                                key={star}
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, rating: star })}
-                                                className="transition-transform hover:scale-110 focus:outline-none"
-                                            >
-                                                <Star
-                                                    size={28}
-                                                    className={star <= formData.rating ? "text-yellow-400 fill-current" : "text-gray-200 dark:text-gray-700"}
-                                                />
-                                            </button>
-                                        ))}
-                                        <span className="ml-2 text-lg font-bold text-gray-700 dark:text-gray-300">{formData.rating} Stars</span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-black uppercase tracking-widest text-gray-400 pl-1">Product</label>
+                                        <div className="relative">
+                                            <SearchableSelect
+                                                options={products}
+                                                value={formData.productId}
+                                                onChange={(val) => setFormData({ ...formData, productId: val })}
+                                                placeholder="Select Product"
+                                                disabled={loading || !!preselectedProductId}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {!isPostingAsAdmin && (
+                                        <motion.div
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            className="space-y-3"
+                                        >
+                                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 pl-1">User</label>
+                                            <SearchableSelect
+                                                options={users}
+                                                value={formData.userId}
+                                                onChange={(val) => setFormData({ ...formData, userId: val })}
+                                                placeholder="Select User"
+                                                disabled={loading}
+                                            />
+                                        </motion.div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 pl-1">Rating</label>
+                                    <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 w-fit">
+                                        <div className="flex gap-1">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <button
+                                                    key={star}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, rating: star })}
+                                                    className="transition-transform hover:scale-110 focus:outline-none"
+                                                >
+                                                    <Star
+                                                        size={24}
+                                                        className={star <= formData.rating ? "text-sking-pink fill-current" : "text-gray-200 dark:text-gray-700"}
+                                                    />
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="h-6 w-[1px] bg-gray-200 dark:bg-white/10"></div>
+                                        <span className="text-lg font-black text-gray-900 dark:text-white">{formData.rating}.0</span>
                                     </div>
                                 </div>
 

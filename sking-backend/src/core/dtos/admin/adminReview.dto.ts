@@ -4,7 +4,7 @@ export interface FilterReviewDto {
     search?: string;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
-    status?: 'active' | 'blocked' | 'all';
+    status?: 'active' | 'blocked' | 'all' | 'pinned';
     productId?: string;
     userId?: string;
 }

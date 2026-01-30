@@ -46,7 +46,7 @@ const ReviewsPage = () => {
                 limit: 10,
                 search,
                 status: status === 'all' ? undefined : status,
-                sortBy: 'isPinned', // Sort by pinned first
+                sortBy: 'createdAt', // Sort by date
                 sortOrder: 'desc'
             });
             setReviews(data.reviews);
@@ -143,7 +143,7 @@ const ReviewsPage = () => {
             {/* Header Actions */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex bg-white dark:bg-gray-800 p-1 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm w-fit">
-                    {['all', 'active', 'blocked'].map((s) => (
+                    {['all', 'active', 'blocked', 'pinned'].map((s) => (
                         <button
                             key={s}
                             onClick={() => { setStatus(s); setPage(1); }}

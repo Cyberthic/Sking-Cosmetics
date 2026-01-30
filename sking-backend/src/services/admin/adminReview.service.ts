@@ -115,10 +115,16 @@ export class AdminReviewService implements IAdminReviewService {
     }
 
     async createReview(data: any): Promise<any> {
+        // Remove userId if it's empty strings to prevent CastError
+        if (!data.userId || data.userId === "") {
+            delete data.userId;
+        }
+
         const review = await this._reviewRepository.create({
             ...data,
-            isAdminReview: true,
-            isVerified: true
+            isAdminReview: true, // Always true for reviews created by admin
+            isVerified: true,
+            user: data.userId // Pass userId if it exists
         });
         return { success: true, message: "Review created successfully", review };
     }
