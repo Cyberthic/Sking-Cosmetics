@@ -32,7 +32,16 @@ export class AdminOrderService implements IAdminOrderService {
     }
 
     async updateOrderStatus(id: string, status: string, isCritical?: boolean): Promise<IOrder | null> {
-        // Validation for state transitions can be overridden by isCritical
+        const existingOrder = await this._orderRepository.findById(id);
+        if (!existingOrder) {
+            throw new CustomError("Order not found", StatusCode.NOT_FOUND);
+        }
+
+        // Prevent changing status of terminal states (delivered/cancelled) unless critical
+        if ((existingOrder.orderStatus === "delivered" || existingOrder.orderStatus === "cancelled") && !isCritical) {
+            throw new CustomError(`Cannot change status of a ${existingOrder.orderStatus} order. Use critical mode to override.`, StatusCode.BAD_REQUEST);
+        }
+
         const order = await this._orderRepository.updateStatus(id, status, isCritical);
         if (!order) {
             throw new CustomError("Order not found", StatusCode.NOT_FOUND);

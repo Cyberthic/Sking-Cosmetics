@@ -203,7 +203,7 @@ export default function OrderDetailPage() {
                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 px-3 py-1">Select New Status</span>
                                 </div>
                                 <div className="p-1">
-                                    {(isCancelled ? [] :
+                                    {(isCancelled || order.orderStatus === 'delivered' ? [] :
                                         order.orderStatus === 'shipped' ? ['delivered', 'cancelled'] :
                                             ['processing', 'shipped', 'delivered', 'cancelled']
                                     )
@@ -218,9 +218,9 @@ export default function OrderDetailPage() {
                                                 <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all" />
                                             </button>
                                         ))}
-                                    {isCancelled && (
+                                    {(isCancelled || order.orderStatus === 'delivered') && (
                                         <div className="p-3 text-[10px] text-gray-500 font-bold text-center uppercase">
-                                            Cancelled orders cannot be modified
+                                            {order.orderStatus.replace('_', ' ')} orders cannot be modified
                                         </div>
                                     )}
                                 </div>
