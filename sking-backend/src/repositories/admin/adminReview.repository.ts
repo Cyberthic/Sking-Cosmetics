@@ -12,7 +12,7 @@ export class AdminReviewRepository implements IAdminReviewRepository {
         if (status === 'blocked') {
             query.isBlocked = true;
         } else if (status === 'active') {
-            query.isBlocked = false;
+            query.isBlocked = { $ne: true };
         }
 
         if (productId) {
