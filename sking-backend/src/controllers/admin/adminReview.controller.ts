@@ -71,7 +71,9 @@ export class AdminReviewController implements IAdminReviewController {
                 page: req.query.page ? parseInt(req.query.page as string) : 1,
                 limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
                 search: req.query.search as string,
-                status: req.query.status as 'active' | 'blocked' | 'all'
+                status: req.query.status as 'active' | 'blocked' | 'all',
+                sortBy: (req.query.sortBy as string) || 'createdAt',
+                sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'desc'
             };
             const result = await this._reviewService.getReviewsByProduct(req.params.productId, filters);
             res.status(200).json(result);
@@ -86,7 +88,9 @@ export class AdminReviewController implements IAdminReviewController {
                 page: req.query.page ? parseInt(req.query.page as string) : 1,
                 limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
                 search: req.query.search as string,
-                status: req.query.status as 'active' | 'blocked' | 'all'
+                status: req.query.status as 'active' | 'blocked' | 'all',
+                sortBy: (req.query.sortBy as string) || 'createdAt',
+                sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'desc'
             };
             const result = await this._reviewService.getReviewsByUser(req.params.userId, filters);
             res.status(200).json(result);

@@ -1,4 +1,5 @@
 import { injectable } from "inversify";
+import mongoose from "mongoose";
 import { IAdminReviewRepository } from "../../core/interfaces/repositories/admin/IAdminReview.repository";
 import { FilterReviewDto } from "../../core/dtos/admin/adminReview.dto";
 import Review, { IReview } from "../../models/review.model";
@@ -15,12 +16,12 @@ export class AdminReviewRepository implements IAdminReviewRepository {
             query.isBlocked = { $ne: true };
         }
 
-        if (productId) {
-            query.product = productId;
+        if (productId && mongoose.Types.ObjectId.isValid(productId)) {
+            query.product = new mongoose.Types.ObjectId(productId);
         }
 
-        if (userId) {
-            query.user = userId;
+        if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+            query.user = new mongoose.Types.ObjectId(userId);
         }
 
         if (search) {
