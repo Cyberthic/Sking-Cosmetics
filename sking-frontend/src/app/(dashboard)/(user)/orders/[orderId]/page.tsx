@@ -13,7 +13,8 @@ import {
     AlertCircle,
     ArrowLeft,
     Printer,
-    MessageCircle
+    MessageCircle,
+    Star
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { userOrderService } from "@/services/user/userOrderApiService";
@@ -305,6 +306,15 @@ export default function OrderDetailPage() {
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm font-black text-black">₹{item.price.toFixed(2)}</span>
                                             </div>
+                                            {order.orderStatus === 'delivered' && (
+                                                <Link
+                                                    href={`/product/${item.product?.slug || item.product?._id}?orderId=${order._id}&writeReview=true`}
+                                                    className="inline-flex items-center gap-1 mt-3 px-3 py-1 bg-pink-50 text-sking-pink border border-pink-100 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-sking-pink hover:text-white transition-all shadow-sm"
+                                                >
+                                                    <Star size={10} fill="currentColor" />
+                                                    Rate Product
+                                                </Link>
+                                            )}
                                         </div>
                                         <div className="hidden sm:block text-right">
                                             <p className="text-sm font-black text-sking-pink">₹{(item.price * item.quantity).toFixed(2)}</p>

@@ -208,6 +208,14 @@ export default function OrdersPage() {
                                                 Pay Now
                                             </button>
                                         )}
+                                        {order.orderStatus === 'delivered' && (
+                                            <Link
+                                                href={`/orders/${order._id}`}
+                                                className="bg-white text-sking-pink border border-sking-pink px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-pink-50 transition-all shadow-lg"
+                                            >
+                                                Rate Items
+                                            </Link>
+                                        )}
                                         <Link
                                             href={`/orders/${order._id}`}
                                             className="bg-black text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all shadow-lg group"

@@ -10,6 +10,7 @@ import userAddressRoutes from "./userRoutes/userAddress.routes";
 import userCheckoutRoutes from "./userRoutes/userCheckout.routes";
 import userOrderRoutes from "./userRoutes/userOrder.routes";
 import userCouponRoutes from "./userRoutes/userCoupon.routes";
+import userReviewRoutes from "./userRoutes/userReview.routes";
 
 const userRouter = Router();
 
@@ -24,5 +25,6 @@ userRouter.use("/address", userAddressRoutes);
 userRouter.use("/checkout", userCheckoutRoutes);
 userRouter.use("/orders", userOrderRoutes);
 userRouter.use("/coupons", userCouponRoutes);
+userRouter.use("/reviews", userReviewRoutes);
 
 export default userRouter;
