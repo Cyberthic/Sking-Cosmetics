@@ -34,5 +34,15 @@ export const adminReviewService = {
     getReviewsByUser: async (userId: string, params: any) => {
         const response = await axiosInstance.get(`/api/admin/reviews/user/${userId}`, { params });
         return response.data;
+    },
+
+    togglePin: async (id: string) => {
+        const response = await axiosInstance.patch(`/api/admin/reviews/${id}/pin`);
+        return response.data;
+    },
+
+    createReview: async (data: any) => {
+        const response = await axiosInstance.post("/api/admin/reviews", data);
+        return response.data;
     }
 };

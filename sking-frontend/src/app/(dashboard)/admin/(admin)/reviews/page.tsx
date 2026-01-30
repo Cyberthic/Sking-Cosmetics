@@ -17,10 +17,13 @@ import {
     ChevronLeft,
     ChevronRight,
     Loader2,
-    Trash2
+    Trash2,
+    Pin,
+    Plus
 } from "lucide-react";
 import Image from "next/image";
 import ReviewDetailsModal from "@/components/admin/reviews/ReviewDetailsModal";
+import AddReviewModal from "@/components/admin/reviews/AddReviewModal";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ReviewsPage = () => {
@@ -33,6 +36,7 @@ const ReviewsPage = () => {
     const [status, setStatus] = useState("all"); // all, active, blocked
     const [selectedReview, setSelectedReview] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const fetchReviews = async () => {
         setLoading(true);
@@ -42,7 +46,7 @@ const ReviewsPage = () => {
                 limit: 10,
                 search,
                 status: status === 'all' ? undefined : status,
-                sortBy: 'createdAt',
+                sortBy: 'isPinned', // Sort by pinned first
                 sortOrder: 'desc'
             });
             setReviews(data.reviews);
@@ -81,13 +85,14 @@ const ReviewsPage = () => {
         }
     };
 
-    const handleUnblock = async () => {
-        if (!selectedReview) return;
+    const handleUnblock = async (reviewId?: string) => {
+        const id = reviewId || selectedReview?._id;
+        if (!id) return;
         try {
-            await adminReviewService.unblockReview(selectedReview._id);
+            await adminReviewService.unblockReview(id);
             toast.success("Review unblocked");
             fetchReviews();
-            setIsModalOpen(false);
+            if (selectedReview) setIsModalOpen(false);
         } catch (error) {
             toast.error("Failed to unblock review");
         }
@@ -105,14 +110,35 @@ const ReviewsPage = () => {
         }
     };
 
+    const handlePin = async () => {
+        if (!selectedReview) return;
+        try {
+            await adminReviewService.togglePin(selectedReview._id);
+            toast.success(selectedReview.isPinned ? "Review unpinned" : "Review pinned");
+            fetchReviews();
+            setIsModalOpen(false);
+        } catch (error) {
+            toast.error("Failed to toggle pin status");
+        }
+    };
+
     const openDetails = (review: any) => {
         setSelectedReview(review);
         setIsModalOpen(true);
     };
 
     return (
-        <div className="p-4 md:p-6 lg:p-8 space-y-8 bg-gray-50/50 dark:bg-gray-900/50 min-h-screen">
-            <PageBreadcrumb pageTitle="Product Reviews" />
+        <div className="p-4 md:p-6 lg:p-8 space-y-6 bg-gray-50/50 dark:bg-gray-900/50 min-h-screen">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <PageBreadcrumb pageTitle="Product Reviews" />
+                <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2 px-6 py-3 bg-sking-pink text-white rounded-2xl text-xs font-bold uppercase tracking-widest shadow-lg shadow-sking-pink/20 hover:bg-sking-pink/90 transition-all"
+                >
+                    <Plus size={16} />
+                    Add Review
+                </button>
+            </div>
 
             {/* Header Actions */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -190,7 +216,7 @@ const ReviewsPage = () => {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         key={review._id}
-                                        className="hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors group"
+                                        className={`hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors group ${review.isPinned ? "bg-sking-pink/5 dark:bg-sking-pink/5" : ""}`}
                                     >
                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-3">
@@ -203,7 +229,10 @@ const ReviewsPage = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-gray-900 dark:text-white leading-none">{review.user?.username}</p>
+                                                    <div className="flex items-center gap-1">
+                                                        <p className="text-sm font-bold text-gray-900 dark:text-white leading-none">{review.user?.username}</p>
+                                                        {review.isPinned && <Pin size={12} className="text-sking-pink fill-current" />}
+                                                    </div>
                                                     <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">{review.user?.email}</p>
                                                 </div>
                                             </div>
@@ -309,11 +338,18 @@ const ReviewsPage = () => {
                 onClose={() => setIsModalOpen(false)}
                 review={selectedReview}
                 onBlock={handleBlock}
-                onUnblock={handleUnblock}
+                onUnblock={() => handleUnblock()}
+                onPin={handlePin}
                 onDelete={handleDeleteReview}
+            />
+
+            <AddReviewModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSuccess={fetchReviews}
+                preselectedProductId="" // Or pass selected product if we contextually add review from product details
             />
         </div>
     );
 };
-
 export default ReviewsPage;

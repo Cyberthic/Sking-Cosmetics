@@ -15,23 +15,35 @@ export class UserReviewRepository implements IUserReviewRepository {
 
     async findByProduct(productId: string, page: number, limit: number, sort: string): Promise<IReviewPaginationDTO> {
         const skip = (page - 1) * limit;
-        let sortQuery: any = { createdAt: -1 };
+        let sortQuery: any = {};
 
-        if (sort === "oldest") sortQuery = { createdAt: 1 };
-        else if (sort === "rating_high") sortQuery = { rating: -1 };
-        else if (sort === "rating_low") sortQuery = { rating: 1 };
+        if (sort === "oldest") sortQuery = { isPinned: -1, createdAt: 1 };
+        else if (sort === "rating_high") sortQuery = { isPinned: -1, rating: -1 };
+        else if (sort === "rating_low") sortQuery = { isPinned: -1, rating: 1 };
+        else sortQuery = { isPinned: -1, createdAt: -1 };
 
-        const reviews = await Review.find({ product: new mongoose.Types.ObjectId(productId) })
+        const reviews = await Review.find({
+            product: new mongoose.Types.ObjectId(productId),
+            isBlocked: { $ne: true }
+        })
             .populate("user", "name profileImage")
             .sort(sortQuery)
             .skip(skip)
             .limit(limit);
 
-        const totalReviews = await Review.countDocuments({ product: new mongoose.Types.ObjectId(productId) });
+        const totalReviews = await Review.countDocuments({
+            product: new mongoose.Types.ObjectId(productId),
+            isBlocked: { $ne: true }
+        });
 
         // Calculate stats
         const stats = await Review.aggregate([
-            { $match: { product: new mongoose.Types.ObjectId(productId) } },
+            {
+                $match: {
+                    product: new mongoose.Types.ObjectId(productId),
+                    isBlocked: { $ne: true }
+                }
+            },
             {
                 $group: {
                     _id: null,
@@ -120,7 +132,12 @@ export class UserReviewRepository implements IUserReviewRepository {
 
     async getProductRatingStats(productId: string): Promise<{ averageRating: number; reviewsCount: number }> {
         const stats = await Review.aggregate([
-            { $match: { product: new mongoose.Types.ObjectId(productId) } },
+            {
+                $match: {
+                    product: new mongoose.Types.ObjectId(productId),
+                    isBlocked: { $ne: true }
+                }
+            },
             {
                 $group: {
                     _id: null,

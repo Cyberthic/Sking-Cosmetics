@@ -22,3 +22,12 @@ export interface ReviewResponseDto {
     page: number;
     totalPages: number;
 }
+
+export interface CreateAdminReviewDto {
+    productId: string;
+    userId?: string; // If null, maybe use admin's or a system user
+    rating: number;
+    comment: string;
+    images?: string[];
+    isPinned?: boolean;
+}

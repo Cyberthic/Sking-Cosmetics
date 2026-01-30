@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { X, Star, Calendar, User, ShoppingBag, ShieldAlert, CheckCircle, Trash2 } from "lucide-react";
+import { X, Star, Calendar, User, ShoppingBag, ShieldAlert, CheckCircle, Trash2, Pin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,10 +12,11 @@ interface ReviewDetailsModalProps {
     review: any;
     onBlock: (duration: string) => void;
     onUnblock: () => void;
+    onPin?: () => void;
     onDelete?: () => void;
 }
 
-const ReviewDetailsModal: React.FC<ReviewDetailsModalProps> = ({ isOpen, onClose, review, onBlock, onUnblock, onDelete }) => {
+const ReviewDetailsModal: React.FC<ReviewDetailsModalProps> = ({ isOpen, onClose, review, onBlock, onUnblock, onPin, onDelete }) => {
     if (!review) return null;
 
     const [blockDuration, setBlockDuration] = React.useState("day");
@@ -129,7 +130,21 @@ const ReviewDetailsModal: React.FC<ReviewDetailsModalProps> = ({ isOpen, onClose
                                     {/* Right Side: Comment & Media */}
                                     <div className="space-y-6">
                                         <div className="space-y-3 font-medium">
-                                            <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">The Review</h4>
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">The Review</h4>
+                                                <div className="flex gap-2">
+                                                    {review.isAdminReview && (
+                                                        <span className="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-bold uppercase tracking-wider">
+                                                            Admin
+                                                        </span>
+                                                    )}
+                                                    {review.isPinned && (
+                                                        <span className="px-2 py-0.5 rounded text-[10px] bg-sking-pink/10 text-sking-pink font-bold uppercase tracking-wider flex items-center gap-1">
+                                                            <Pin size={10} className="fill-current" /> Pinned
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
                                             <div className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 max-h-[300px] overflow-y-auto text-sm text-gray-700 dark:text-gray-300 leading-relaxed custom-scrollbar">
                                                 {review.comment}
                                             </div>
@@ -219,6 +234,19 @@ const ReviewDetailsModal: React.FC<ReviewDetailsModalProps> = ({ isOpen, onClose
                                         >
                                             <Trash2 size={14} />
                                             Delete
+                                        </button>
+                                    )}
+
+                                    {onPin && (
+                                        <button
+                                            onClick={onPin}
+                                            className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 border ${review.isPinned
+                                                ? "bg-sking-pink text-white border-sking-pink shadow-lg shadow-sking-pink/20 hover:bg-sking-pink/90"
+                                                : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                                }`}
+                                        >
+                                            <Pin size={14} className={review.isPinned ? "fill-current" : ""} />
+                                            {review.isPinned ? "Unpin" : "Pin"}
                                         </button>
                                     )}
                                 </div>

@@ -8,4 +8,6 @@ export interface IAdminReviewService {
     deleteReview(id: string): Promise<any>;
     getReviewsByProduct(productId: string, filters: FilterReviewDto): Promise<ReviewResponseDto>;
     getReviewsByUser(userId: string, filters: FilterReviewDto): Promise<ReviewResponseDto>;
+    togglePin(reviewId: string): Promise<any>;
+    createReview(data: any): Promise<any>;
 }

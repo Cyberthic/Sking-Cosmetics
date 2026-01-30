@@ -16,5 +16,7 @@ adminReviewRouter.patch("/unblock/:id", (req, res, next) => controller.unblockRe
 adminReviewRouter.delete("/:id", (req, res, next) => controller.deleteReview(req, res, next));
 adminReviewRouter.get("/product/:productId", (req, res, next) => controller.getReviewsByProduct(req, res, next));
 adminReviewRouter.get("/user/:userId", (req, res, next) => controller.getReviewsByUser(req, res, next));
+adminReviewRouter.patch("/:id/pin", (req, res, next) => controller.togglePin(req, res, next));
+adminReviewRouter.post("/", (req, res, next) => controller.createReview(req, res, next));
 
 export default adminReviewRouter;

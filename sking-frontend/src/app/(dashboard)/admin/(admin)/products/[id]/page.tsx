@@ -7,10 +7,11 @@ import { adminProductService } from "@/services/admin/adminProductApiService";
 import Button from "@/components/admin/ui/button/Button";
 import Badge from "@/components/admin/ui/badge/Badge";
 import { toast } from "sonner";
-import { Eye, EyeOff, Package, BarChart, FileText, ShoppingBag, Users, Info, ArrowRight, MessageSquare, Star } from "lucide-react";
+import { Eye, EyeOff, Package, BarChart, FileText, ShoppingBag, Users, Info, ArrowRight, MessageSquare, Star, Pin, Plus } from "lucide-react";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 import { adminReviewService } from "@/services/admin/adminReviewApiService";
 import ReviewDetailsModal from "@/components/admin/reviews/ReviewDetailsModal";
+import AddReviewModal from "@/components/admin/reviews/AddReviewModal";
 import Link from "next/link";
 import {
     Table,
@@ -49,6 +50,7 @@ export default function ProductDetailPage() {
     const [reviewsLoading, setReviewsLoading] = useState(false);
     const [selectedReview, setSelectedReview] = useState<any>(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [isAddReviewModalOpen, setIsAddReviewModalOpen] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -161,6 +163,18 @@ export default function ProductDetailPage() {
             setIsReviewModalOpen(false);
         } catch (error) {
             toast.error("Failed to delete review");
+        }
+    };
+
+    const handlePinReview = async () => {
+        if (!selectedReview) return;
+        try {
+            await adminReviewService.togglePin(selectedReview._id);
+            toast.success(selectedReview.isPinned ? "Review unpinned" : "Review pinned");
+            fetchReviews();
+            setIsReviewModalOpen(false);
+        } catch (error) {
+            toast.error("Failed to toggle pin status");
         }
     };
 
@@ -486,6 +500,14 @@ export default function ProductDetailPage() {
                 {/* REVIEWS TAB */}
                 {activeTab === 'reviews' && (
                     <div>
+                        <div className="flex justify-end mb-4">
+                            <Button
+                                onClick={() => setIsAddReviewModalOpen(true)}
+                                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-gray-800"
+                            >
+                                <Plus size={14} /> Add Review
+                            </Button>
+                        </div>
                         {reviewsLoading ? (
                             <div className="text-center py-20">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
@@ -511,7 +533,7 @@ export default function ProductDetailPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {reviews.map((review: any) => (
-                                            <TableRow key={review._id}>
+                                            <TableRow key={review._id} className={review.isPinned ? "bg-sking-pink/5" : ""}>
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden relative border border-gray-100 dark:border-gray-700">
@@ -523,7 +545,10 @@ export default function ProductDetailPage() {
                                                             />
                                                         </div>
                                                         <div>
-                                                            <p className="text-xs font-bold text-gray-900 dark:text-white leading-none">{review.user?.username}</p>
+                                                            <div className="flex items-center gap-1">
+                                                                <p className="text-xs font-bold text-gray-900 dark:text-white leading-none">{review.user?.username}</p>
+                                                                {review.isPinned && <Pin size={10} className="text-sking-pink fill-current" />}
+                                                            </div>
                                                             <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-1">{review.user?.email}</p>
                                                         </div>
                                                     </div>
@@ -580,7 +605,15 @@ export default function ProductDetailPage() {
                 review={selectedReview}
                 onBlock={handleBlockReview}
                 onUnblock={handleUnblockReview}
+                onPin={handlePinReview}
                 onDelete={handleDeleteReview}
+            />
+
+            <AddReviewModal
+                isOpen={isAddReviewModalOpen}
+                onClose={() => setIsAddReviewModalOpen(false)}
+                onSuccess={fetchReviews}
+                preselectedProductId={id}
             />
 
             <ConfirmationModal

@@ -8,4 +8,6 @@ export interface IAdminReviewController {
     deleteReview(req: Request, res: Response, next: NextFunction): Promise<void>;
     getReviewsByProduct(req: Request, res: Response, next: NextFunction): Promise<void>;
     getReviewsByUser(req: Request, res: Response, next: NextFunction): Promise<void>;
+    togglePin(req: Request, res: Response, next: NextFunction): Promise<void>;
+    createReview(req: Request, res: Response, next: NextFunction): Promise<void>;
 }

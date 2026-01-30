@@ -59,6 +59,11 @@ export class AdminReviewRepository implements IAdminReviewRepository {
         return !!result;
     }
 
+    async create(data: Partial<IReview>): Promise<IReview> {
+        const review = new Review(data);
+        return await review.save();
+    }
+
     async findByProductId(productId: string, filters: FilterReviewDto): Promise<{ reviews: IReview[], total: number }> {
         return this.findAll({ ...filters, productId });
     }

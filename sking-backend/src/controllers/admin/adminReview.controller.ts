@@ -98,4 +98,22 @@ export class AdminReviewController implements IAdminReviewController {
             next(error);
         }
     }
+
+    async togglePin(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const result = await this._reviewService.togglePin(req.params.id);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async createReview(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const result = await this._reviewService.createReview(req.body);
+            res.status(201).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

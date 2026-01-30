@@ -3,12 +3,14 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IReview extends Document {
     user: mongoose.Types.ObjectId;
     product: mongoose.Types.ObjectId;
-    order: mongoose.Types.ObjectId;
+    order?: mongoose.Types.ObjectId;
     rating: number;
     comment: string;
     images?: string[];
     isVerified: boolean;
     isBlocked: boolean;
+    isPinned: boolean;
+    isAdminReview: boolean;
     blockedUntil?: Date;
     blockReason?: string;
     createdAt: Date;
@@ -19,12 +21,14 @@ const ReviewSchema: Schema = new Schema(
     {
         user: { type: Schema.Types.ObjectId, ref: "User", required: true },
         product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
-        order: { type: Schema.Types.ObjectId, ref: "Order", required: true },
+        order: { type: Schema.Types.ObjectId, ref: "Order", required: false },
         rating: { type: Number, required: true, min: 1, max: 5 },
         comment: { type: String, required: true },
         images: [{ type: String }],
         isVerified: { type: Boolean, default: true },
         isBlocked: { type: Boolean, default: false },
+        isPinned: { type: Boolean, default: false },
+        isAdminReview: { type: Boolean, default: false },
         blockedUntil: { type: Date },
         blockReason: { type: String },
     },

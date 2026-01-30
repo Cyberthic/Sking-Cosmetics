@@ -102,4 +102,24 @@ export class AdminReviewService implements IAdminReviewService {
             totalPages: Math.ceil(total / limit)
         };
     }
+
+    async togglePin(reviewId: string): Promise<any> {
+        const review = await this._reviewRepository.findById(reviewId);
+        if (!review) throw new CustomError("Review not found", StatusCode.NOT_FOUND);
+
+        const updatedReview = await this._reviewRepository.update(reviewId, {
+            isPinned: !review.isPinned
+        });
+
+        return { success: true, message: `Review ${updatedReview?.isPinned ? 'pinned' : 'unpinned'} successfully`, review: updatedReview };
+    }
+
+    async createReview(data: any): Promise<any> {
+        const review = await this._reviewRepository.create({
+            ...data,
+            isAdminReview: true,
+            isVerified: true
+        });
+        return { success: true, message: "Review created successfully", review };
+    }
 }
