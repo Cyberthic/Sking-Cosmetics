@@ -5,6 +5,8 @@ import Link from "next/link";
 import { X, Star, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { createPortal } from "react-dom";
+
 interface RateProductsModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -12,15 +14,21 @@ interface RateProductsModalProps {
 }
 
 export const RateProductsModal: React.FC<RateProductsModalProps> = ({ isOpen, onClose, order }) => {
-    if (!order) return null;
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!order || !mounted) return null;
 
     // Filter items that have product data
     const items = order.items.filter((item: any) => item.product);
 
-    return (
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -96,6 +104,7 @@ export const RateProductsModal: React.FC<RateProductsModalProps> = ({ isOpen, on
                     </motion.div>
                 </div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };
