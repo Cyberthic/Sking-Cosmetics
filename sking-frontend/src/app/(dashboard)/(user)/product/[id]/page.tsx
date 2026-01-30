@@ -15,7 +15,6 @@ import { toggleWishlist } from "@/redux/features/wishlistSlice";
 import { RootState, AppDispatch } from "@/redux/store";
 import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check, Info, Ticket, ExternalLink, Loader2 } from "lucide-react";
 import { userReviewApiService } from "@/services/user/userReviewApiService";
-import { ReviewModal } from "@/components/user/ReviewModal";
 import { useSearchParams } from "next/navigation";
 
 
@@ -38,7 +37,6 @@ export default function ProductDetail() {
     // Reviews State
     const [reviewsData, setReviewsData] = useState<any>(null);
     const [reviewsLoading, setReviewsLoading] = useState(true);
-    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [canReview, setCanReview] = useState(false);
     const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
@@ -106,7 +104,10 @@ export default function ProductDetail() {
 
     useEffect(() => {
         if (canReview && writeReviewParam === 'true') {
-            setIsReviewModalOpen(true);
+            const element = document.getElementById('reviews-form');
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
     }, [canReview, writeReviewParam]);
 
@@ -558,19 +559,11 @@ export default function ProductDetail() {
                 <div id="reviews" className="border-t border-gray-100 pt-10">
                     <div className="flex items-center justify-between mb-12">
                         <h3 className="text-2xl font-black text-black uppercase tracking-tight">Customer Reviews</h3>
-                        {canReview && !writeReviewParam && (
-                            <button
-                                onClick={() => setIsReviewModalOpen(true)}
-                                className="bg-black text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-neutral-800 transition-all shadow-lg"
-                            >
-                                Write a Review
-                            </button>
-                        )}
                     </div>
 
                     {/* Inline Review Form (Enhanced UI) */}
                     {canReview && (
-                        <div className="mb-16 bg-gray-50/50 border border-gray-100 rounded-[40px] p-8 md:p-12">
+                        <div id="reviews-form" className="mb-16 bg-white border border-gray-100/50 rounded-[40px] p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.02]">
                             <div className="flex flex-col md:flex-row gap-12">
                                 <div className="md:w-1/3">
                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-sking-pink mb-2 block">Share your experience</span>
@@ -757,34 +750,20 @@ export default function ProductDetail() {
                     </div>
                 </div>
 
-                {/* MODALS */}
-                <ReviewModal
-                    isOpen={isReviewModalOpen}
-                    onClose={() => setIsReviewModalOpen(false)}
-                    productId={product._id}
-                    productName={product.name}
-                    orderId={activeOrderId || ""}
-                    onSuccess={() => {
-                        fetchReviews(id as string);
-                        checkUserCanReview(id as string, orderIdParam || undefined);
-                    }}
-                />
+                {/* RELATED PRODUCTS */}
+                {related.length > 0 && (
+                    <section className="border-t border-gray-200 pt-16 mt-16">
+                        <div className="flex justify-between items-end mb-8">
+                            <h2 className="text-2xl font-black text-black uppercase tracking-tight">Related Products</h2>
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                            {related.map(p => (
+                                <ProductCard key={p._id} product={p} />
+                            ))}
+                        </div>
+                    </section>
+                )}
             </div>
-
-            {/* RELATED PRODUCTS */}
-            {related.length > 0 && (
-                <section className="border-t border-gray-200 pt-16">
-                    <div className="flex justify-between items-end mb-8">
-                        <h2 className="text-2xl font-bold text-black">Related Products</h2>
-                    </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                        {related.map(p => (
-                            <ProductCard key={p._id} product={p} />
-                        ))}
-                    </div>
-                </section>
-            )}
-
         </div>
     );
 }

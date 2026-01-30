@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { clearCartLocally } from '@/redux/features/cartSlice';
+import { RateProductsModal } from '@/components/user/RateProductsModal';
 
 export default function OrdersPage() {
     const router = useRouter();
@@ -16,6 +17,20 @@ export default function OrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Modal State
+    const [selectedOrderForRate, setSelectedOrderForRate] = useState<any>(null);
+    const [isRateModalOpen, setIsRateModalOpen] = useState(false);
+
+    const handleRateItems = (order: any) => {
+        if (order.items.length === 1) {
+            const item = order.items[0];
+            router.push(`/product/${item.product?.slug || item.product?._id}?orderId=${order._id}&writeReview=true`);
+        } else {
+            setSelectedOrderForRate(order);
+            setIsRateModalOpen(true);
+        }
+    };
 
     useEffect(() => {
         fetchOrders();
@@ -209,12 +224,12 @@ export default function OrdersPage() {
                                             </button>
                                         )}
                                         {order.orderStatus === 'delivered' && (
-                                            <Link
-                                                href={`/orders/${order._id}`}
+                                            <button
+                                                onClick={() => handleRateItems(order)}
                                                 className="bg-white text-sking-pink border border-sking-pink px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-pink-50 transition-all shadow-lg"
                                             >
                                                 Rate Items
-                                            </Link>
+                                            </button>
                                         )}
                                         <Link
                                             href={`/orders/${order._id}`}
@@ -248,6 +263,12 @@ export default function OrdersPage() {
                     </Link>
                 </motion.div>
             )}
+
+            <RateProductsModal
+                isOpen={isRateModalOpen}
+                onClose={() => setIsRateModalOpen(false)}
+                order={selectedOrderForRate}
+            />
         </div>
     );
 }

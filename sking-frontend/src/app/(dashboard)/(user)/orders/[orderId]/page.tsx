@@ -22,6 +22,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { clearCartLocally } from "@/redux/features/cartSlice";
+import { RateProductsModal } from "@/components/user/RateProductsModal";
 
 export default function OrderDetailPage() {
     const { orderId } = useParams();
@@ -32,6 +33,19 @@ export default function OrderDetailPage() {
     const [timeLeft, setTimeLeft] = useState<string>("");
     const [isExpired, setIsExpired] = useState(false);
     const [isRetrying, setIsRetrying] = React.useState(false);
+
+    // Modal State
+    const [isRateModalOpen, setIsRateModalOpen] = useState(false);
+
+    const handleRateItems = () => {
+        if (!order) return;
+        if (order.items.length === 1) {
+            const item = order.items[0];
+            router.push(`/product/${item.product?.slug || item.product?._id}?orderId=${order._id}&writeReview=true`);
+        } else {
+            setIsRateModalOpen(true);
+        }
+    };
 
     useEffect(() => {
         if (orderId) {
@@ -213,6 +227,15 @@ export default function OrderDetailPage() {
                             >
                                 {isRetrying ? <Clock className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
                                 Pay Now ({timeLeft})
+                            </button>
+                        )}
+                        {order.orderStatus === 'delivered' && (
+                            <button
+                                onClick={handleRateItems}
+                                className="bg-white text-sking-pink border border-sking-pink px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-pink-50 transition-all shadow-sm"
+                            >
+                                <Star size={14} fill="currentColor" />
+                                Rate Products
                             </button>
                         )}
                         <button className="bg-white text-black border border-gray-100 p-3 rounded-xl hover:border-black transition-all">
@@ -408,6 +431,11 @@ export default function OrderDetailPage() {
                     </div>
                 </div>
             </div>
+            <RateProductsModal
+                isOpen={isRateModalOpen}
+                onClose={() => setIsRateModalOpen(false)}
+                order={order}
+            />
         </div>
     );
 }
