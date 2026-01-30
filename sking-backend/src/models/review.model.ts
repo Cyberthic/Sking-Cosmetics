@@ -38,6 +38,12 @@ const ReviewSchema: Schema = new Schema(
 // Index for getting reviews for a product faster
 ReviewSchema.index({ product: 1, createdAt: -1 });
 // Index for checking if user already reviewed a product for an order
-ReviewSchema.index({ user: 1, product: 1, order: 1 }, { unique: true });
+ReviewSchema.index({ user: 1, product: 1, order: 1 }, {
+    unique: true,
+    sparse: true,
+    partialFilterExpression: {
+        user: { $type: "objectId" } // Only enforce if user exists
+    }
+});
 
 export default mongoose.model<IReview>("Review", ReviewSchema);

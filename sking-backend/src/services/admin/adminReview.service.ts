@@ -122,7 +122,7 @@ export class AdminReviewService implements IAdminReviewService {
 
         const review = await this._reviewRepository.create({
             ...data,
-            isAdminReview: true, // Always true for reviews created by admin
+            isAdminReview: !data.userId, // True only if no user is assigned
             isVerified: true,
             user: data.userId // Pass userId if it exists
         });

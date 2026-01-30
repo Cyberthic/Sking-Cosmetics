@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Star, Upload, Loader2, Search } from "lucide-react";
 import { SearchableSelect } from "@/components/user/ui/SearchableSelect";
@@ -22,6 +23,7 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
     const [products, setProducts] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [isPostingAsAdmin, setIsPostingAsAdmin] = useState(true);
+    const [mounted, setMounted] = useState(false);
 
     const [formData, setFormData] = useState({
         productId: preselectedProductId || "",
@@ -37,6 +39,11 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
             fetchInitialData();
         }
     }, [isOpen, preselectedProductId]);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
 
     const fetchInitialData = async () => {
         try {
@@ -110,10 +117,12 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
         }
     };
 
-    return (
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -144,8 +153,8 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
                                         type="button"
                                         onClick={() => setIsPostingAsAdmin(true)}
                                         className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${isPostingAsAdmin
-                                                ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
-                                                : "text-gray-500 hover:text-black dark:hover:text-white"
+                                            ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
+                                            : "text-gray-500 hover:text-black dark:hover:text-white"
                                             }`}
                                     >
                                         Post as Admin
@@ -154,8 +163,8 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
                                         type="button"
                                         onClick={() => setIsPostingAsAdmin(false)}
                                         className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${!isPostingAsAdmin
-                                                ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
-                                                : "text-gray-500 hover:text-black dark:hover:text-white"
+                                            ? "bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
+                                            : "text-gray-500 hover:text-black dark:hover:text-white"
                                             }`}
                                     >
                                         Post as User
@@ -169,7 +178,7 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
                                             <SearchableSelect
                                                 options={products}
                                                 value={formData.productId}
-                                                onChange={(val) => setFormData({ ...formData, productId: val })}
+                                                onChange={(val: string) => setFormData({ ...formData, productId: val })}
                                                 placeholder="Select Product"
                                                 disabled={loading || !!preselectedProductId}
                                                 className="w-full"
@@ -187,7 +196,7 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
                                             <SearchableSelect
                                                 options={users}
                                                 value={formData.userId}
-                                                onChange={(val) => setFormData({ ...formData, userId: val })}
+                                                onChange={(val: string) => setFormData({ ...formData, userId: val })}
                                                 placeholder="Select User"
                                                 disabled={loading}
                                             />
@@ -254,6 +263,7 @@ export default function AddReviewModal({ isOpen, onClose, onSuccess, preselected
                     </motion.div>
                 </div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }
