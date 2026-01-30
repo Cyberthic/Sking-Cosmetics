@@ -97,11 +97,11 @@ const ShopPage = () => {
             ) : (
                 <div className={`grid gap-x-3 gap-y-6 md:gap-x-6 md:gap-y-10 ${viewMode === 'grid'
                     ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                    : 'grid-cols-1'
+                    : 'grid-cols-1 md:grid-cols-2'
                     }`}>
                     {products.map((product) => (
-                        <div key={product.id} className={viewMode === 'list' ? 'flex gap-6' : ''}>
-                            <ShopProductCard product={product} />
+                        <div key={product.id}>
+                            <ShopProductCard product={product} viewMode={viewMode} />
                         </div>
                     ))}
                 </div>

@@ -26,9 +26,10 @@ export interface ShopProduct {
 
 interface ShopProductCardProps {
     product: ShopProduct;
+    viewMode?: 'grid' | 'list';
 }
 
-const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
+const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = 'grid' }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const isInWishlist = wishlistItems.includes(product.id);
@@ -63,6 +64,95 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product }) => {
             toast.error("Failed to update wishlist");
         }
     };
+
+    if (viewMode === 'list') {
+        return (
+            <div className="group relative flex w-full bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                {/* Image Section */}
+                <div className="relative w-1/3 min-w-[120px] sm:min-w-[180px] aspect-[4/3] sm:aspect-square overflow-hidden bg-gray-50">
+                    <Link href={`/product/${product.slug || product.id}`}>
+                        {product.image ? (
+                            <Image
+                                src={product.image}
+                                alt={product.name}
+                                fill
+                                className="object-contain p-4 transition-transform duration-700 group-hover:scale-105"
+                                sizes="(max-width: 768px) 30vw, 20vw"
+                            />
+                        ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
+                                No Image
+                            </div>
+                        )}
+                    </Link>
+
+                    {/* Discount Badge */}
+                    {discountPercentage > 0 && (
+                        <div className="absolute top-3 left-3 bg-sking-pink px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm rounded-full">
+                            -{discountPercentage}%
+                        </div>
+                    )}
+                </div>
+
+                {/* Details Section */}
+                <div className="flex-1 p-4 sm:p-6 flex flex-col justify-center">
+                    <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+                        {product.brand}
+                    </span>
+
+                    <Link href={`/product/${product.slug || product.id}`}>
+                        <h3 className="text-sm sm:text-lg font-medium text-gray-900 mb-2 line-clamp-2 hover:text-sking-pink transition-colors">
+                            {product.name}
+                        </h3>
+                    </Link>
+
+                    <div className="flex items-baseline gap-3 mb-3">
+                        <span className="text-lg sm:text-2xl font-bold text-gray-900">
+                            ₹{product.price.toLocaleString('en-IN')}
+                        </span>
+                        {product.originalPrice && product.originalPrice > product.price && (
+                            <span className="text-sm text-gray-400 line-through">
+                                ₹{product.originalPrice.toLocaleString('en-IN')}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Rating & Reviews */}
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                        <div className="flex text-sking-pink">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                    key={star}
+                                    size={14}
+                                    className={star <= Math.round(product.rating) ? "fill-current" : "text-gray-200 fill-gray-200"}
+                                />
+                            ))}
+                        </div>
+                        <span className="text-[10px] sm:text-xs text-gray-400">
+                            ({product.rating}/5) | {product.reviewCount} Reviews
+                        </span>
+                    </div>
+
+                    {/* Action Buttons (Visible on hover or mobile) */}
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleAddToCart}
+                            className="bg-black text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center gap-2"
+                        >
+                            <ShoppingBag size={14} />
+                            Add to Bag
+                        </button>
+                        <button
+                            onClick={handleToggleWishlist}
+                            className={`p-2 border transition-colors ${isInWishlist ? 'bg-sking-pink text-white border-sking-pink' : 'bg-white text-gray-400 border-gray-200 hover:text-sking-pink hover:border-sking-pink'}`}
+                        >
+                            <Heart size={16} fill={isInWishlist ? "currentColor" : "none"} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="group relative flex flex-col bg-white">
