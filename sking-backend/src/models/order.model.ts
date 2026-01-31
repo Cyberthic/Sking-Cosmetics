@@ -50,6 +50,7 @@ export interface IOrder extends Document {
 
     // Display IDs
     displayId: string;
+    whatsappOptIn: boolean;
 
     statusHistory: IStatusHistory[];
     createdAt: Date;
@@ -97,6 +98,7 @@ const OrderSchema: Schema = new Schema({
     discountAmount: { type: Number, default: 0 },
 
     displayId: { type: String, required: true, unique: true },
+    whatsappOptIn: { type: Boolean, default: true },
 
     statusHistory: [
         {

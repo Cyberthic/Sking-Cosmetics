@@ -51,10 +51,12 @@ export class AdminOrderService implements IAdminOrderService {
         }
 
         // Send WhatsApp notification for status update
-        try {
-            await this._whatsappService.sendOrderStatusUpdateMessage(order);
-        } catch (error) {
-            logger.error(`Error sending order status update WhatsApp message for order ${id}`, error);
+        if (order.whatsappOptIn) {
+            try {
+                await this._whatsappService.sendOrderStatusUpdateMessage(order);
+            } catch (error) {
+                logger.error(`Error sending order status update WhatsApp message for order ${id}`, error);
+            }
         }
 
         return order;

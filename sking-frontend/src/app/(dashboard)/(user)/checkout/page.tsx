@@ -46,6 +46,7 @@ function CheckoutPageContent() {
     const [discountAmount, setDiscountAmount] = useState(0);
     const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
     const [couponError, setCouponError] = useState("");
+    const [whatsappOptIn, setWhatsappOptIn] = useState(true);
 
     // Shipping & Total Logic
     const shippingFee = totalAmount > 1000 ? 0 : 49;
@@ -137,7 +138,8 @@ function CheckoutPageContent() {
             const response = await userCheckoutService.placeOrder({
                 addressId: selectedAddressId,
                 paymentMethod: "online",
-                couponCode: appliedCoupon?.code
+                couponCode: appliedCoupon?.code,
+                whatsappOptIn: whatsappOptIn
             });
 
             if (response.success) {
@@ -389,6 +391,17 @@ function CheckoutPageContent() {
                                 <div className="flex justify-between items-center pt-4 border-t border-gray-900">
                                     <span className="text-sm font-black uppercase tracking-widest text-black">Grand Total</span>
                                     <span className="text-xl font-black text-black">₹{finalTotal.toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            {/* WhatsApp Opt-in */}
+                            <div className="mt-8 p-4 rounded-2xl bg-green-50/50 border border-green-100 flex items-start gap-4 cursor-pointer group hover:bg-green-50 transition-all" onClick={() => setWhatsappOptIn(!whatsappOptIn)}>
+                                <div className={`mt-1 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${whatsappOptIn ? 'bg-green-600 border-green-600' : 'bg-white border-gray-300 group-hover:border-green-600'}`}>
+                                    {whatsappOptIn && <Check size={14} className="text-white" />}
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-xs font-bold text-black uppercase tracking-tight">WhatsApp Updates</p>
+                                    <p className="text-[10px] text-gray-500 font-medium leading-tight">Get order updates & delivery alerts on WhatsApp</p>
                                 </div>
                             </div>
 

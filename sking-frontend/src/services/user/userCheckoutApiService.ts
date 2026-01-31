@@ -4,6 +4,7 @@ export interface CheckoutPayload {
     addressId: string;
     paymentMethod: "online";
     couponCode?: string;
+    whatsappOptIn?: boolean;
 }
 
 export const userCheckoutService = {

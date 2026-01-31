@@ -95,10 +95,12 @@ export class UserOrderService implements IUserOrderService {
             return await this.processPaymentSuccess(order, razorpay_payment_id, razorpay_signature);
         } else {
             await this._orderRepository.updateOrder(order._id!.toString(), { paymentStatus: "failed" });
-            try {
-                await this._whatsappService.sendOrderFailureMessage(order);
-            } catch (error) {
-                logger.error("Error sending order failure WhatsApp message", error);
+            if (order.whatsappOptIn) {
+                try {
+                    await this._whatsappService.sendOrderFailureMessage(order);
+                } catch (error) {
+                    logger.error("Error sending order failure WhatsApp message", error);
+                }
             }
             throw new CustomError("Payment verification failed", StatusCode.BAD_REQUEST);
         }
@@ -198,10 +200,12 @@ export class UserOrderService implements IUserOrderService {
             const order = await this._orderRepository.findByGatewayOrderId(orderId);
             if (order && order.paymentStatus === "pending") {
                 await this._orderRepository.updateOrder(order._id!.toString(), { paymentStatus: "failed" });
-                try {
-                    await this._whatsappService.sendOrderFailureMessage(order);
-                } catch (error) {
-                    logger.error("Error sending order failure WhatsApp message", error);
+                if (order.whatsappOptIn) {
+                    try {
+                        await this._whatsappService.sendOrderFailureMessage(order);
+                    } catch (error) {
+                        logger.error("Error sending order failure WhatsApp message", error);
+                    }
                 }
             }
         }
@@ -251,10 +255,12 @@ export class UserOrderService implements IUserOrderService {
             });
         } catch (e) { logger.error(e); }
 
-        try {
-            await this._whatsappService.sendOrderSuccessMessage(updatedOrder);
-        } catch (error) {
-            logger.error("Error sending order success WhatsApp message", error);
+        if (updatedOrder.whatsappOptIn) {
+            try {
+                await this._whatsappService.sendOrderSuccessMessage(updatedOrder);
+            } catch (error) {
+                logger.error("Error sending order success WhatsApp message", error);
+            }
         }
 
         return updatedOrder;

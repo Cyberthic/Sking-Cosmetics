@@ -111,7 +111,8 @@ export class UserCheckoutService implements IUserCheckoutService {
                 timestamp: new Date(),
                 message: "Order initiated. Awaiting payment confirmation."
             }],
-            paymentExpiresAt: expiryTime
+            paymentExpiresAt: expiryTime,
+            whatsappOptIn: data.whatsappOptIn !== undefined ? data.whatsappOptIn : true
         };
 
         if (data.paymentMethod === "online") {
