@@ -13,6 +13,7 @@ import crypto from "crypto";
 import logger from "../../utils/logger";
 import mongoose from "mongoose";
 import razorpay from "../../config/razorpay";
+import { IWhatsappService } from "../../core/interfaces/services/IWhatsapp.service";
 
 @injectable()
 export class UserOrderService implements IUserOrderService {
@@ -21,7 +22,8 @@ export class UserOrderService implements IUserOrderService {
         @inject(TYPES.IUserProductRepository) private _productRepository: IUserProductRepository,
         @inject(TYPES.ICartRepository) private _cartRepository: ICartRepository,
         @inject(TYPES.IUserCouponService) private _couponService: IUserCouponService,
-        @inject(TYPES.IAdminTransactionRepository) private _transactionRepository: IAdminTransactionRepository
+        @inject(TYPES.IAdminTransactionRepository) private _transactionRepository: IAdminTransactionRepository,
+        @inject(TYPES.IWhatsappService) private _whatsappService: IWhatsappService
     ) { }
 
     async getUserOrders(userId: string): Promise<IOrder[]> {
@@ -93,6 +95,11 @@ export class UserOrderService implements IUserOrderService {
             return await this.processPaymentSuccess(order, razorpay_payment_id, razorpay_signature);
         } else {
             await this._orderRepository.updateOrder(order._id!.toString(), { paymentStatus: "failed" });
+            try {
+                await this._whatsappService.sendOrderFailureMessage(order);
+            } catch (error) {
+                logger.error("Error sending order failure WhatsApp message", error);
+            }
             throw new CustomError("Payment verification failed", StatusCode.BAD_REQUEST);
         }
     }
@@ -191,6 +198,11 @@ export class UserOrderService implements IUserOrderService {
             const order = await this._orderRepository.findByGatewayOrderId(orderId);
             if (order && order.paymentStatus === "pending") {
                 await this._orderRepository.updateOrder(order._id!.toString(), { paymentStatus: "failed" });
+                try {
+                    await this._whatsappService.sendOrderFailureMessage(order);
+                } catch (error) {
+                    logger.error("Error sending order failure WhatsApp message", error);
+                }
             }
         }
     }
@@ -238,6 +250,12 @@ export class UserOrderService implements IUserOrderService {
                 description: `Payment for Order #${order.displayId}`
             });
         } catch (e) { logger.error(e); }
+
+        try {
+            await this._whatsappService.sendOrderSuccessMessage(updatedOrder);
+        } catch (error) {
+            logger.error("Error sending order success WhatsApp message", error);
+        }
 
         return updatedOrder;
     }

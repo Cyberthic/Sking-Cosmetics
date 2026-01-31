@@ -5,11 +5,14 @@ import { IAdminOrderRepository } from "../../core/interfaces/repositories/admin/
 import { IOrder } from "../../models/order.model";
 import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
+import { IWhatsappService } from "../../core/interfaces/services/IWhatsapp.service";
+import logger from "../../utils/logger";
 
 @injectable()
 export class AdminOrderService implements IAdminOrderService {
     constructor(
-        @inject(TYPES.IAdminOrderRepository) private _orderRepository: IAdminOrderRepository
+        @inject(TYPES.IAdminOrderRepository) private _orderRepository: IAdminOrderRepository,
+        @inject(TYPES.IWhatsappService) private _whatsappService: IWhatsappService
     ) { }
 
     async getOrders(limit: number, page: number, search?: string, status?: string, sort?: string): Promise<{ orders: IOrder[]; total: number; totalPages: number }> {
@@ -46,6 +49,14 @@ export class AdminOrderService implements IAdminOrderService {
         if (!order) {
             throw new CustomError("Order not found", StatusCode.NOT_FOUND);
         }
+
+        // Send WhatsApp notification for status update
+        try {
+            await this._whatsappService.sendOrderStatusUpdateMessage(order);
+        } catch (error) {
+            logger.error(`Error sending order status update WhatsApp message for order ${id}`, error);
+        }
+
         return order;
     }
 }

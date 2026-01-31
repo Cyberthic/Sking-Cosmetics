@@ -63,6 +63,7 @@ const TYPES = {
     IAdminReviewRepository: Symbol.for("IAdminReviewRepository"),
     IAdminReviewService: Symbol.for("IAdminReviewService"),
     IAdminReviewController: Symbol.for("IAdminReviewController"),
+    IWhatsappService: Symbol.for("IWhatsappService"),
 };
 
 export { TYPES };

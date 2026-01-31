@@ -242,13 +242,17 @@ container.bind<IUserReviewController>(TYPES.IUserReviewController).to(UserReview
 import { IAdminReviewRepository } from "./interfaces/repositories/admin/IAdminReview.repository";
 import { IAdminReviewService } from "./interfaces/services/admin/IAdminReview.service";
 import { IAdminReviewController } from "./interfaces/controllers/admin/IAdminReview.controller";
+import { IWhatsappService } from "./interfaces/services/IWhatsapp.service";
 import { AdminReviewRepository } from "../repositories/admin/adminReview.repository";
 import { AdminReviewService } from "../services/admin/adminReview.service";
 import { AdminReviewController } from "../controllers/admin/adminReview.controller";
+import { WhatsappService } from "../services/whatsapp.service";
 
 container.bind<IAdminReviewRepository>(TYPES.IAdminReviewRepository).to(AdminReviewRepository);
 container.bind<IAdminReviewService>(TYPES.IAdminReviewService).to(AdminReviewService);
 container.bind<IAdminReviewController>(TYPES.IAdminReviewController).to(AdminReviewController);
+
+container.bind<IWhatsappService>(TYPES.IWhatsappService).to(WhatsappService);
 
 export { container };
 export default container;

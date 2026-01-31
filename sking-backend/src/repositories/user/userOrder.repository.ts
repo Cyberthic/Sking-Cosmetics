@@ -49,7 +49,7 @@ export class UserOrderRepository implements IUserOrderRepository {
                         `Status updated to ${updateData.orderStatus}`
             };
         }
-        return await Order.findByIdAndUpdate(orderId, updateData, { new: true });
+        return await Order.findByIdAndUpdate(orderId, updateData, { new: true }).populate("items.product");
     }
 
     async updateOrderByDisplayId(displayId: string, updateData: any): Promise<IOrder | null> {
@@ -63,7 +63,7 @@ export class UserOrderRepository implements IUserOrderRepository {
                         `Status updated to ${updateData.orderStatus}`
             };
         }
-        return await Order.findOneAndUpdate({ displayId }, updateData, { new: true });
+        return await Order.findOneAndUpdate({ displayId }, updateData, { new: true }).populate("items.product");
     }
 
     async findByProductIdPaginated(productId: string, page: number, limit: number): Promise<{ orders: IOrder[], total: number }> {
