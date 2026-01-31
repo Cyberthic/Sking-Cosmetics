@@ -20,7 +20,7 @@ export class WhatsappService implements IWhatsappService {
         this.client = twilio(accountSid || '', authToken || '');
     }
 
-    private async sendMessage(to: string, body: string): Promise<void> {
+    private async sendMessage(to: string, body: string, options: { contentSid?: string, contentVariables?: string } = {}): Promise<void> {
         try {
             if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
                 logger.error("❌ Cannot send WhatsApp: Missing Twilio credentials in environment.");
@@ -32,83 +32,100 @@ export class WhatsappService implements IWhatsappService {
 
             if (!formattedTo.startsWith("whatsapp:")) {
                 if (!formattedTo.startsWith("+")) {
-                    // Default to India (+91) if 10 digits and no prefix, or adjust as needed
-                    if (formattedTo.length === 10) {
-                        formattedTo = "+91" + formattedTo;
-                    } else if (!formattedTo.startsWith("+")) {
-                        formattedTo = "+" + formattedTo;
-                    }
+                    formattedTo = formattedTo.length === 10 ? "+91" + formattedTo : "+" + formattedTo;
                 }
                 formattedTo = "whatsapp:" + formattedTo;
             }
 
-            await this.client.messages.create({
-                body: body,
+            const messageData: any = {
                 from: this.fromNumber,
                 to: formattedTo
-            });
-            logger.info(`✅ WhatsApp message sent to ${formattedTo}`);
+            };
+
+            if (options.contentSid) {
+                messageData.contentSid = options.contentSid;
+                messageData.contentVariables = options.contentVariables;
+            } else {
+                messageData.body = body;
+            }
+
+            await this.client.messages.create(messageData);
+            logger.info(`✅ WhatsApp message sent to ${formattedTo} [Template: ${options.contentSid || 'None'}]`);
         } catch (error) {
             logger.error(`❌ Failed to send WhatsApp message to ${to}:`, error);
         }
     }
 
     async sendOrderSuccessMessage(order: IOrder): Promise<void> {
-        const itemsList = order.items.map(item => `- ${item.quantity}x ${(item.product as any).name || 'Product'} (${item.variantName || 'Standard'})`).join("\n");
         const orderLink = `${process.env.FRONTEND_URL}/orders/${order.displayId}`;
-        const body = `*Order Placed Successfully!* 🛍️\n\n` +
-            `Hi ${order.shippingAddress.name},\n` +
-            `Your order *#${order.displayId}* has been confirmed.\n\n` +
-            `*Items:* \n${itemsList}\n\n` +
-            `*Total Amount:* ₹${order.finalAmount}\n` +
-            `*Status:* Processing\n\n` +
-            `*View Invoice/Details:* ${orderLink}\n\n` +
-            `Thank you for shopping with Sking Cosmetics! ✨`;
+        const itemsList = order.items.map(item => `${item.quantity}x ${(item.product as any).name || 'Product'}`).join(", ");
 
-        await this.sendMessage(order.shippingAddress.phoneNumber, body);
+        if (process.env.NODE_ENV === 'production' && process.env.TWILIO_TEMPLATE_SUCCESS_SID) {
+            await this.sendMessage(order.shippingAddress.phoneNumber, "", {
+                contentSid: process.env.TWILIO_TEMPLATE_SUCCESS_SID,
+                contentVariables: JSON.stringify({
+                    "1": order.shippingAddress.name,
+                    "2": order.displayId,
+                    "3": itemsList,
+                    "4": order.finalAmount.toString(),
+                    "5": orderLink
+                })
+            });
+        } else {
+            const body = `*Order Placed Successfully!* 🛍️\n\n` +
+                `Hi ${order.shippingAddress.name},\n` +
+                `Your order *#${order.displayId}* has been confirmed.\n\n` +
+                `*Items:* ${itemsList}\n` +
+                `*Total Amount:* ₹${order.finalAmount}\n\n` +
+                `*View Details:* ${orderLink}\n\n` +
+                `Thank you for shopping with Sking Cosmetics! ✨`;
+            await this.sendMessage(order.shippingAddress.phoneNumber, body);
+        }
     }
 
     async sendOrderFailureMessage(order: IOrder): Promise<void> {
-        const body = `*Order Payment Failed* ❌\n\n` +
-            `Hi ${order.shippingAddress.name},\n` +
-            `The payment for your order *#${order.displayId}* has failed.\n\n` +
-            `Don't worry, your items are still reserved for a short time. You can try place the order again from your profile.\n\n` +
-            `If you need help, contact our support.`;
-
-        await this.sendMessage(order.shippingAddress.phoneNumber, body);
+        if (process.env.NODE_ENV === 'production' && process.env.TWILIO_TEMPLATE_FAILURE_SID) {
+            await this.sendMessage(order.shippingAddress.phoneNumber, "", {
+                contentSid: process.env.TWILIO_TEMPLATE_FAILURE_SID,
+                contentVariables: JSON.stringify({
+                    "1": order.shippingAddress.name,
+                    "2": order.displayId
+                })
+            });
+        } else {
+            const body = `*Order Payment Failed* ❌\n\n` +
+                `Hi ${order.shippingAddress.name},\n` +
+                `The payment for your order *#${order.displayId}* has failed.\n\n` +
+                `Please try again from your profile or contact support.`;
+            await this.sendMessage(order.shippingAddress.phoneNumber, body);
+        }
     }
 
     async sendOrderStatusUpdateMessage(order: IOrder): Promise<void> {
-        let statusEmoji = "📦";
-        let messageText = "";
-
-        switch (order.orderStatus) {
-            case "processing":
-                statusEmoji = "⚙️";
-                messageText = "is now being processed.";
-                break;
-            case "shipped":
-                statusEmoji = "🚚";
-                messageText = "has been shipped and is on its way!";
-                break;
-            case "delivered":
-                statusEmoji = "✅";
-                messageText = "has been delivered! We hope you love your products.";
-                break;
-            case "cancelled":
-                statusEmoji = "🚫";
-                messageText = "has been cancelled.";
-                break;
-        }
-
         const orderLink = `${process.env.FRONTEND_URL}/orders/${order.displayId}`;
-        const body = `*Order Update: ${order.orderStatus.toUpperCase()}* ${statusEmoji}\n\n` +
-            `Hi ${order.shippingAddress.name},\n` +
-            `Your order *#${order.displayId}* ${messageText}\n\n` +
-            `*Total Amount:* ₹${order.finalAmount}\n\n` +
-            `*View Details:* ${orderLink}\n\n` +
-            `Thank you for choosing Sking Cosmetics!`;
 
-        await this.sendMessage(order.shippingAddress.phoneNumber, body);
+        if (process.env.NODE_ENV === 'production' && process.env.TWILIO_TEMPLATE_UPDATE_SID) {
+            await this.sendMessage(order.shippingAddress.phoneNumber, "", {
+                contentSid: process.env.TWILIO_TEMPLATE_UPDATE_SID,
+                contentVariables: JSON.stringify({
+                    "1": order.orderStatus.toUpperCase(),
+                    "2": order.shippingAddress.name,
+                    "3": order.displayId,
+                    "4": orderLink
+                })
+            });
+        } else {
+            let statusEmoji = "📦";
+            if (order.orderStatus === "shipped") statusEmoji = "🚚";
+            if (order.orderStatus === "delivered") statusEmoji = "✅";
+            if (order.orderStatus === "cancelled") statusEmoji = "🚫";
+
+            const body = `*Order Update: ${order.orderStatus.toUpperCase()}* ${statusEmoji}\n\n` +
+                `Hi ${order.shippingAddress.name},\n` +
+                `Your order *#${order.displayId}* status has changed to ${order.orderStatus}.\n\n` +
+                `*View Details:* ${orderLink}\n\n` +
+                `Thank you!`;
+            await this.sendMessage(order.shippingAddress.phoneNumber, body);
+        }
     }
 }
