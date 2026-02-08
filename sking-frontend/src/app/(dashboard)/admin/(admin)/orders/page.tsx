@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useUrlState } from "@/hooks/useUrlState";
 import { debounce } from "@/utils/debounce";
 import { adminOrderService } from "@/services/admin/adminOrderApiService";
@@ -24,7 +24,7 @@ import Pagination from "@/components/admin/tables/Pagination";
 import { toast } from "sonner";
 import FormSelect from "@/components/admin/form/FormSelect";
 
-export default function OrdersPage() {
+function OrdersContent() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalPages, setTotalPages] = useState(1);
@@ -346,5 +346,17 @@ export default function OrdersPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function OrdersPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sking-pink"></div>
+            </div>
+        }>
+            <OrdersContent />
+        </Suspense>
     );
 }

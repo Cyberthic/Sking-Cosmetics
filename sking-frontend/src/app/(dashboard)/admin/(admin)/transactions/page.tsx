@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useUrlState } from "@/hooks/useUrlState";
 import { debounce } from "@/utils/debounce";
@@ -20,7 +20,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 
-export default function TransactionsPage() {
+function TransactionsContent() {
     const router = useRouter();
     const [transactions, setTransactions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -249,5 +249,17 @@ export default function TransactionsPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function TransactionsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-transparent">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sking-pink"></div>
+            </div>
+        }>
+            <TransactionsContent />
+        </Suspense>
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useUrlState } from "@/hooks/useUrlState";
 import { debounce } from "@/utils/debounce";
 import Link from "next/link";
@@ -31,7 +31,7 @@ interface IUser {
     phoneNumber?: string;
 }
 
-export default function CustomersPage() {
+function CustomersContent() {
     const [users, setUsers] = useState<IUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalPages, setTotalPages] = useState(1);
@@ -234,5 +234,13 @@ export default function CustomersPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function CustomersPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-center">Loading Customers...</div>}>
+            <CustomersContent />
+        </Suspense>
     );
 }

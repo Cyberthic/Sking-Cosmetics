@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useUrlState } from "@/hooks/useUrlState";
 import { debounce } from "@/utils/debounce";
 import Link from "next/link";
@@ -26,7 +26,7 @@ interface ICategory {
     createdAt: string;
 }
 
-export default function CategoriesPage() {
+function CategoriesContent() {
     const [categories, setCategories] = useState<ICategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalPages, setTotalPages] = useState(1);
@@ -155,5 +155,13 @@ export default function CategoriesPage() {
                 title="Add New Category"
             />
         </div>
+    );
+}
+
+export default function CategoriesPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-center">Loading Categories...</div>}>
+            <CategoriesContent />
+        </Suspense>
     );
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import FilterBar from '@/components/user/shop-page/FilterBar';
 import ShopProductCard, { ShopProduct } from '@/components/user/shop-page/ShopProductCard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { userProductService } from '@/services/user/userProductApiService';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-const ShopPage = () => {
+const ShopContent = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [products, setProducts] = useState<ShopProduct[]>([]);
     const [loading, setLoading] = useState(true);
@@ -152,4 +152,25 @@ const ShopPage = () => {
     );
 };
 
+const ShopPage = () => {
+    return (
+        <Suspense fallback={
+            <div className="w-full max-w-[1280px] mx-auto px-4 md:px-8 pb-20 pt-10">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {[...Array(8)].map((_, i) => (
+                        <div key={i} className="animate-pulse">
+                            <div className="bg-gray-100 aspect-[3/4] rounded-sm mb-4"></div>
+                            <div className="h-4 bg-gray-100 w-3/4 mb-2"></div>
+                            <div className="h-4 bg-gray-100 w-1/4"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        }>
+            <ShopContent />
+        </Suspense>
+    );
+};
+
 export default ShopPage;
+

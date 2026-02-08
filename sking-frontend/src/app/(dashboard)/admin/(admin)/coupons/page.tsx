@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useUrlState } from "@/hooks/useUrlState";
 import { debounce } from "@/utils/debounce";
@@ -14,7 +15,7 @@ import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 import SkingSwitch from "@/components/admin/form/switch/SkingSwitch";
 
-export default function CouponsPage() {
+function CouponsContent() {
     const router = useRouter();
     const [coupons, setCoupons] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -295,5 +296,13 @@ export default function CouponsPage() {
                 type={toggleCoupon?.isActive ? "warning" : "success"}
             />
         </div>
+    );
+}
+
+export default function CouponsPage() {
+    return (
+        <Suspense fallback={<div className="p-4 sm:p-6 lg:p-8 text-center">Loading Coupons...</div>}>
+            <CouponsContent />
+        </Suspense>
     );
 }

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,9 +17,7 @@ import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Ch
 import { userReviewApiService } from "@/services/user/userReviewApiService";
 import { useSearchParams } from "next/navigation";
 
-
-
-export default function ProductDetail() {
+function ProductDetailContent() {
     const { id } = useParams();
     const [product, setProduct] = useState<any>(null);
     const [related, setRelated] = useState<any[]>([]);
@@ -765,5 +763,20 @@ export default function ProductDetail() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function ProductDetail() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-white text-black flex items-center justify-center">
+                <div className="animate-pulse flex flex-col items-center gap-4">
+                    <div className="h-12 w-12 border-4 border-sking-pink border-t-transparent rounded-full animate-spin"></div>
+                    <p className="font-bold tracking-widest uppercase text-sm">Loading Product...</p>
+                </div>
+            </div>
+        }>
+            <ProductDetailContent />
+        </Suspense>
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useUrlState } from "@/hooks/useUrlState";
 import { debounce } from "@/utils/debounce";
 import Link from "next/link";
@@ -38,7 +38,7 @@ interface IProduct {
     variants: any[];
 }
 
-export default function ProductsPage() {
+function ProductsContent() {
     const [products, setProducts] = useState<IProduct[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -275,5 +275,13 @@ export default function ProductsPage() {
                 isLoading={actionLoading}
             />
         </div>
+    );
+}
+
+export default function ProductsPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-center">Loading Products...</div>}>
+            <ProductsContent />
+        </Suspense>
     );
 }
