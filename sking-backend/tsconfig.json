@@ -12,14 +12,9 @@
     "emitDecoratorMetadata": true,
     "moduleResolution": "node",
     "noImplicitAny": false,
-    "lib": [
-      "ES2020",
-      "dom"
-    ],
-    "baseUrl": ".",
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "resolveJsonModule": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": "."
   },
   "include": [
     "src"
