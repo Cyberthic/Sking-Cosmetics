@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { RootState } from '../../../redux/store';
+import { RootState } from '@/redux/store';
+import Navbar from '@/components/user/Navbar';
 
 export default function AuthLayout({
     children,
@@ -23,6 +24,13 @@ export default function AuthLayout({
         return null; // Don't render auth pages if redirected
     }
 
-    return <>{children}</>;
+    return (
+        <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow overflow-x-hidden">
+                {children}
+            </main>
+        </div>
+    );
 }
 

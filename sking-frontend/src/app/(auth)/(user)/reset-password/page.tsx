@@ -8,7 +8,8 @@ import { userAuthService } from '@/services/user/userAuthApiService';
 import { resetPasswordSchema, ResetPasswordFormData } from '@/validations/userAuth.validation';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Loader2, Eye, EyeOff, AlertCircle, Check, X, CheckCircle } from 'lucide-react';
+import { Lock, Loader2, Eye, EyeOff, AlertCircle, Check, X, CheckCircle, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 function ResetPasswordContent() {
     const [loading, setLoading] = useState(false);
@@ -33,7 +34,6 @@ function ResetPasswordContent() {
     const watchedPassword = watch('password', '');
     const watchedConfirmPassword = watch('confirmPassword', '');
 
-    // Password strength validation
     const getPasswordStrength = (password: string) => {
         let strength = 0;
         let checks = {
@@ -77,61 +77,71 @@ function ResetPasswordContent() {
 
     if (!email || !verified) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold mb-4">Invalid Reset Session</h1>
-                    <p className="text-gray-400 mb-6">Please start the password reset process again.</p>
-                    <button
-                        onClick={() => router.push('/forgot-password')}
-                        className="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg transition-colors"
+            <div className="min-h-screen flex items-center justify-center bg-white text-black p-8">
+                <div className="max-w-md w-full text-center">
+                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
+                        <AlertCircle className="w-10 h-10 text-red-500" />
+                    </div>
+                    <h1 className="text-3xl font-bold mb-4 uppercase tracking-tight">Session Expired</h1>
+                    <p className="text-gray-500 font-medium mb-8">Please start the password reset process again to ensure security.</p>
+                    <Link
+                        href="/forgot-password"
+                        className="inline-block w-full bg-sking-pink hover:bg-sking-pink/90 text-white font-bold py-4 rounded-md transition-all uppercase tracking-widest"
                     >
-                        Reset Password
-                    </button>
+                        Restart Reset
+                    </Link>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white relative overflow-hidden">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-green-500/20 rounded-full blur-[120px]" />
+        <div className="min-h-screen w-full flex bg-white text-black overflow-hidden">
+            {/* Left Side: Image */}
+            <div className="hidden lg:block lg:w-1/2 relative">
+                <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{
+                        backgroundImage: 'url("https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=1000&auto=format&fit=crop")',
+                        backgroundPosition: 'center'
+                    }}
+                >
+                    <div className="absolute inset-0 bg-black/5" />
+                </div>
+            </div>
 
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-full max-w-md relative z-10 p-8"
-            >
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 shadow-2xl">
-                    <div className="text-center mb-8">
-                        <motion.div
-                            initial={{ scale: 0.8 }}
-                            animate={{ scale: 1 }}
-                            className="w-16 h-16 bg-linear-to-tr from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30"
-                        >
-                            <CheckCircle className="w-8 h-8 text-white" />
-                        </motion.div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Reset Password</h1>
-                        <p className="text-gray-400 text-sm">Create a new strong password for your account</p>
+            {/* Right Side: Form */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16">
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full max-w-md"
+                >
+                    <div className="mb-10">
+                        <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-2 uppercase">Reset Password</h1>
+                        <p className="text-gray-500 font-medium tracking-wide">Enter your new strong password below</p>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         {/* Password Field */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-300 ml-1">New Password</label>
-                            <div className="relative group">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-green-400 transition-colors" />
+                            <label className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                New Password<span className="text-sking-pink">*</span>
+                            </label>
+                            <div className="relative">
                                 <input
                                     {...register('password')}
                                     type={showPassword ? 'text' : 'password'}
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-10 py-3 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition-all"
+                                    className="w-full bg-white border border-gray-300 rounded-md px-4 py-3 pr-12 text-black placeholder-gray-400 focus:outline-none focus:border-sking-pink transition-all h-14"
                                     placeholder="••••••••"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                                 >
-                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
                             </div>
 
@@ -139,113 +149,69 @@ function ResetPasswordContent() {
                             <AnimatePresence>
                                 {watchedPassword && (
                                     <motion.div
-                                        key="password-strength"
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="space-y-2"
+                                        className="space-y-2 mt-2"
                                     >
-                                        <div className="flex gap-1">
+                                        <div className="flex gap-1 h-1">
                                             {[1, 2, 3, 4, 5].map((level) => (
                                                 <div
                                                     key={level}
-                                                    className={`h-1 flex-1 rounded-full transition-colors ${passwordStrength.strength >= level
+                                                    className={`h-full flex-1 rounded-full transition-colors ${passwordStrength.strength >= level
                                                         ? passwordStrength.strength <= 2
                                                             ? 'bg-red-500'
                                                             : passwordStrength.strength <= 3
                                                                 ? 'bg-yellow-500'
                                                                 : 'bg-green-500'
-                                                        : 'bg-gray-600'
+                                                        : 'bg-gray-200'
                                                         }`}
                                                 />
                                             ))}
                                         </div>
-                                        <div className="text-xs text-gray-400 space-y-1">
-                                            <div className="flex flex-wrap gap-2">
-                                                {Object.entries(passwordStrength.checks).map(([key, valid]) => (
-                                                    <span
-                                                        key={key}
-                                                        className={`flex items-center gap-1 ${valid ? 'text-green-500' : 'text-gray-500'}`}
-                                                    >
-                                                        {valid ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                                                        {key === 'length' && '8+ chars'}
-                                                        {key === 'uppercase' && 'A-Z'}
-                                                        {key === 'lowercase' && 'a-z'}
-                                                        {key === 'numbers' && '0-9'}
-                                                        {key === 'special' && '!@#$'}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
                                     </motion.div>
                                 )}
                                 {errors.password && (
-                                    <motion.p
-                                        key="password-error"
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="text-red-500 text-xs ml-1 flex items-center gap-1"
-                                    >
-                                        <AlertCircle className="w-3 h-3" />
-                                        {errors.password.message}
-                                    </motion.p>
+                                    <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>
                                 )}
                             </AnimatePresence>
                         </div>
 
                         {/* Confirm Password Field */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-300 ml-1">Confirm New Password</label>
-                            <div className="relative group">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-green-400 transition-colors" />
+                            <label className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                Confirm New Password<span className="text-sking-pink">*</span>
+                            </label>
+                            <div className="relative">
                                 <input
                                     {...register('confirmPassword')}
                                     type={showConfirmPassword ? 'text' : 'password'}
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-10 py-3 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition-all"
+                                    className="w-full bg-white border border-gray-300 rounded-md px-4 py-3 pr-12 text-black placeholder-gray-400 focus:outline-none focus:border-sking-pink transition-all h-14"
                                     placeholder="••••••••"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                                 >
-                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
                             </div>
                             <AnimatePresence>
                                 {watchedConfirmPassword && watchedPassword && (
                                     <motion.div
-                                        key="confirm-password-match"
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="flex items-center gap-1 text-xs ml-1"
+                                        className="flex items-center gap-1 text-xs mt-1 font-medium"
                                     >
                                         {watchedPassword === watchedConfirmPassword ? (
-                                            <>
-                                                <Check className="w-3 h-3 text-green-500" />
-                                                <span className="text-green-500">Passwords match</span>
-                                            </>
+                                            <span className="text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> Passwords match</span>
                                         ) : (
-                                            <>
-                                                <X className="w-3 h-3 text-red-500" />
-                                                <span className="text-red-500">Passwords don't match</span>
-                                            </>
+                                            <span className="text-red-500 flex items-center gap-1"><X className="w-3 h-3" /> Passwords don't match</span>
                                         )}
                                     </motion.div>
                                 )}
                                 {errors.confirmPassword && (
-                                    <motion.p
-                                        key="confirm-password-error"
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="text-red-500 text-xs ml-1 flex items-center gap-1"
-                                    >
-                                        <AlertCircle className="w-3 h-3" />
-                                        {errors.confirmPassword.message}
-                                    </motion.p>
+                                    <p className="text-red-500 text-xs mt-1 font-medium">{errors.confirmPassword.message}</p>
                                 )}
                             </AnimatePresence>
                         </div>
@@ -253,20 +219,26 @@ function ResetPasswordContent() {
                         <button
                             type="submit"
                             disabled={loading || passwordStrength.strength < 4}
-                            className="w-full bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full bg-sking-pink hover:bg-sking-pink/90 text-white font-bold py-4 rounded-md transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-widest h-14"
                         >
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Reset Password'}
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Set New Password'}
                         </button>
                     </form>
-                </div>
-            </motion.div>
+
+                    <div className="mt-10 text-center">
+                        <Link href="/login" className="text-sm font-bold text-gray-400 hover:text-sking-pink transition-colors uppercase tracking-widest flex items-center justify-center gap-2">
+                            <ArrowLeft className="w-4 h-4" /> Back to Login
+                        </Link>
+                    </div>
+                </motion.div>
+            </div>
         </div>
     );
 }
 
 export default function ResetPasswordPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white">Loading...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white text-black font-bold uppercase tracking-widest">Loading...</div>}>
             <ResetPasswordContent />
         </Suspense>
     );
