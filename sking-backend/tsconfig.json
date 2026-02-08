@@ -16,9 +16,9 @@
       "ES2020",
       "dom"
     ],
-    "types": [
-      "node",
-      "reflect-metadata"
+    "baseUrl": ".",
+    "typeRoots": [
+      "node_modules/@types"
     ]
   },
   "include": [
