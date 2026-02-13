@@ -22,6 +22,10 @@ export class AdminLoginResponseDto {
         name: string;
         username: string;
         isAdmin: boolean;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        profilePicture: string;
     };
     message: string;
 
@@ -31,7 +35,11 @@ export class AdminLoginResponseDto {
             email: user.email,
             name: user.name,
             username: user.username,
-            isAdmin: user.isAdmin
+            isAdmin: user.isAdmin,
+            isActive: user.isActive,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            profilePicture: user.profilePicture || ""
         };
         this.message = message;
     }

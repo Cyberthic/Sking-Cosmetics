@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
-import { AppDispatch } from '../../../redux/store';
+import { AppDispatch, RootState } from '../../../redux/store';
 import { checkSession } from '../../../redux/features/authSlice';
 import { checkAdminSession } from '../../../redux/features/adminAuthSlice';
 
@@ -11,13 +11,20 @@ export default function AuthInitializer() {
     const dispatch = useDispatch<AppDispatch>();
     const pathname = usePathname();
 
+    const { isAuthenticated: isUserAuth } = useSelector((state: RootState) => state.auth);
+    const { isAuthenticated: isAdminAuth } = useSelector((state: RootState) => state.adminAuth);
+
     useEffect(() => {
         if (pathname?.startsWith('/admin')) {
-            dispatch(checkAdminSession());
+            if (!isAdminAuth) {
+                dispatch(checkAdminSession());
+            }
         } else {
-            dispatch(checkSession());
+            if (!isUserAuth) {
+                dispatch(checkSession());
+            }
         }
-    }, [dispatch, pathname]);
+    }, [dispatch, pathname, isAdminAuth, isUserAuth]);
 
     return null;
 }
