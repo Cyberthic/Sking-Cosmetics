@@ -36,10 +36,10 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "sking-backend/."
-          target: "~/sking-backend"
+          source: "sking-backend"
+          target: "~/"
 
-      - name: Restart Server
+      - name: Install & Restart
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
