@@ -7,6 +7,7 @@ import logger from "./utils/logger";
 
 const PORT = Number(process.env.PORT) || 5000;
 
+
 const startServer = async (): Promise<void> => {
   try {
     await connectDB();
