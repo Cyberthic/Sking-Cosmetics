@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../core/types";
 import { DashboardPeriod, IAdminDashboardService } from "../../core/interfaces/services/admin/IAdminDashboard.service";
 import { IAdminDashboardRepository } from "../../core/interfaces/repositories/admin/IAdminDashboard.repository";
-import { AdminDashboardStatsDto } from "../../core/dtos/admin/adminDashboard.dto";
+import { AdminDashboardStatsDto, SalesDataPointDto } from "../../core/dtos/admin/adminDashboard.dto";
 
 @injectable()
 export class AdminDashboardService implements IAdminDashboardService {
@@ -40,6 +40,19 @@ export class AdminDashboardService implements IAdminDashboardService {
             orderGrowth = 100;
         }
 
+        // Monthly Sales
+        const currentYear = now.getFullYear();
+        const salesData = await this._adminDashboardRepository.getMonthlySales(currentYear);
+
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthlySales: SalesDataPointDto[] = months.map((month, index) => {
+            const sale = salesData.find(s => s.month === index + 1);
+            return {
+                month,
+                sales: sale ? sale.totalSales : 0
+            };
+        });
+
         return {
             customerStats: {
                 totalCustomers,
@@ -50,7 +63,8 @@ export class AdminDashboardService implements IAdminDashboardService {
                 totalOrders,
                 growthPercentage: parseFloat(orderGrowth.toFixed(2)),
                 isGrowthPositive: orderGrowth >= 0
-            }
+            },
+            monthlySales
         };
     }
 

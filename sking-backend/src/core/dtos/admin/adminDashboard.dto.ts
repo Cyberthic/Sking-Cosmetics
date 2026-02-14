@@ -10,7 +10,13 @@ export interface OrderStatsDto {
     isGrowthPositive: boolean;
 }
 
+export interface SalesDataPointDto {
+    month: string;
+    sales: number;
+}
+
 export interface AdminDashboardStatsDto {
     customerStats: CustomerStatsDto;
     orderStats: OrderStatsDto;
+    monthlySales: SalesDataPointDto[];
 }

@@ -14,9 +14,15 @@ export interface OrderStats {
     isGrowthPositive: boolean;
 }
 
+export interface SalesDataPoint {
+    month: string;
+    sales: number;
+}
+
 export interface DashboardStats {
     customerStats: CustomerStats;
     orderStats: OrderStats;
+    monthlySales: SalesDataPoint[];
 }
 
 export const adminDashboardApiService = {

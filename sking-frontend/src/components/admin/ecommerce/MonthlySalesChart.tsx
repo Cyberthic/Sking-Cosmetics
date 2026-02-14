@@ -3,8 +3,9 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { MoreDotIcon } from "@/icons";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
+import { adminDashboardApiService, DashboardStats } from "@/services/admin/adminDashboardApiService";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -12,6 +13,24 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 export default function MonthlySalesChart() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await adminDashboardApiService.getDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Error fetching sales stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   const options: ApexOptions = {
     colors: ["#465fff"],
     chart: {
@@ -39,19 +58,9 @@ export default function MonthlySalesChart() {
       colors: ["transparent"],
     },
     xaxis: {
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
+      categories: stats?.monthlySales.map(s => s.month) || [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
       ],
       axisBorder: {
         show: false,
@@ -91,12 +100,14 @@ export default function MonthlySalesChart() {
       },
     },
   };
+
   const series = [
     {
       name: "Sales",
-      data: [168, 385, 201, 298, 187, 195, 291, 110, 215, 390, 280, 112],
+      data: stats?.monthlySales.map(s => s.sales) || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
   ];
+
   const [isOpen, setIsOpen] = useState(false);
 
   function toggleDropdown() {
@@ -141,12 +152,18 @@ export default function MonthlySalesChart() {
 
       <div className="max-w-full overflow-x-auto custom-scrollbar">
         <div className="-ml-5 min-w-[650px] xl:min-w-full pl-2">
-          <ReactApexChart
-            options={options}
-            series={series}
-            type="bar"
-            height={180}
-          />
+          {!loading ? (
+            <ReactApexChart
+              options={options}
+              series={series}
+              type="bar"
+              height={180}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-[180px] text-gray-400">
+              Loading chart...
+            </div>
+          )}
         </div>
       </div>
     </div>
