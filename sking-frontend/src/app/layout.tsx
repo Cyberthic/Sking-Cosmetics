@@ -17,8 +17,72 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sking Cosmetics | Redefining Beauty",
-  description: "Luxury skincare for the modern era. Experience pure, potent, and precise formulations.",
+  title: {
+    default: "Sking Cosmetics | Premium Luxury Skincare & Beauty Products",
+    template: "%s | Sking Cosmetics"
+  },
+  description: "Discover Sking Cosmetics - your destination for premium, luxury skincare and beauty products. Experience pure, potent, and precise formulations designed for modern skin health and radiance. Shop our collection of cleansers, serums, moisturizers, and more.",
+  keywords: [
+    "Sking Cosmetics", "S king Cosmetics", "S king", "luxury skincare", "premium beauty products", "natural cosmetics",
+    "anti-aging serums", "organic skincare", "luxury beauty brand", "skin health",
+    "radiant skin", "precision formulations", "dermatologist tested", "vegan beauty",
+    "cruelty-free cosmetics", "best skincare 2026", "glowing skin tips", "skincare routine",
+    "high-end makeup", "beauty essentials", "luxury moisture products", "skin rejuvenation",
+    "professional skincare", "skincare technology", "modern beauty", "elegant skincare",
+    "cosmetic shop", "online beauty store", "skincare for sensitive skin", "brightening serums",
+    "hydrating creams", "luxury face oils", "skincare treatments", "beauty innovation"
+  ],
+  metadataBase: new URL("https://www.skingcosmetics.com"),
+  alternates: {
+    canonical: "/",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-32x32.png",
+    apple: "/apple-touch-icon.png",
+  },
+  authors: [{ name: "Sking Cosmetics" }],
+  creator: "Sking Cosmetics",
+  publisher: "Sking Cosmetics",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://www.skingcosmetics.com",
+    siteName: "Sking Cosmetics",
+    title: "Sking Cosmetics | Premium Luxury Skincare & Beauty Products",
+    description: "Experience the pinnacle of luxury skincare. Discover potent formulations that redefine beauty and skin health.",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Sking Cosmetics - Luxury Redefined",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sking Cosmetics | Premium Luxury Skincare",
+    description: "Discover the secret to radiant, healthy skin with our luxury skincare collection.",
+    creator: "@skingcosmetics",
+    images: ["/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({
@@ -44,6 +108,30 @@ export default function RootLayout({
             gtag('config', 'G-4XTM03R5L5');
           `}
         </Script>
+        <Script
+          id="structured-data"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "Sking Cosmetics",
+              "url": "https://www.skingcosmetics.com",
+              "logo": "https://www.skingcosmetics.com/logo.png",
+              "description": "Premium luxury skincare and beauty products.",
+              "sameAs": [
+                "https://www.facebook.com/skingcosmetics",
+                "https://www.instagram.com/skingcosmetics",
+                "https://twitter.com/skingcosmetics"
+              ],
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+1-555-SKING-CO",
+                "contactType": "customer service"
+              }
+            })
+          }}
+        />
         <ReduxProvider>
           {children}
           <Toaster theme="dark" position="top-right" richColors />
