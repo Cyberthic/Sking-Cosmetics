@@ -1,5 +1,6 @@
 import { injectable } from "inversify";
 import { UserModel } from "../../models/user.model";
+import OrderModel from "../../models/order.model";
 import { IAdminDashboardRepository } from "../../core/interfaces/repositories/admin/IAdminDashboard.repository";
 
 @injectable()
@@ -14,5 +15,17 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
         }
 
         return await UserModel.countDocuments(filter);
+    }
+
+    async getOrderCount(startDate?: Date, endDate?: Date): Promise<number> {
+        const filter: any = {};
+
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) filter.createdAt.$gte = startDate;
+            if (endDate) filter.createdAt.$lte = endDate;
+        }
+
+        return await OrderModel.countDocuments(filter);
     }
 }

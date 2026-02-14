@@ -4,7 +4,13 @@ export interface CustomerStatsDto {
     isGrowthPositive: boolean;
 }
 
+export interface OrderStatsDto {
+    totalOrders: number;
+    growthPercentage: number;
+    isGrowthPositive: boolean;
+}
+
 export interface AdminDashboardStatsDto {
     customerStats: CustomerStatsDto;
-    // We can add more stats here later like orderStats, salesStats etc.
+    orderStats: OrderStatsDto;
 }

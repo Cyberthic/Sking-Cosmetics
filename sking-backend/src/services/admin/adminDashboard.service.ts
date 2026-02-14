@@ -10,27 +10,46 @@ export class AdminDashboardService implements IAdminDashboardService {
         @inject(TYPES.IAdminDashboardRepository) private _adminDashboardRepository: IAdminDashboardRepository
     ) { }
 
-    async getDashboardStats(period: DashboardPeriod): Promise<AdminDashboardStatsDto> {
+    async getDashboardStats(customerPeriod: DashboardPeriod, orderPeriod: DashboardPeriod): Promise<AdminDashboardStatsDto> {
         const totalCustomers = await this._adminDashboardRepository.getCustomerCount();
+        const totalOrders = await this._adminDashboardRepository.getOrderCount();
 
         const now = new Date();
-        const { currentStart, previousStart, previousEnd } = this._getDateRanges(period, now);
 
-        const currentPeriodCustomers = await this._adminDashboardRepository.getCustomerCount(currentStart, now);
-        const previousPeriodCustomers = await this._adminDashboardRepository.getCustomerCount(previousStart, previousEnd);
+        // Customer growth
+        const customerRanges = this._getDateRanges(customerPeriod, now);
+        const currentPeriodCustomers = await this._adminDashboardRepository.getCustomerCount(customerRanges.currentStart, now);
+        const previousPeriodCustomers = await this._adminDashboardRepository.getCustomerCount(customerRanges.previousStart, customerRanges.previousEnd);
 
-        let growthPercentage = 0;
+        let customerGrowth = 0;
         if (previousPeriodCustomers > 0) {
-            growthPercentage = ((currentPeriodCustomers - previousPeriodCustomers) / previousPeriodCustomers) * 100;
+            customerGrowth = ((currentPeriodCustomers - previousPeriodCustomers) / previousPeriodCustomers) * 100;
         } else if (currentPeriodCustomers > 0) {
-            growthPercentage = 100;
+            customerGrowth = 100;
+        }
+
+        // Order growth
+        const orderRanges = this._getDateRanges(orderPeriod, now);
+        const currentPeriodOrders = await this._adminDashboardRepository.getOrderCount(orderRanges.currentStart, now);
+        const previousPeriodOrders = await this._adminDashboardRepository.getOrderCount(orderRanges.previousStart, orderRanges.previousEnd);
+
+        let orderGrowth = 0;
+        if (previousPeriodOrders > 0) {
+            orderGrowth = ((currentPeriodOrders - previousPeriodOrders) / previousPeriodOrders) * 100;
+        } else if (currentPeriodOrders > 0) {
+            orderGrowth = 100;
         }
 
         return {
             customerStats: {
                 totalCustomers,
-                growthPercentage: parseFloat(growthPercentage.toFixed(2)),
-                isGrowthPositive: growthPercentage >= 0
+                growthPercentage: parseFloat(customerGrowth.toFixed(2)),
+                isGrowthPositive: customerGrowth >= 0
+            },
+            orderStats: {
+                totalOrders,
+                growthPercentage: parseFloat(orderGrowth.toFixed(2)),
+                isGrowthPositive: orderGrowth >= 0
             }
         };
     }

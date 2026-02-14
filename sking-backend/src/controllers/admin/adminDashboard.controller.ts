@@ -15,11 +15,11 @@ export class AdminDashboardController implements IAdminDashboardController {
 
     getDashboardStats = async (req: Request, res: Response): Promise<void> => {
         try {
-            const period = (req.query.period as DashboardPeriod) || 'weekly';
+            const customerPeriod = (req.query.customerPeriod as DashboardPeriod) || (req.query.period as DashboardPeriod) || 'weekly';
+            const orderPeriod = (req.query.orderPeriod as DashboardPeriod) || (req.query.period as DashboardPeriod) || 'weekly';
 
-            // Validate period
             const validPeriods: DashboardPeriod[] = ['weekly', 'monthly', 'quarterly', 'yearly'];
-            if (!validPeriods.includes(period)) {
+            if (!validPeriods.includes(customerPeriod) || !validPeriods.includes(orderPeriod)) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
                     error: "Invalid period parameter"
@@ -27,7 +27,7 @@ export class AdminDashboardController implements IAdminDashboardController {
                 return;
             }
 
-            const stats = await this._adminDashboardService.getDashboardStats(period);
+            const stats = await this._adminDashboardService.getDashboardStats(customerPeriod, orderPeriod);
             res.status(StatusCode.OK).json({
                 success: true,
                 data: stats
