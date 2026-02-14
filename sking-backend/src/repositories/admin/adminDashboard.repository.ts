@@ -29,28 +29,33 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
         return await OrderModel.countDocuments(filter);
     }
 
-    async getMonthlySales(year: number): Promise<{ month: number; totalSales: number }[]> {
+    async getMonthlySales(year: number): Promise<{ month: number; totalSales: number; orderCount: number }[]> {
         const startDate = new Date(year, 0, 1);
         const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
 
         const sales = await OrderModel.aggregate([
             {
                 $match: {
-                    createdAt: { $gte: startDate, $lte: endDate },
-                    paymentStatus: "completed"
+                    createdAt: { $gte: startDate, $lte: endDate }
                 }
             },
             {
                 $group: {
                     _id: { $month: "$createdAt" },
-                    totalSales: { $sum: "$finalAmount" }
+                    sales: {
+                        $sum: {
+                            $cond: [{ $eq: ["$paymentStatus", "completed"] }, "$finalAmount", 0]
+                        }
+                    },
+                    count: { $sum: 1 }
                 }
             },
             {
                 $project: {
+                    _id: 0,
                     month: "$_id",
-                    totalSales: 1,
-                    _id: 0
+                    totalSales: "$sales",
+                    orderCount: "$count"
                 }
             },
             {

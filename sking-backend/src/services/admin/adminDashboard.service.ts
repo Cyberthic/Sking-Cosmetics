@@ -44,12 +44,13 @@ export class AdminDashboardService implements IAdminDashboardService {
         const currentYear = now.getFullYear();
         const salesData = await this._adminDashboardRepository.getMonthlySales(currentYear);
 
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const monthlySales: SalesDataPointDto[] = months.map((month, index) => {
-            const sale = salesData.find(s => s.month === index + 1);
+        const monthsLabel = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthlySales: SalesDataPointDto[] = monthsLabel.map((month, index) => {
+            const sale = salesData.find(s => s.month === (index + 1));
             return {
                 month,
-                sales: sale ? sale.totalSales : 0
+                sales: sale ? Number(sale.totalSales || 0) : 0,
+                orders: sale ? Number(sale.orderCount || 0) : 0
             };
         });
 

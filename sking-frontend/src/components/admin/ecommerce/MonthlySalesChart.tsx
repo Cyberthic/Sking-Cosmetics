@@ -96,7 +96,11 @@ export default function MonthlySalesChart() {
         show: false,
       },
       y: {
-        formatter: (val: number) => `₹ ${val}`,
+        formatter: (val: number, { dataPointIndex }: any) => {
+          // Direct lookup from the component's stats state for maximum reliability
+          const orders = stats?.monthlySales?.[dataPointIndex]?.orders ?? 0;
+          return `₹ ${val.toLocaleString()} (Orders: ${orders})`;
+        },
       },
     },
   };

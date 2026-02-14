@@ -13,6 +13,7 @@ export interface OrderStatsDto {
 export interface SalesDataPointDto {
     month: string;
     sales: number;
+    orders: number;
 }
 
 export interface AdminDashboardStatsDto {

@@ -17,6 +17,7 @@ export interface OrderStats {
 export interface SalesDataPoint {
     month: string;
     sales: number;
+    orders: number;
 }
 
 export interface DashboardStats {
