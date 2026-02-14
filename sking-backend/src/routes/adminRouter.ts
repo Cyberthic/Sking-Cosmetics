@@ -7,10 +7,12 @@ import adminOrderRouter from "./adminRoutes/adminOrder.routes";
 import adminCouponRoutes from "./adminRoutes/adminCoupon.routes";
 import adminTransactionRoutes from "./adminRoutes/adminTransaction.routes";
 import adminReviewRouter from "./adminRoutes/adminReview.routes";
+import dashboardRouter from "./adminRoutes/adminDashboard.routes";
 
 const adminRouter = Router();
 
 adminRouter.use("/auth", adminAuthRoutes);
+adminRouter.use("/dashboard", dashboardRouter);
 adminRouter.use("/customers", customerRouter);
 adminRouter.use("/categories", categoryRouter);
 adminRouter.use("/products", productRouter);

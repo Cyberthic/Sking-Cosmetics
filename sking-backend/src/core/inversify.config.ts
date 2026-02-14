@@ -68,6 +68,14 @@ import { AdminCouponRepository } from "../repositories/admin/adminCoupon.reposit
 import { AdminCouponService } from "../services/admin/adminCoupon.service";
 import { AdminCouponController } from "../controllers/admin/adminCoupon.controller";
 
+// Admin Dashboard
+import { IAdminDashboardRepository } from "./interfaces/repositories/admin/IAdminDashboard.repository";
+import { IAdminDashboardService } from "./interfaces/services/admin/IAdminDashboard.service";
+import { IAdminDashboardController } from "./interfaces/controllers/admin/IAdminDashboard.controller";
+import { AdminDashboardRepository } from "../repositories/admin/adminDashboard.repository";
+import { AdminDashboardService } from "../services/admin/adminDashboard.service";
+import { AdminDashboardController } from "../controllers/admin/adminDashboard.controller";
+
 const container = new Container();
 
 // Repositories
@@ -110,6 +118,11 @@ container.bind<IAdminOrderController>(TYPES.IAdminOrderController).to(AdminOrder
 container.bind<IAdminCouponRepository>(TYPES.IAdminCouponRepository).to(AdminCouponRepository);
 container.bind<IAdminCouponService>(TYPES.IAdminCouponService).to(AdminCouponService);
 container.bind<IAdminCouponController>(TYPES.IAdminCouponController).to(AdminCouponController);
+
+// Admin Dashboard
+container.bind<IAdminDashboardRepository>(TYPES.IAdminDashboardRepository).to(AdminDashboardRepository);
+container.bind<IAdminDashboardService>(TYPES.IAdminDashboardService).to(AdminDashboardService);
+container.bind<IAdminDashboardController>(TYPES.IAdminDashboardController).to(AdminDashboardController);
 
 // Admin Transaction
 import { IAdminTransactionRepository } from "./interfaces/repositories/admin/IAdminTransaction.repository";

@@ -1,9 +1,28 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Badge from "../ui/badge/Badge";
 import { ArrowDownIcon, ArrowUpIcon, BoxIconLine, GroupIcon } from "@/icons";
+import { adminDashboardApiService, DashboardStats } from "@/services/admin/adminDashboardApiService";
 
 export const EcommerceMetrics = () => {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await adminDashboardApiService.getDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {/* <!-- Metric Item Start --> */}
@@ -18,13 +37,15 @@ export const EcommerceMetrics = () => {
               Customers
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              3,782
+              {loading ? "..." : stats?.customerStats.totalCustomers.toLocaleString()}
             </h4>
           </div>
-          <Badge color="success">
-            <ArrowUpIcon />
-            11.01%
-          </Badge>
+          {!loading && stats && (
+            <Badge color={stats.customerStats.isGrowthPositive ? "success" : "error"}>
+              {stats.customerStats.isGrowthPositive ? <ArrowUpIcon /> : <ArrowDownIcon className="text-error-500" />}
+              {Math.abs(stats.customerStats.growthPercentage)}%
+            </Badge>
+          )}
         </div>
       </div>
       {/* <!-- Metric Item End --> */}

@@ -56,6 +56,9 @@ const TYPES = {
     IAdminTransactionRepository: Symbol.for("IAdminTransactionRepository"),
     IAdminTransactionService: Symbol.for("IAdminTransactionService"),
     IAdminTransactionController: Symbol.for("IAdminTransactionController"),
+    IAdminDashboardRepository: Symbol.for("IAdminDashboardRepository"),
+    IAdminDashboardService: Symbol.for("IAdminDashboardService"),
+    IAdminDashboardController: Symbol.for("IAdminDashboardController"),
 
     IUserReviewRepository: Symbol.for("IUserReviewRepository"),
     IUserReviewService: Symbol.for("IUserReviewService"),
