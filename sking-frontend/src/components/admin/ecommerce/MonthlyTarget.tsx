@@ -1,10 +1,7 @@
 "use client";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { MoreDotIcon } from "@/icons";
 import { useState, useEffect } from "react";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Modal } from "../ui/modal";
 import { adminDashboardApiService, MonthlyTarget as IMonthlyTarget } from "@/services/admin/adminDashboardApiService";
 
@@ -16,7 +13,6 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 export default function MonthlyTarget() {
   const [targetData, setTargetData] = useState<IMonthlyTarget | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTarget, setNewTarget] = useState<string>("");
   const [updating, setUpdating] = useState(false);
@@ -101,14 +97,6 @@ export default function MonthlyTarget() {
     labels: ["Progress"],
   };
 
-  function toggleDropdown() {
-    setIsOpen(!isOpen);
-  }
-
-  function closeDropdown() {
-    setIsOpen(false);
-  }
-
   const formatCurrency = (value: number) => {
     if (value >= 1000000) return `₹${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
@@ -127,33 +115,13 @@ export default function MonthlyTarget() {
               Target you’ve set for each month
             </p>
           </div>
-          <div className="relative inline-block">
-            <button onClick={toggleDropdown} className="dropdown-toggle">
-              <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
-            </button>
-            <Dropdown
-              isOpen={isOpen}
-              onClose={closeDropdown}
-              className="w-40 p-2"
+          <div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-3 py-1.5 text-xs font-medium text-primary bg-primary/5 border border-primary/20 rounded-lg hover:bg-primary hover:text-white transition-all duration-200"
             >
-              <DropdownItem
-                tag="button"
-                onClick={() => {
-                  closeDropdown();
-                  setIsModalOpen(true);
-                }}
-                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-              >
-                View More
-              </DropdownItem>
-              <DropdownItem
-                tag="button"
-                onItemClick={closeDropdown}
-                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-              >
-                Delete
-              </DropdownItem>
-            </Dropdown>
+              Set Monthly Target
+            </button>
           </div>
         </div>
         <div className="relative ">
@@ -222,7 +190,9 @@ export default function MonthlyTarget() {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} className="max-w-[400px] p-6">
         <div className="space-y-4">
-          <h4 className="text-xl font-bold text-gray-800 dark:text-white/90">Set Monthly Target</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-xl font-bold text-gray-800 dark:text-white/90">Set Monthly Target</h4>
+          </div>
           <p className="text-sm text-gray-500 dark:text-gray-400">Update your target revenue for the current month.</p>
 
           <div>
