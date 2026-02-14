@@ -1,11 +1,8 @@
 import { inject, injectable } from "inversify";
-import { Request, Response } from "express";
 import { TYPES } from "../../core/types";
+import type { Request, Response } from "express";
 import { IAdminDashboardController } from "../../core/interfaces/controllers/admin/IAdminDashboard.controller";
-import { DashboardPeriod, IAdminDashboardService } from "../../core/interfaces/services/admin/IAdminDashboard.service";
-import { StatusCode } from "../../enums/statusCode.enums";
-import logger from "../../utils/logger";
-import { CustomError } from "../../utils/customError";
+import { IAdminDashboardService, DashboardPeriod } from "../../core/interfaces/services/admin/IAdminDashboard.service";
 
 @injectable()
 export class AdminDashboardController implements IAdminDashboardController {
@@ -13,32 +10,50 @@ export class AdminDashboardController implements IAdminDashboardController {
         @inject(TYPES.IAdminDashboardService) private _adminDashboardService: IAdminDashboardService
     ) { }
 
-    getDashboardStats = async (req: Request, res: Response): Promise<void> => {
+    async getDashboardStats(req: Request, res: Response): Promise<void> {
         try {
-            const customerPeriod = (req.query.customerPeriod as DashboardPeriod) || (req.query.period as DashboardPeriod) || 'weekly';
-            const orderPeriod = (req.query.orderPeriod as DashboardPeriod) || (req.query.period as DashboardPeriod) || 'weekly';
+            const customerPeriod = (req.query.customerPeriod as DashboardPeriod) || 'weekly';
+            const orderPeriod = (req.query.orderPeriod as DashboardPeriod) || 'weekly';
 
-            const validPeriods: DashboardPeriod[] = ['weekly', 'monthly', 'quarterly', 'yearly'];
-            if (!validPeriods.includes(customerPeriod) || !validPeriods.includes(orderPeriod)) {
-                res.status(StatusCode.BAD_REQUEST).json({
+            const stats = await this._adminDashboardService.getDashboardStats(customerPeriod, orderPeriod);
+
+            res.status(200).json({
+                success: true,
+                data: stats
+            });
+        } catch (error: any) {
+            console.error("Dashboard Stats Error:", error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
+    async updateMonthlyTarget(req: Request, res: Response): Promise<void> {
+        try {
+            const { target } = req.body;
+
+            if (target === undefined || target === null) {
+                res.status(400).json({
                     success: false,
-                    error: "Invalid period parameter"
+                    message: "Target value is required"
                 });
                 return;
             }
 
-            const stats = await this._adminDashboardService.getDashboardStats(customerPeriod, orderPeriod);
-            res.status(StatusCode.OK).json({
+            await this._adminDashboardService.updateMonthlyTarget(Number(target));
+
+            res.status(200).json({
                 success: true,
-                data: stats
+                message: "Monthly target updated successfully"
             });
-        } catch (error) {
-            logger.error("Error getting dashboard stats:", error);
-            const statusCode = error instanceof CustomError ? error.statusCode : StatusCode.INTERNAL_SERVER_ERROR;
-            res.status(statusCode).json({
+        } catch (error: any) {
+            console.error("Update Target Error:", error);
+            res.status(500).json({
                 success: false,
-                error: (error as Error).message
+                message: error.message
             });
         }
-    };
+    }
 }

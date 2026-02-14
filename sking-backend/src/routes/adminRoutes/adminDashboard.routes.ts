@@ -7,6 +7,7 @@ import { isAuthenticated } from "../../middlewares/auth.middleware";
 const dashboardRouter = Router();
 const adminDashboardController = container.get<IAdminDashboardController>(TYPES.IAdminDashboardController);
 
-dashboardRouter.get("/stats", isAuthenticated, adminDashboardController.getDashboardStats);
+dashboardRouter.get("/stats", isAuthenticated, adminDashboardController.getDashboardStats.bind(adminDashboardController));
+dashboardRouter.put("/target", isAuthenticated, adminDashboardController.updateMonthlyTarget.bind(adminDashboardController));
 
 export default dashboardRouter;

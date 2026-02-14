@@ -1,6 +1,7 @@
 import { injectable } from "inversify";
 import { UserModel } from "../../models/user.model";
 import OrderModel from "../../models/order.model";
+import DashboardConfigModel from "../../models/dashboardConfig.model";
 import { IAdminDashboardRepository } from "../../core/interfaces/repositories/admin/IAdminDashboard.repository";
 
 @injectable()
@@ -54,8 +55,8 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
                 $project: {
                     _id: 0,
                     month: "$_id",
-                    totalSales: "$sales",
-                    orderCount: "$count"
+                    totalSales: { $ifNull: ["$sales", 0] },
+                    orderCount: { $ifNull: ["$count", 0] }
                 }
             },
             {
@@ -64,5 +65,37 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
         ]);
 
         return sales;
+    }
+
+    async getMonthlyRevenue(startDate: Date, endDate: Date): Promise<number> {
+        const result = await OrderModel.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate, $lte: endDate },
+                    paymentStatus: "completed"
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { $sum: "$finalAmount" }
+                }
+            }
+        ]);
+
+        return result.length > 0 ? (result[0].totalRevenue || 0) : 0;
+    }
+
+    async getMonthlyTarget(month: number, year: number): Promise<number> {
+        const config = await DashboardConfigModel.findOne({ month, year });
+        return config ? (config.monthlyTarget || 0) : 0;
+    }
+
+    async updateMonthlyTarget(month: number, year: number, target: number): Promise<void> {
+        await DashboardConfigModel.findOneAndUpdate(
+            { month, year },
+            { monthlyTarget: target },
+            { upsert: true, new: true }
+        );
     }
 }

@@ -11,10 +11,12 @@ export class AdminDashboardService implements IAdminDashboardService {
     ) { }
 
     async getDashboardStats(customerPeriod: DashboardPeriod, orderPeriod: DashboardPeriod): Promise<AdminDashboardStatsDto> {
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+
         const totalCustomers = await this._adminDashboardRepository.getCustomerCount();
         const totalOrders = await this._adminDashboardRepository.getOrderCount();
-
-        const now = new Date();
 
         // Customer growth
         const customerRanges = this._getDateRanges(customerPeriod, now);
@@ -41,9 +43,7 @@ export class AdminDashboardService implements IAdminDashboardService {
         }
 
         // Monthly Sales
-        const currentYear = now.getFullYear();
         const salesData = await this._adminDashboardRepository.getMonthlySales(currentYear);
-
         const monthsLabel = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const monthlySales: SalesDataPointDto[] = monthsLabel.map((month, index) => {
             const sale = salesData.find(s => s.month === (index + 1));
@@ -54,19 +54,64 @@ export class AdminDashboardService implements IAdminDashboardService {
             };
         });
 
+        // Monthly Target
+        const target = await this._adminDashboardRepository.getMonthlyTarget(currentMonth, currentYear);
+
+        const startOfMonth = new Date(currentYear, now.getMonth(), 1);
+        const endOfMonth = new Date(currentYear, now.getMonth() + 1, 0, 23, 59, 59, 999);
+        const revenue = await this._adminDashboardRepository.getMonthlyRevenue(startOfMonth, endOfMonth);
+
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        const todayRevenue = await this._adminDashboardRepository.getMonthlyRevenue(startOfToday, endOfToday);
+
+        const lastMonth = now.getMonth() === 0 ? 12 : now.getMonth();
+        const lastMonthYear = now.getMonth() === 0 ? currentYear - 1 : currentYear;
+        const startOfLastMonth = new Date(lastMonthYear, lastMonth - 1, 1);
+        const endOfLastMonth = new Date(lastMonthYear, lastMonth, 0, 23, 59, 59, 999);
+        const lastMonthRevenue = await this._adminDashboardRepository.getMonthlyRevenue(startOfLastMonth, endOfLastMonth);
+
+        let growthFromLastMonth = 0;
+        if (lastMonthRevenue > 0) {
+            growthFromLastMonth = ((revenue - lastMonthRevenue) / lastMonthRevenue) * 100;
+        } else if (revenue > 0) {
+            growthFromLastMonth = 100;
+        }
+
+        const progressPercentage = target > 0 ? (revenue / target) * 100 : 0;
+
+        const safeFixed = (val: any) => {
+            const num = parseFloat(val);
+            return Number.isFinite(num) ? parseFloat(num.toFixed(2)) : 0;
+        };
+
         return {
             customerStats: {
                 totalCustomers,
-                growthPercentage: parseFloat(customerGrowth.toFixed(2)),
+                growthPercentage: safeFixed(customerGrowth),
                 isGrowthPositive: customerGrowth >= 0
             },
             orderStats: {
                 totalOrders,
-                growthPercentage: parseFloat(orderGrowth.toFixed(2)),
+                growthPercentage: safeFixed(orderGrowth),
                 isGrowthPositive: orderGrowth >= 0
             },
-            monthlySales
+            monthlySales,
+            monthlyTarget: {
+                target: target || 0,
+                revenue: revenue || 0,
+                todayRevenue: todayRevenue || 0,
+                progressPercentage: safeFixed(progressPercentage),
+                growthFromLastMonth: safeFixed(growthFromLastMonth)
+            }
         };
+    }
+
+    async updateMonthlyTarget(target: number): Promise<void> {
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        await this._adminDashboardRepository.updateMonthlyTarget(currentMonth, currentYear, target);
     }
 
     private _getDateRanges(period: DashboardPeriod, now: Date) {
