@@ -54,32 +54,48 @@ export class JwtService implements IJwtService {
   }
 
   setTokens(res: Response, accessToken: string, refreshToken: string, role: string): void {
-    res.cookie("accessToken", accessToken, {
+    // @ts-ignore - access request from response
+    const req = res.req;
+    const host = req?.get("host") || "";
+    const isProdDomain = host.includes("skingcosmetics.com");
+    const cookieDomain = isProdDomain ? ".skingcosmetics.com" : undefined;
+
+    // Force secure if HTTPS or in production
+    const isHttps = req?.protocol === "https" || req?.get("x-forwarded-proto") === "https";
+    const isSecure = isHttps || process.env.NODE_ENV === "production";
+
+    const commonOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isSecure,
+      sameSite: "lax" as const,
+      domain: cookieDomain,
+    };
+
+    res.cookie("accessToken", accessToken, {
+      ...commonOptions,
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      ...commonOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // Valid only for same session duration as refresh token or just persistent
     res.cookie("user_role", role, {
-      httpOnly: false, // Allow client-side JS/Middleware to read this to determine role
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      ...commonOptions,
+      httpOnly: false,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
   }
 
   clearTokens(res: Response): void {
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
-    res.clearCookie("user_role");
+    // @ts-ignore
+    const host = res.req?.get("host") || "";
+    const isProdDomain = host.includes("skingcosmetics.com");
+    const cookieDomain = isProdDomain ? ".skingcosmetics.com" : undefined;
+
+    res.clearCookie("accessToken", { domain: cookieDomain });
+    res.clearCookie("refreshToken", { domain: cookieDomain });
+    res.clearCookie("user_role", { domain: cookieDomain });
   }
 }

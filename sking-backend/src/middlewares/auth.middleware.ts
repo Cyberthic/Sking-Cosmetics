@@ -32,18 +32,23 @@ export const isAuthenticated = async (req: AuthRequest, res: Response, next: Nex
             return res.status(401).json({ success: false, message: "User not found." });
         }
 
+        const host = req.get("host") || "";
+        const isProdDomain = host.includes("skingcosmetics.com");
+        const cookieDomain = isProdDomain ? ".skingcosmetics.com" : undefined;
+        const cookieOptions = { domain: cookieDomain };
+
         if (user.isBanned) {
-            res.clearCookie("accessToken");
-            res.clearCookie("refreshToken");
-            res.clearCookie("user_role");
+            res.clearCookie("accessToken", cookieOptions);
+            res.clearCookie("refreshToken", cookieOptions);
+            res.clearCookie("user_role", cookieOptions);
             return res.status(403).json({ success: false, message: "Account is banned." });
         }
 
         // Check if token version matches
         if (verified.tokenVersion !== undefined && user.tokenVersion !== verified.tokenVersion) {
-            res.clearCookie("accessToken");
-            res.clearCookie("refreshToken");
-            res.clearCookie("user_role");
+            res.clearCookie("accessToken", cookieOptions);
+            res.clearCookie("refreshToken", cookieOptions);
+            res.clearCookie("user_role", cookieOptions);
             return res.status(401).json({ success: false, message: "Token is invalid (user logged out or banned elsewhere)." });
         }
 

@@ -15,12 +15,15 @@ export default function AuthInitializer() {
     const { isAuthenticated: isAdminAuth } = useSelector((state: RootState) => state.adminAuth);
 
     useEffect(() => {
+        // Skip session check on login/signin pages to avoid race conditions
+        const isLoginPage = pathname === '/login' || pathname === '/signin' || pathname === '/admin/login';
+
         if (pathname?.startsWith('/admin')) {
-            if (!isAdminAuth) {
+            if (!isAdminAuth && !isLoginPage) {
                 dispatch(checkAdminSession());
             }
         } else {
-            if (!isUserAuth) {
+            if (!isUserAuth && !isLoginPage) {
                 dispatch(checkSession());
             }
         }
