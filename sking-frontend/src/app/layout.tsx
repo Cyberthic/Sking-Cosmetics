@@ -4,6 +4,7 @@ import "./globals.css";
 import "./silky-theme.css";
 import ReduxProvider from "@/components/user/providers/ReduxProvider";
 import { Toaster } from "sonner";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-4XTM03R5L5"
+        />
+        <Script id="google-analytics">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-4XTM03R5L5');
+          `}
+        </Script>
         <ReduxProvider>
           {children}
           <Toaster theme="dark" position="top-right" richColors />
