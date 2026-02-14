@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { Request, Response } from "express";
 import { TYPES } from "../../core/types";
 import { IAdminDashboardController } from "../../core/interfaces/controllers/admin/IAdminDashboard.controller";
-import { IAdminDashboardService } from "../../core/interfaces/services/admin/IAdminDashboard.service";
+import { DashboardPeriod, IAdminDashboardService } from "../../core/interfaces/services/admin/IAdminDashboard.service";
 import { StatusCode } from "../../enums/statusCode.enums";
 import logger from "../../utils/logger";
 import { CustomError } from "../../utils/customError";
@@ -15,7 +15,19 @@ export class AdminDashboardController implements IAdminDashboardController {
 
     getDashboardStats = async (req: Request, res: Response): Promise<void> => {
         try {
-            const stats = await this._adminDashboardService.getDashboardStats();
+            const period = (req.query.period as DashboardPeriod) || 'weekly';
+
+            // Validate period
+            const validPeriods: DashboardPeriod[] = ['weekly', 'monthly', 'quarterly', 'yearly'];
+            if (!validPeriods.includes(period)) {
+                res.status(StatusCode.BAD_REQUEST).json({
+                    success: false,
+                    error: "Invalid period parameter"
+                });
+                return;
+            }
+
+            const stats = await this._adminDashboardService.getDashboardStats(period);
             res.status(StatusCode.OK).json({
                 success: true,
                 data: stats

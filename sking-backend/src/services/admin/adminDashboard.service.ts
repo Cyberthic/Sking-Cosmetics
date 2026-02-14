@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../core/types";
-import { IAdminDashboardService } from "../../core/interfaces/services/admin/IAdminDashboard.service";
+import { DashboardPeriod, IAdminDashboardService } from "../../core/interfaces/services/admin/IAdminDashboard.service";
 import { IAdminDashboardRepository } from "../../core/interfaces/repositories/admin/IAdminDashboard.repository";
 import { AdminDashboardStatsDto } from "../../core/dtos/admin/adminDashboard.dto";
 
@@ -10,28 +10,19 @@ export class AdminDashboardService implements IAdminDashboardService {
         @inject(TYPES.IAdminDashboardRepository) private _adminDashboardRepository: IAdminDashboardRepository
     ) { }
 
-    async getDashboardStats(): Promise<AdminDashboardStatsDto> {
+    async getDashboardStats(period: DashboardPeriod): Promise<AdminDashboardStatsDto> {
         const totalCustomers = await this._adminDashboardRepository.getCustomerCount();
 
-        // Calculate growth compared to previous week
         const now = new Date();
-        const startOfCurrentWeek = new Date(now);
-        startOfCurrentWeek.setDate(now.getDate() - now.getDay());
-        startOfCurrentWeek.setHours(0, 0, 0, 0);
+        const { currentStart, previousStart, previousEnd } = this._getDateRanges(period, now);
 
-        const startOfPreviousWeek = new Date(startOfCurrentWeek);
-        startOfPreviousWeek.setDate(startOfPreviousWeek.getDate() - 7);
-
-        const endOfPreviousWeek = new Date(startOfCurrentWeek);
-        endOfPreviousWeek.setMilliseconds(-1);
-
-        const currentWeekCustomers = await this._adminDashboardRepository.getCustomerCount(startOfCurrentWeek, now);
-        const previousWeekCustomers = await this._adminDashboardRepository.getCustomerCount(startOfPreviousWeek, endOfPreviousWeek);
+        const currentPeriodCustomers = await this._adminDashboardRepository.getCustomerCount(currentStart, now);
+        const previousPeriodCustomers = await this._adminDashboardRepository.getCustomerCount(previousStart, previousEnd);
 
         let growthPercentage = 0;
-        if (previousWeekCustomers > 0) {
-            growthPercentage = ((currentWeekCustomers - previousWeekCustomers) / previousWeekCustomers) * 100;
-        } else if (currentWeekCustomers > 0) {
+        if (previousPeriodCustomers > 0) {
+            growthPercentage = ((currentPeriodCustomers - previousPeriodCustomers) / previousPeriodCustomers) * 100;
+        } else if (currentPeriodCustomers > 0) {
             growthPercentage = 100;
         }
 
@@ -42,5 +33,40 @@ export class AdminDashboardService implements IAdminDashboardService {
                 isGrowthPositive: growthPercentage >= 0
             }
         };
+    }
+
+    private _getDateRanges(period: DashboardPeriod, now: Date) {
+        let currentStart = new Date(now);
+        let previousStart = new Date(now);
+        let previousEnd = new Date(now);
+
+        switch (period) {
+            case 'weekly':
+                currentStart.setDate(now.getDate() - now.getDay());
+                currentStart.setHours(0, 0, 0, 0);
+                previousStart = new Date(currentStart);
+                previousStart.setDate(previousStart.getDate() - 7);
+                previousEnd = new Date(currentStart);
+                previousEnd.setMilliseconds(-1);
+                break;
+            case 'monthly':
+                currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                previousStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                previousEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+                break;
+            case 'quarterly':
+                const currentQuarter = Math.floor(now.getMonth() / 3);
+                currentStart = new Date(now.getFullYear(), currentQuarter * 3, 1);
+                previousStart = new Date(now.getFullYear(), (currentQuarter - 1) * 3, 1);
+                previousEnd = new Date(now.getFullYear(), currentQuarter * 3, 0, 23, 59, 59, 999);
+                break;
+            case 'yearly':
+                currentStart = new Date(now.getFullYear(), 0, 1);
+                previousStart = new Date(now.getFullYear() - 1, 0, 1);
+                previousEnd = new Date(now.getFullYear(), 0, 0, 23, 59, 59, 999);
+                break;
+        }
+
+        return { currentStart, previousStart, previousEnd };
     }
 }
