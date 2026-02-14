@@ -21,7 +21,8 @@ export const metadata: Metadata = {
     default: "Sking Cosmetics | Premium Luxury Skincare & Beauty Products",
     template: "%s | Sking Cosmetics"
   },
-  description: "Discover Sking Cosmetics - your destination for premium, luxury skincare and beauty products. Experience pure, potent, and precise formulations designed for modern skin health and radiance. Shop our collection of cleansers, serums, moisturizers, and more.",
+  description: "Discover Sking Cosmetics - your destination for premium, luxury skincare and beauty products. Experience pure, potent, and precise formulations designed for modern skin health and radiance.",
+  applicationName: "Sking Cosmetics",
   keywords: [
     "Sking Cosmetics", "S king Cosmetics", "S king", "luxury skincare", "premium beauty products", "natural cosmetics",
     "anti-aging serums", "organic skincare", "luxury beauty brand", "skin health",
@@ -38,8 +39,8 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
-    shortcut: "/favicon-32x32.png",
-    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon.ico",
+    apple: "/sking/sking-bg-2.webp",
   },
   authors: [{ name: "Sking Cosmetics" }],
   creator: "Sking Cosmetics",
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
     description: "Experience the pinnacle of luxury skincare. Discover potent formulations that redefine beauty and skin health.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/sking/sking-bg-2.webp",
         width: 1200,
         height: 630,
         alt: "Sking Cosmetics - Luxury Redefined",
@@ -70,7 +71,7 @@ export const metadata: Metadata = {
     title: "Sking Cosmetics | Premium Luxury Skincare",
     description: "Discover the secret to radiant, healthy skin with our luxury skincare collection.",
     creator: "@skingcosmetics",
-    images: ["/og-image.jpg"],
+    images: ["/sking/sking-bg-2.webp"],
   },
   robots: {
     index: true,
