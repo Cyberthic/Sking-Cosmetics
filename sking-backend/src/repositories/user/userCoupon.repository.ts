@@ -23,7 +23,7 @@ export class UserCouponRepository implements IUserCouponRepository {
             ]
         })
             .sort({ createdAt: -1 })
-            .populate('specificProducts', 'name images price');
+            .populate('specificProducts', 'name images price slug');
 
         // Filter more accurately in JS since some logic like "new_users" depends on external state (orders)
         return coupons.filter(coupon => {

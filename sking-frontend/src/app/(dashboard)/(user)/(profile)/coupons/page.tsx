@@ -12,6 +12,7 @@ interface Product {
     name: string;
     images: string[];
     price: number;
+    slug: string;
 }
 
 interface ICoupon {
@@ -254,7 +255,7 @@ export default function CouponsPage() {
                                         selectedCouponProducts?.map((product) => (
                                             <Link
                                                 key={product._id}
-                                                href={`/product/${product._id}`}
+                                                href={`/product/${product.slug || product._id}`}
                                                 className="group flex items-center gap-4 p-4 bg-gray-50 hover:bg-white border border-transparent hover:border-gray-100 rounded-3xl transition-all duration-300 shadow-sm hover:shadow-md"
                                             >
                                                 <div className="w-16 h-16 bg-white rounded-2xl border border-gray-100 overflow-hidden shrink-0">
