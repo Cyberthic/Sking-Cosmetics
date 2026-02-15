@@ -16,6 +16,12 @@ export interface SalesDataPointDto {
     orders: number;
 }
 
+export interface PerformanceDataPointDto {
+    month: string;
+    acquisition: number; // New customers/orders
+    retention: number;   // Returning customers/orders
+}
+
 export interface MonthlyTargetDto {
     target: number;
     revenue: number;
@@ -29,4 +35,5 @@ export interface AdminDashboardStatsDto {
     orderStats: OrderStatsDto;
     monthlySales: SalesDataPointDto[];
     monthlyTarget: MonthlyTargetDto;
+    customerPerformance: PerformanceDataPointDto[];
 }

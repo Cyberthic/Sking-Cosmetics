@@ -20,6 +20,12 @@ export interface SalesDataPoint {
     orders: number;
 }
 
+export interface PerformanceDataPoint {
+    month: string;
+    acquisition: number;
+    retention: number;
+}
+
 export interface MonthlyTarget {
     target: number;
     revenue: number;
@@ -33,11 +39,20 @@ export interface DashboardStats {
     orderStats: OrderStats;
     monthlySales: SalesDataPoint[];
     monthlyTarget: MonthlyTarget;
+    customerPerformance: PerformanceDataPoint[];
 }
 
 export const adminDashboardApiService = {
-    getDashboardStats: async (customerPeriod: DashboardPeriod = 'weekly', orderPeriod: DashboardPeriod = 'weekly'): Promise<DashboardStats> => {
-        const response = await axiosInstance.get(`/api/admin/dashboard/stats?customerPeriod=${customerPeriod}&orderPeriod=${orderPeriod}`);
+    getDashboardStats: async (
+        customerPeriod: DashboardPeriod = 'weekly',
+        orderPeriod: DashboardPeriod = 'weekly',
+        range?: { startDate: string; endDate: string }
+    ): Promise<DashboardStats> => {
+        let url = `/api/admin/dashboard/stats?customerPeriod=${customerPeriod}&orderPeriod=${orderPeriod}`;
+        if (range) {
+            url += `&startDate=${range.startDate}&endDate=${range.endDate}`;
+        }
+        const response = await axiosInstance.get(url);
         return response.data.data;
     },
     updateMonthlyTarget: async (target: number): Promise<void> => {

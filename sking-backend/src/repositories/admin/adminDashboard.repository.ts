@@ -30,9 +30,9 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
         return await OrderModel.countDocuments(filter);
     }
 
-    async getMonthlySales(year: number): Promise<{ month: number; totalSales: number; orderCount: number }[]> {
-        const startDate = new Date(year, 0, 1);
-        const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+    async getMonthlySales(startDate: Date, endDate: Date): Promise<{ label: string; totalSales: number; orderCount: number }[]> {
+        const diffInDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const useDayGroup = diffInDays <= 31;
 
         const sales = await OrderModel.aggregate([
             {
@@ -42,25 +42,29 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
             },
             {
                 $group: {
-                    _id: { $month: "$createdAt" },
+                    _id: useDayGroup
+                        ? { $dateToString: { format: "%d %b", date: "$createdAt" } }
+                        : { $dateToString: { format: "%b %Y", date: "$createdAt" } },
                     sales: {
                         $sum: {
                             $cond: [{ $eq: ["$paymentStatus", "completed"] }, "$finalAmount", 0]
                         }
                     },
-                    count: { $sum: 1 }
+                    count: { $sum: 1 },
+                    firstDate: { $min: "$createdAt" } // For sorting
                 }
             },
             {
                 $project: {
                     _id: 0,
-                    month: "$_id",
+                    label: "$_id",
                     totalSales: { $ifNull: ["$sales", 0] },
-                    orderCount: { $ifNull: ["$count", 0] }
+                    orderCount: { $ifNull: ["$count", 0] },
+                    firstDate: 1
                 }
             },
             {
-                $sort: { month: 1 }
+                $sort: { firstDate: 1 }
             }
         ]);
 
@@ -97,5 +101,78 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
             { monthlyTarget: target },
             { upsert: true, new: true }
         );
+    }
+
+    async getCustomerPerformance(startDate: Date, endDate: Date): Promise<{ label: string; acquisition: number; retention: number }[]> {
+        const diffInDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const useDayGroup = diffInDays <= 31;
+
+        const performance = await OrderModel.aggregate([
+            {
+                $match: {
+                    paymentStatus: "completed"
+                }
+            },
+            {
+                $sort: { createdAt: 1 }
+            },
+            {
+                $group: {
+                    _id: "$user",
+                    orders: {
+                        $push: {
+                            date: "$createdAt",
+                            _id: "$_id"
+                        }
+                    }
+                }
+            },
+            {
+                $unwind: {
+                    path: "$orders",
+                    includeArrayIndex: "orderIndex"
+                }
+            },
+            {
+                $match: {
+                    "orders.date": { $gte: startDate, $lte: endDate }
+                }
+            },
+            {
+                $project: {
+                    label: useDayGroup
+                        ? { $dateToString: { format: "%d %b", date: "$orders.date" } }
+                        : { $dateToString: { format: "%b %Y", date: "$orders.date" } },
+                    date: "$orders.date",
+                    isFirstOrder: { $eq: ["$orderIndex", 0] }
+                }
+            },
+            {
+                $group: {
+                    _id: "$label",
+                    acquisition: {
+                        $sum: { $cond: ["$isFirstOrder", 1, 0] }
+                    },
+                    retention: {
+                        $sum: { $cond: ["$isFirstOrder", 0, 1] }
+                    },
+                    firstDate: { $min: "$date" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    label: "$_id",
+                    acquisition: 1,
+                    retention: 1,
+                    firstDate: 1
+                }
+            },
+            {
+                $sort: { firstDate: 1 }
+            }
+        ]);
+
+        return performance;
     }
 }

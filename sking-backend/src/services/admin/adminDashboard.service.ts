@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../core/types";
 import { DashboardPeriod, IAdminDashboardService } from "../../core/interfaces/services/admin/IAdminDashboard.service";
 import { IAdminDashboardRepository } from "../../core/interfaces/repositories/admin/IAdminDashboard.repository";
-import { AdminDashboardStatsDto, SalesDataPointDto } from "../../core/dtos/admin/adminDashboard.dto";
+import { AdminDashboardStatsDto, SalesDataPointDto, PerformanceDataPointDto } from "../../core/dtos/admin/adminDashboard.dto";
 
 @injectable()
 export class AdminDashboardService implements IAdminDashboardService {
@@ -10,10 +10,19 @@ export class AdminDashboardService implements IAdminDashboardService {
         @inject(TYPES.IAdminDashboardRepository) private _adminDashboardRepository: IAdminDashboardRepository
     ) { }
 
-    async getDashboardStats(customerPeriod: DashboardPeriod, orderPeriod: DashboardPeriod): Promise<AdminDashboardStatsDto> {
+    async getDashboardStats(
+        customerPeriod: DashboardPeriod,
+        orderPeriod: DashboardPeriod,
+        startDate?: Date,
+        endDate?: Date
+    ): Promise<AdminDashboardStatsDto> {
         const now = new Date();
         const currentMonth = now.getMonth() + 1;
         const currentYear = now.getFullYear();
+
+        // Default range is current year if not provided
+        const chartStart = startDate || new Date(currentYear, 0, 1);
+        const chartEnd = endDate || new Date(currentYear, 11, 31, 23, 59, 59, 999);
 
         const totalCustomers = await this._adminDashboardRepository.getCustomerCount();
         const totalOrders = await this._adminDashboardRepository.getOrderCount();
@@ -42,17 +51,21 @@ export class AdminDashboardService implements IAdminDashboardService {
             orderGrowth = 100;
         }
 
-        // Monthly Sales
-        const salesData = await this._adminDashboardRepository.getMonthlySales(currentYear);
-        const monthsLabel = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const monthlySales: SalesDataPointDto[] = monthsLabel.map((month, index) => {
-            const sale = salesData.find(s => s.month === (index + 1));
-            return {
-                month,
-                sales: sale ? Number(sale.totalSales || 0) : 0,
-                orders: sale ? Number(sale.orderCount || 0) : 0
-            };
-        });
+        // Monthly Sales (using the provided or default range)
+        const salesData = await this._adminDashboardRepository.getMonthlySales(chartStart, chartEnd);
+        const monthlySales: SalesDataPointDto[] = salesData.map(s => ({
+            month: s.label,
+            sales: Number(s.totalSales || 0),
+            orders: Number(s.orderCount || 0)
+        }));
+
+        // Customer Performance (using the provided or default range)
+        const performanceData = await this._adminDashboardRepository.getCustomerPerformance(chartStart, chartEnd);
+        const customerPerformance: PerformanceDataPointDto[] = performanceData.map(p => ({
+            month: p.label,
+            acquisition: Number(p.acquisition || 0),
+            retention: Number(p.retention || 0)
+        }));
 
         // Monthly Target
         const target = await this._adminDashboardRepository.getMonthlyTarget(currentMonth, currentYear);
@@ -103,7 +116,8 @@ export class AdminDashboardService implements IAdminDashboardService {
                 todayRevenue: todayRevenue || 0,
                 progressPercentage: safeFixed(progressPercentage),
                 growthFromLastMonth: safeFixed(growthFromLastMonth)
-            }
+            },
+            customerPerformance
         };
     }
 

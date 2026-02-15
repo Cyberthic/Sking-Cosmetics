@@ -15,7 +15,22 @@ export class AdminDashboardController implements IAdminDashboardController {
             const customerPeriod = (req.query.customerPeriod as DashboardPeriod) || 'weekly';
             const orderPeriod = (req.query.orderPeriod as DashboardPeriod) || 'weekly';
 
-            const stats = await this._adminDashboardService.getDashboardStats(customerPeriod, orderPeriod);
+            let startDate: Date | undefined;
+            let endDate: Date | undefined;
+
+            if (req.query.startDate) {
+                startDate = new Date(req.query.startDate as string);
+            }
+            if (req.query.endDate) {
+                endDate = new Date(req.query.endDate as string);
+            }
+
+            const stats = await this._adminDashboardService.getDashboardStats(
+                customerPeriod,
+                orderPeriod,
+                startDate,
+                endDate
+            );
 
             res.status(200).json({
                 success: true,

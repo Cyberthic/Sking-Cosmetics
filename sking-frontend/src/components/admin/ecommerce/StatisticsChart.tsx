@@ -1,30 +1,85 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { ApexOptions } from "apexcharts";
 import flatpickr from "flatpickr";
 import ChartTab from "../common/ChartTab";
 import { CalenderIcon } from "@/icons/index";
+import { adminDashboardApiService, DashboardStats } from "@/services/admin/adminDashboardApiService";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function StatisticsChart() {
   const datePickerRef = useRef<HTMLInputElement>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState<{ startDate: string; endDate: string } | undefined>(undefined);
+  const [period, setPeriod] = useState<"Monthly" | "Quarterly" | "Annually">("Monthly");
+
+  const fetchStats = useCallback(async (currentRange?: { startDate: string; endDate: string }) => {
+    setLoading(true);
+    try {
+      // If we have a custom range from the calendar, use it. 
+      // Otherwise, the backend defaults to the current year.
+      const data = await adminDashboardApiService.getDashboardStats('weekly', 'weekly', currentRange);
+      setStats(data);
+    } catch (error) {
+      console.error("Error fetching statistics stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats(range);
+  }, [range, fetchStats]);
+
+  const handlePeriodChange = (selectedPeriod: "Monthly" | "Quarterly" | "Annually") => {
+    setPeriod(selectedPeriod);
+    const now = new Date();
+    let start = new Date();
+    let end = new Date(now);
+
+    if (selectedPeriod === "Monthly") {
+      start = new Date(now.getFullYear(), 0, 1);
+    } else if (selectedPeriod === "Quarterly") {
+      // Last 4 quarters
+      start = new Date(now.getFullYear(), now.getMonth() - 9, 1);
+    } else if (selectedPeriod === "Annually") {
+      // Last 3 years
+      start = new Date(now.getFullYear() - 2, 0, 1);
+    }
+
+    const newRange = {
+      startDate: start.toISOString(),
+      endDate: end.toISOString()
+    };
+
+    setRange(newRange);
+  };
 
   useEffect(() => {
     if (!datePickerRef.current) return;
 
     const today = new Date();
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(today.getDate() - 6);
+    const rangeStart = new Date();
+    rangeStart.setDate(today.getDate() - 30); // Default to last 30 days for visualization
 
     const fp = flatpickr(datePickerRef.current, {
       mode: "range",
       static: true,
       monthSelectorType: "static",
-      dateFormat: "M d",
-      defaultDate: [sevenDaysAgo, today],
+      dateFormat: "Y-m-d",
+      defaultDate: [rangeStart, today],
       clickOpens: true,
+      onChange: (selectedDates) => {
+        if (selectedDates.length === 2) {
+          setRange({
+            startDate: selectedDates[0].toISOString(),
+            endDate: selectedDates[1].toISOString()
+          });
+        }
+      },
       prevArrow:
         '<svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 15L7.5 10L12.5 5" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       nextArrow:
@@ -40,24 +95,24 @@ export default function StatisticsChart() {
 
   const options: ApexOptions = {
     legend: {
-      show: false, // Hide legend
+      show: true,
       position: "top",
       horizontalAlign: "left",
+      fontFamily: "Outfit",
     },
-    colors: ["#465FFF", "#9CB9FF"], // Define line colors
+    colors: ["#465FFF", "#9CB9FF"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       height: 310,
-      type: "line", // Set the chart type to 'line'
+      type: "area",
       toolbar: {
-        show: false, // Hide chart toolbar
+        show: false,
       },
     },
     stroke: {
-      curve: "straight", // Define the line style (straight, smooth, or step)
-      width: [2, 2], // Line width for each dataset
+      curve: "smooth",
+      width: [2, 2],
     },
-
     fill: {
       type: "gradient",
       gradient: {
@@ -66,72 +121,59 @@ export default function StatisticsChart() {
       },
     },
     markers: {
-      size: 0, // Size of the marker points
-      strokeColors: "#fff", // Marker border color
+      size: 0,
+      strokeColors: "#fff",
       strokeWidth: 2,
       hover: {
-        size: 6, // Marker size on hover
+        size: 6,
       },
     },
     grid: {
       xaxis: {
         lines: {
-          show: false, // Hide grid lines on x-axis
+          show: false,
         },
       },
       yaxis: {
         lines: {
-          show: true, // Show grid lines on y-axis
+          show: true,
         },
       },
     },
     dataLabels: {
-      enabled: false, // Disable data labels
+      enabled: false,
     },
     tooltip: {
-      enabled: true, // Enable tooltip
+      enabled: true,
       x: {
-        format: "dd MMM yyyy", // Format for x-axis tooltip
+        show: true
       },
       y: {
-        formatter: (val: number) => `₹ ${val}`,
+        formatter: (val: number) => `${val} Orders`,
       },
     },
     xaxis: {
-      type: "category", // Category-based x-axis
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
+      type: "category",
+      categories: stats?.customerPerformance.map(p => p.month) || [],
       axisBorder: {
-        show: false, // Hide x-axis border
+        show: false,
       },
       axisTicks: {
-        show: false, // Hide x-axis ticks
+        show: false,
       },
       tooltip: {
-        enabled: false, // Disable tooltip for x-axis points
+        enabled: false,
       },
     },
     yaxis: {
       labels: {
         style: {
-          fontSize: "12px", // Adjust font size for y-axis labels
-          colors: ["#6B7280"], // Color of the labels
+          fontSize: "12px",
+          colors: ["#6B7280"],
         },
       },
       title: {
-        text: "", // Remove y-axis title
+        text: "",
         style: {
           fontSize: "0px",
         },
@@ -141,27 +183,28 @@ export default function StatisticsChart() {
 
   const series = [
     {
-      name: "Sales",
-      data: [180, 190, 170, 160, 175, 165, 170, 205, 230, 210, 240, 235],
+      name: "Acquisition (New)",
+      data: stats?.customerPerformance.map(p => p.acquisition) || [],
     },
     {
-      name: "Revenue",
-      data: [40, 30, 50, 40, 55, 40, 70, 100, 110, 120, 150, 140],
+      name: "Retention (Returning)",
+      data: stats?.customerPerformance.map(p => p.retention) || [],
     },
   ];
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white px-5 pb-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
         <div className="w-full">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Statistics
+            Customer Performance
           </h3>
           <p className="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
-            Target you've set for each month
+            Acquisition (New Orders) vs Retention (Repeat Orders)
           </p>
         </div>
         <div className="flex items-center gap-3 sm:justify-end">
-          <ChartTab />
+          <ChartTab onSelect={handlePeriodChange} defaultSelected="Monthly" />
           <div className="relative inline-flex items-center">
             <CalenderIcon className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:left-3 lg:top-1/2 lg:translate-x-0 lg:-translate-y-1/2  text-gray-500 dark:text-gray-400 pointer-events-none z-10" />
             <input
@@ -175,7 +218,13 @@ export default function StatisticsChart() {
 
       <div className="max-w-full overflow-x-auto custom-scrollbar">
         <div className="min-w-[1000px] xl:min-w-full">
-          <Chart options={options} series={series} type="area" height={310} />
+          {loading ? (
+            <div className="flex h-[310px] items-center justify-center">
+              <p className="text-gray-500">Loading statistics...</p>
+            </div>
+          ) : (
+            <Chart options={options} series={series} type="area" height={310} />
+          )}
         </div>
       </div>
     </div>
