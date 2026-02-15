@@ -262,50 +262,82 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
             }
         ]);
 
-        // Comprehensive JVectorMap India codes
+        // Comprehensive JVectorMap India codes + Common Abbreviations/Variations
         const stateCodes: Record<string, string> = {
-            "andaman and nicobar islands": "IN-AN",
-            "andhra pradesh": "IN-AP",
-            "arunachal pradesh": "IN-AR",
-            "assam": "IN-AS",
-            "bihar": "IN-BR",
-            "chandigarh": "IN-CH",
-            "chhattisgarh": "IN-CT",
-            "dadra and nagar haveli": "IN-DN",
-            "daman and diu": "IN-DD",
-            "delhi": "IN-DL",
-            "goa": "IN-GA",
-            "gujarat": "IN-GJ",
-            "haryana": "IN-HR",
-            "himachal pradesh": "IN-HP",
-            "jammu and kashmir": "IN-JK",
-            "jharkhand": "IN-JH",
-            "karnataka": "IN-KA",
-            "kerala": "IN-KL",
-            "ladakh": "IN-LA",
-            "lakshadweep": "IN-LD",
-            "madhya pradesh": "IN-MP",
-            "maharashtra": "IN-MH",
-            "manipur": "IN-MN",
-            "meghalaya": "IN-ML",
-            "mizoram": "IN-MZ",
-            "nagaland": "IN-NL",
-            "odisha": "IN-OR",
-            "puducherry": "IN-PY",
-            "punjab": "IN-PB",
-            "rajasthan": "IN-RJ",
-            "sikkim": "IN-SK",
-            "tamil nadu": "IN-TN",
-            "telangana": "IN-TG",
-            "tripura": "IN-TR",
-            "uttar pradesh": "IN-UP",
-            "uttarakhand": "IN-UT",
-            "west bengal": "IN-WB"
+            "andaman and nicobar islands": "IN-AN", "andaman": "IN-AN", "nicobar": "IN-AN", "an": "IN-AN",
+            "andhra pradesh": "IN-AP", "andhra": "IN-AP", "ap": "IN-AP",
+            "arunachal pradesh": "IN-AR", "arunachal": "IN-AR", "ar": "IN-AR",
+            "assam": "IN-AS", "as": "IN-AS",
+            "bihar": "IN-BR", "br": "IN-BR",
+            "chandigarh": "IN-CH", "ch": "IN-CH",
+            "chhattisgarh": "IN-CT", "ct": "IN-CT", "cg": "IN-CT",
+            "dadra and nagar haveli": "IN-DN", "dn": "IN-DN",
+            "daman and diu": "IN-DD", "dd": "IN-DD",
+            "delhi": "IN-DL", "new delhi": "IN-DL", "dl": "IN-DL",
+            "goa": "IN-GA", "ga": "IN-GA",
+            "gujarat": "IN-GJ", "gj": "IN-GJ",
+            "haryana": "IN-HR", "hr": "IN-HR",
+            "himachal pradesh": "IN-HP", "hp": "IN-HP",
+            "jammu and kashmir": "IN-JK", "jk": "IN-JK",
+            "jharkhand": "IN-JH", "jh": "IN-JH",
+            "karnataka": "IN-KA", "ka": "IN-KA",
+            "kerala": "IN-KL", "kl": "IN-KL",
+            "ladakh": "IN-LA", "la": "IN-LA",
+            "lakshadweep": "IN-LD", "ld": "IN-LD",
+            "madhya pradesh": "IN-MP", "mp": "IN-MP",
+            "maharashtra": "IN-MH", "mh": "IN-MH", "mumbai": "IN-MH",
+            "manipur": "IN-MN", "mn": "IN-MN",
+            "meghalaya": "IN-ML", "ml": "IN-ML",
+            "mizoram": "IN-MZ", "mz": "IN-MZ",
+            "nagaland": "IN-NL", "nl": "IN-NL",
+            "odisha": "IN-OR", "orissa": "IN-OR", "or": "IN-OR",
+            "puducherry": "IN-PY", "py": "IN-PY", "pondicherry": "IN-PY",
+            "punjab": "IN-PB", "pb": "IN-PB",
+            "rajasthan": "IN-RJ", "rj": "IN-RJ",
+            "sikkim": "IN-SK", "sk": "IN-SK",
+            "tamil nadu": "IN-TN", "tn": "IN-TN", "chennai": "IN-TN",
+            "telangana": "IN-TG", "tg": "IN-TG", "ts": "IN-TG",
+            "tripura": "IN-TR", "tr": "IN-TR",
+            "uttar pradesh": "IN-UP", "up": "IN-UP",
+            "uttarakhand": "IN-UT", "ut": "IN-UT", "uk": "IN-UT",
+            "west bengal": "IN-WB", "wb": "IN-WB", "bengal": "IN-WB"
         };
 
-        return stateData.map(s => ({
-            ...s,
-            code: stateCodes[s.state.toLowerCase().trim()] || `IN-${s.state.substring(0, 2).toUpperCase()}`
-        }));
+        return stateData.map(s => {
+            const rawState = String(s.state || "");
+            const normalized = rawState.toLowerCase().trim();
+            let code = stateCodes[normalized];
+
+            // Robust fallback with broader matching
+            if (!code) {
+                const searchStr = normalized.replace(/[^a-z]/g, '');
+                if (searchStr.includes("kerala") || searchStr === "kl" || searchStr === "ke") {
+                    code = "IN-KL";
+                } else if (searchStr.includes("andaman") || searchStr.includes("nicobar") || searchStr === "an") {
+                    code = "IN-AN";
+                } else if (searchStr.includes("delhi") || searchStr === "dl") {
+                    code = "IN-DL";
+                } else if (searchStr.includes("maharashtra") || searchStr === "mh") {
+                    code = "IN-MH";
+                } else if (searchStr.includes("tamil") || searchStr === "tn") {
+                    code = "IN-TN";
+                } else if (searchStr.includes("karnataka") || searchStr === "ka") {
+                    code = "IN-KA";
+                } else if (searchStr.includes("gujarat") || searchStr === "gj") {
+                    code = "IN-GJ";
+                } else if (searchStr.includes("telangana") || searchStr === "tg" || searchStr === "ts") {
+                    code = "IN-TG";
+                } else if (searchStr.includes("andhra") || searchStr === "ap") {
+                    code = "IN-AP";
+                } else if (searchStr.includes("westbengal") || searchStr.includes("bengal") || searchStr === "wb") {
+                    code = "IN-WB";
+                }
+            }
+
+            return {
+                ...s,
+                code: code || `IN-${normalized.substring(0, 2).toUpperCase()}`
+            };
+        });
     }
 }

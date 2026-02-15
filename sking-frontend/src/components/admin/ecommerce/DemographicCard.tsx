@@ -133,25 +133,31 @@ export default function DemographicCard() {
 
       <div className="space-y-5">
         {loading ? (
-          <div className="py-4 text-center text-gray-500">Loading demographics...</div>
-        ) : demographics.length === 0 ? (
+          <div className="py-4 text-center text-gray-500">Loading statistics...</div>
+        ) : (mapType === "india" ? stateDemographics : demographics).length === 0 ? (
           <div className="py-4 text-center text-gray-500">No order data available.</div>
         ) : (
-          demographics.slice(0, 3).map((item, index) => (
+          (mapType === "india" ? stateDemographics : demographics).slice(0, 3).map((item, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="relative h-8 w-8 overflow-hidden rounded-full border border-gray-100 flex-shrink-0">
-                  <Image
-                    fill
-                    src={getFlag(item.country)}
-                    alt={item.country}
-                    className="object-cover"
-                    unoptimized={true}
-                  />
+                <div className="relative h-8 w-8 overflow-hidden rounded-full border border-gray-100 flex-shrink-0 bg-gray-50 flex items-center justify-center">
+                  {mapType === "world" ? (
+                    <Image
+                      fill
+                      src={getFlag((item as DemographicData).country)}
+                      alt={(item as DemographicData).country}
+                      className="object-cover"
+                      unoptimized={true}
+                    />
+                  ) : (
+                    <span className="text-[10px] font-bold text-brand-500 uppercase">
+                      {(item as StateDemographic).code?.split('-')[1] || (item as StateDemographic).state.substring(0, 2)}
+                    </span>
+                  )}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-800 text-theme-sm dark:text-white/90">
-                    {item.country}
+                  <p className="font-semibold text-gray-800 text-theme-sm dark:text-white/90 truncate max-w-[120px]">
+                    {mapType === "india" ? (item as StateDemographic).state : (item as DemographicData).country}
                   </p>
                   <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
                     {item.orderCount.toLocaleString()} {item.orderCount === 1 ? 'Order' : 'Orders'}
@@ -190,7 +196,7 @@ export default function DemographicCard() {
           {(mapType === "india" ? stateDemographics : demographics).map((item, index) => (
             <div key={index} className="flex items-center justify-between group">
               <div className="flex items-center gap-4">
-                <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-100 flex-shrink-0 bg-gray-50">
+                <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-100 flex-shrink-0 bg-gray-50 flex items-center justify-center">
                   {mapType === "world" ? (
                     <Image
                       fill
@@ -200,9 +206,9 @@ export default function DemographicCard() {
                       unoptimized={true}
                     />
                   ) : (
-                    <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-brand-500">
+                    <span className="text-xs font-bold text-brand-500 uppercase">
                       {(item as StateDemographic).code?.split('-')[1]}
-                    </div>
+                    </span>
                   )}
                 </div>
                 <div>

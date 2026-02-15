@@ -66,7 +66,8 @@ const CountryMap: React.FC<CountryMapProps> = ({ mapColor, type = "world", data 
           ],
         }}
         onRegionTipShow={(_e: any, el: any, code: string) => {
-          const value = seriesData[code] || 0;
+          // Robust lookup for the code (try exact, then upper, then normalized name)
+          const value = seriesData[code] || seriesData[code.toUpperCase()] || 0;
           const name = el.html();
           el.html(
             `<div style="background-color: #111827; color: white; padding: 8px; border-radius: 6px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); font-size: 12px; line-height: 1;">
