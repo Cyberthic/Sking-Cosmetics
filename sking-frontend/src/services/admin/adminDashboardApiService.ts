@@ -26,6 +26,17 @@ export interface PerformanceDataPoint {
     retention: number;
 }
 
+export interface RecentOrder {
+    _id: string;
+    displayId: string;
+    customerName: string;
+    amount: number;
+    status: string;
+    date: string;
+    itemsCount: number;
+    productImage: string;
+}
+
 export interface MonthlyTarget {
     target: number;
     revenue: number;
@@ -40,6 +51,7 @@ export interface DashboardStats {
     monthlySales: SalesDataPoint[];
     monthlyTarget: MonthlyTarget;
     customerPerformance: PerformanceDataPoint[];
+    recentOrders: RecentOrder[];
 }
 
 export const adminDashboardApiService = {

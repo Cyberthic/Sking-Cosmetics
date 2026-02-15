@@ -30,10 +30,22 @@ export interface MonthlyTargetDto {
     growthFromLastMonth: number;
 }
 
+export interface RecentOrderDto {
+    _id: string;
+    displayId: string;
+    customerName: string;
+    amount: number;
+    status: string;
+    date: string;
+    itemsCount: number;
+    productImage: string;
+}
+
 export interface AdminDashboardStatsDto {
     customerStats: CustomerStatsDto;
     orderStats: OrderStatsDto;
     monthlySales: SalesDataPointDto[];
     monthlyTarget: MonthlyTargetDto;
     customerPerformance: PerformanceDataPointDto[];
+    recentOrders: RecentOrderDto[];
 }

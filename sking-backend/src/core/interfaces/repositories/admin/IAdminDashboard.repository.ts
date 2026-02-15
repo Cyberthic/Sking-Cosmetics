@@ -6,4 +6,5 @@ export interface IAdminDashboardRepository {
     getMonthlyTarget(month: number, year: number): Promise<number>;
     updateMonthlyTarget(month: number, year: number, target: number): Promise<void>;
     getCustomerPerformance(startDate: Date, endDate: Date): Promise<{ label: string; acquisition: number; retention: number }[]>;
+    getRecentOrders(count: number): Promise<any[]>;
 }

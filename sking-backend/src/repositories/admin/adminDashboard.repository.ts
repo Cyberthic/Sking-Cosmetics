@@ -2,6 +2,7 @@ import { injectable } from "inversify";
 import { UserModel } from "../../models/user.model";
 import OrderModel from "../../models/order.model";
 import DashboardConfigModel from "../../models/dashboardConfig.model";
+import { ProductModel } from "../../models/product.model"; // Import to ensure registration
 import { IAdminDashboardRepository } from "../../core/interfaces/repositories/admin/IAdminDashboard.repository";
 
 @injectable()
@@ -174,5 +175,15 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
         ]);
 
         return performance;
+    }
+
+    async getRecentOrders(count: number): Promise<any[]> {
+        // Explicitly use ProductModel to ensure it's registered
+        return await OrderModel.find()
+            .sort({ createdAt: -1 })
+            .limit(count)
+            .populate("user", "name email")
+            .populate("items.product", "images")
+            .exec();
     }
 }

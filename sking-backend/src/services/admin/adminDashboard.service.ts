@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../core/types";
 import { DashboardPeriod, IAdminDashboardService } from "../../core/interfaces/services/admin/IAdminDashboard.service";
 import { IAdminDashboardRepository } from "../../core/interfaces/repositories/admin/IAdminDashboard.repository";
-import { AdminDashboardStatsDto, SalesDataPointDto, PerformanceDataPointDto } from "../../core/dtos/admin/adminDashboard.dto";
+import { AdminDashboardStatsDto, SalesDataPointDto, PerformanceDataPointDto, RecentOrderDto } from "../../core/dtos/admin/adminDashboard.dto";
 
 @injectable()
 export class AdminDashboardService implements IAdminDashboardService {
@@ -67,6 +67,30 @@ export class AdminDashboardService implements IAdminDashboardService {
             retention: Number(p.retention || 0)
         }));
 
+        // Recent Orders
+        const rOrders = await this._adminDashboardRepository.getRecentOrders(5);
+        const recentOrders: RecentOrderDto[] = rOrders.map(o => {
+            // Get image from the first item's product
+            let productImage = "";
+            if (o.items && o.items.length > 0 && o.items[0].product && o.items[0].product.images && o.items[0].product.images.length > 0) {
+                const img = o.items[0].product.images[0];
+                if (img && img.trim() !== "") {
+                    productImage = img;
+                }
+            }
+
+            return {
+                _id: o._id.toString(),
+                displayId: o.displayId || o._id.toString().substring(0, 8),
+                customerName: o.user?.name || "Guest",
+                amount: o.finalAmount,
+                status: o.orderStatus,
+                date: o.createdAt.toISOString(),
+                itemsCount: o.items?.length || 0,
+                productImage: productImage
+            };
+        });
+
         // Monthly Target
         const target = await this._adminDashboardRepository.getMonthlyTarget(currentMonth, currentYear);
 
@@ -117,7 +141,8 @@ export class AdminDashboardService implements IAdminDashboardService {
                 progressPercentage: safeFixed(progressPercentage),
                 growthFromLastMonth: safeFixed(growthFromLastMonth)
             },
-            customerPerformance
+            customerPerformance,
+            recentOrders
         };
     }
 
