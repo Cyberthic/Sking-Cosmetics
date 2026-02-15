@@ -12,6 +12,7 @@ import razorpay from "../../config/razorpay";
 import logger from "../../utils/logger";
 import { IUserCouponService } from "../../core/interfaces/services/user/IUserCoupon.service";
 import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
+import { IAdminDeliveryRepository } from "../../core/interfaces/repositories/admin/IAdminDelivery.repository";
 
 @injectable()
 export class UserCheckoutService implements IUserCheckoutService {
@@ -20,8 +21,17 @@ export class UserCheckoutService implements IUserCheckoutService {
         @inject(TYPES.ICartRepository) private _cartRepository: ICartRepository,
         @inject(TYPES.IUserAddressRepository) private _addressRepository: IUserAddressRepository,
         @inject(TYPES.IUserProductRepository) private _productRepository: IUserProductRepository,
-        @inject(TYPES.IUserCouponService) private _couponService: IUserCouponService
+        @inject(TYPES.IUserCouponService) private _couponService: IUserCouponService,
+        @inject(TYPES.IAdminDeliveryRepository) private _deliveryRepository: IAdminDeliveryRepository
     ) { }
+
+    async getDeliverySettings(): Promise<{ deliveryCharge: number; freeShippingThreshold: number; }> {
+        const settings = await this._deliveryRepository.getSettings();
+        return {
+            deliveryCharge: settings.deliveryCharge,
+            freeShippingThreshold: settings.freeShippingThreshold
+        };
+    }
 
     async placeOrder(userId: string, data: PlaceOrderDto): Promise<IOrder> {
         // 1. Get Cart
@@ -65,7 +75,11 @@ export class UserCheckoutService implements IUserCheckoutService {
             couponId = couponResult.coupon._id;
         }
 
-        const shippingFee = totalAmount > 1000 ? 0 : 49;
+        // Fetch Delivery Settings from DB
+        const deliverySettings = await this._deliveryRepository.getSettings();
+        const { deliveryCharge, freeShippingThreshold } = deliverySettings;
+
+        const shippingFee = totalAmount > freeShippingThreshold ? 0 : deliveryCharge;
         const finalAmount = Math.max(0, totalAmount + shippingFee - discountAmount);
 
         const ORDER_EXPIRY_MINUTES_ONLINE = 15;

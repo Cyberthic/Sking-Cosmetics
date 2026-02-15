@@ -13,6 +13,19 @@ export class UserCheckoutController implements IUserCheckoutController {
         @inject(TYPES.IUserCheckoutService) private _checkoutService: IUserCheckoutService
     ) { }
 
+    getDeliverySettings = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const settings = await this._checkoutService.getDeliverySettings();
+            res.status(StatusCode.OK).json({
+                success: true,
+                data: settings
+            });
+        } catch (error: any) {
+            logger.error("Get Delivery Settings Error", error);
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, error: "Failed to fetch delivery settings" });
+        }
+    }
+
     placeOrder = async (req: Request, res: Response): Promise<void> => {
         try {
             // @ts-ignore

@@ -61,6 +61,7 @@ app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
 
 import { errorHandler } from "./middlewares/error.middleware";
+// Force restart
 app.use(errorHandler);
 
 export default app;

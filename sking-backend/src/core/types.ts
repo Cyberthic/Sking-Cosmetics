@@ -71,6 +71,9 @@ const TYPES = {
     IOrderSettingsRepository: Symbol.for("IOrderSettingsRepository"),
     IOrderSettingsService: Symbol.for("IOrderSettingsService"),
     IOrderSettingsController: Symbol.for("IOrderSettingsController"),
+    IAdminDeliveryRepository: Symbol.for("IAdminDeliveryRepository"),
+    IAdminDeliveryService: Symbol.for("IAdminDeliveryService"),
+    IAdminDeliveryController: Symbol.for("IAdminDeliveryController"),
 };
 
 export { TYPES };

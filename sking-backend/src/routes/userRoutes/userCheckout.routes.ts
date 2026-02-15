@@ -7,6 +7,7 @@ import { isAuthenticated } from "../../middlewares/auth.middleware";
 const checkoutRouter = Router();
 const checkoutController = container.get<IUserCheckoutController>(TYPES.IUserCheckoutController);
 
+checkoutRouter.get("/settings", isAuthenticated, checkoutController.getDeliverySettings);
 checkoutRouter.post("/place-order", isAuthenticated, checkoutController.placeOrder);
 
 export default checkoutRouter;

@@ -18,7 +18,8 @@ import {
     Globe,
     Settings2,
     Bell,
-    Palette
+    Palette,
+    Truck
 } from "lucide-react";
 import Link from "next/link";
 
@@ -78,6 +79,14 @@ export const SiteSettingTiles = () => {
             href: "/admin/site-settings/orders",
             className: "col-span-12 md:col-span-6 lg:col-span-1 row-span-1",
             color: "bg-orange-600",
+        },
+        {
+            title: "Delivery & Shipping",
+            description: "Manage delivery charges, free shipping thresholds, and shipping zones.",
+            icon: <Truck size={28} />,
+            href: "/admin/site-settings/delivery",
+            className: "col-span-12 md:col-span-6 lg:col-span-1 row-span-1",
+            color: "bg-teal-600",
         },
         {
             title: "Hero Section",

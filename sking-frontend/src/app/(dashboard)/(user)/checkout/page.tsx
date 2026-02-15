@@ -71,6 +71,7 @@ function CheckoutPageContent() {
 
     // Order Settings
     const [orderSettings, setOrderSettings] = useState<OrderSettings | null>(null);
+    const [deliverySettings, setDeliverySettings] = useState({ deliveryCharge: 49, freeShippingThreshold: 1000 });
 
     // Coupon State
     const [coupons, setCoupons] = useState<any[]>([]);
@@ -83,7 +84,7 @@ function CheckoutPageContent() {
     const [paymentMethod, setPaymentMethod] = useState<"online" | "whatsapp">("online");
 
     // Shipping & Total Logic
-    const shippingFee = totalAmount > 1000 ? 0 : 49;
+    const shippingFee = totalAmount > deliverySettings.freeShippingThreshold ? 0 : deliverySettings.deliveryCharge;
     const finalTotal = Math.max(0, totalAmount + shippingFee - discountAmount);
 
     useEffect(() => {
@@ -98,7 +99,17 @@ function CheckoutPageContent() {
         fetchAddresses();
         fetchCoupons();
         fetchOrderSettings();
+        fetchDeliverySettings();
     }, []);
+
+    const fetchDeliverySettings = async () => {
+        try {
+            const res = await userCheckoutService.getDeliverySettings();
+            if (res.success) {
+                setDeliverySettings(res.data);
+            }
+        } catch (e) { }
+    };
 
     const fetchOrderSettings = async () => {
         try {

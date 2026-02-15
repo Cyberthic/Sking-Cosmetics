@@ -279,5 +279,17 @@ container.bind<IOrderSettingsRepository>(TYPES.IOrderSettingsRepository).to(Orde
 container.bind<IOrderSettingsService>(TYPES.IOrderSettingsService).to(OrderSettingsService);
 container.bind<IOrderSettingsController>(TYPES.IOrderSettingsController).to(OrderSettingsController);
 
+// Delivery Settings
+import { IAdminDeliveryRepository } from "./interfaces/repositories/admin/IAdminDelivery.repository";
+import { IAdminDeliveryService } from "./interfaces/services/admin/IAdminDelivery.service";
+import { IAdminDeliveryController } from "./interfaces/controllers/admin/IAdminDelivery.controller";
+import { AdminDeliveryRepository } from "../repositories/admin/adminDelivery.repository";
+import { AdminDeliveryService } from "../services/admin/adminDelivery.service";
+import { AdminDeliveryController } from "../controllers/admin/adminDelivery.controller";
+
+container.bind<IAdminDeliveryRepository>(TYPES.IAdminDeliveryRepository).to(AdminDeliveryRepository);
+container.bind<IAdminDeliveryService>(TYPES.IAdminDeliveryService).to(AdminDeliveryService);
+container.bind<IAdminDeliveryController>(TYPES.IAdminDeliveryController).to(AdminDeliveryController);
+
 export { container };
 export default container;
