@@ -24,6 +24,9 @@ import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { clearCartLocally } from "@/redux/features/cartSlice";
 import { RateProductsModal } from "@/components/user/RateProductsModal";
+import { useReactToPrint } from "react-to-print";
+import { useRef } from "react";
+import { InvoicePrintView } from "@/components/user/orders/InvoicePrintView";
 
 export default function OrderDetailPage() {
     const { orderId } = useParams();
@@ -38,6 +41,12 @@ export default function OrderDetailPage() {
 
     // Modal State
     const [isRateModalOpen, setIsRateModalOpen] = useState(false);
+
+    const componentRef = useRef<HTMLDivElement>(null);
+    const handlePrint = useReactToPrint({
+        contentRef: componentRef,
+        documentTitle: `sking-invoice-${orderId}`,
+    });
 
     const handleRateItems = () => {
         if (!order) return;
@@ -138,9 +147,11 @@ export default function OrderDetailPage() {
                 const options = {
                     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
                     amount: Math.round(retryOrder.finalAmount * 100),
+                    country: "IN",
                     currency: "INR",
                     name: "SKING COSMETICS",
                     description: "Order Retry Payment",
+                    image: window.location.origin + "/sking/sking-logo-bged.png",
                     order_id: retryOrder.paymentDetails.gatewayOrderId,
                     handler: async function (res: any) {
                         try {
@@ -262,10 +273,23 @@ export default function OrderDetailPage() {
                                 Rate Products
                             </button>
                         )}
-                        <button className="bg-white text-black border border-gray-100 p-3 rounded-xl hover:border-black transition-all">
-                            <Printer className="w-5 h-5" />
-                        </button>
+                        <div className="relative group">
+                            <button
+                                onClick={() => handlePrint()}
+                                className="bg-white text-black border border-gray-100 px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:border-black transition-all shadow-sm"
+                            >
+                                <Printer className="w-4 h-4" />
+                                Invoice
+                            </button>
+                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-bold uppercase tracking-widest pointer-events-none">
+                                Generate Invoice
+                            </span>
+                        </div>
                     </div>
+                </div>
+
+                <div className="hidden">
+                    <InvoicePrintView ref={componentRef} order={order} />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

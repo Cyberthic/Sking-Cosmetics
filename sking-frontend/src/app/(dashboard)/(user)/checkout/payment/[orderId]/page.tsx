@@ -129,10 +129,11 @@ export default function OrderPaymentPage() {
         const options = {
             key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
             amount: Math.round(orderData.finalAmount * 100),
+            country: "IN",
             currency: "INR",
             name: "SKING COSMETICS",
             description: "Order Payment",
-            image: "/logo.png",
+            image: window.location.origin + "/sking/sking-logo-bged.png",
             order_id: orderData.paymentDetails.gatewayOrderId,
             handler: async function (response: any) {
                 try {

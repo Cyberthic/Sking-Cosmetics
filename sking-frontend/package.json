@@ -24,6 +24,7 @@
     "apexcharts": "^5.3.6",
     "axios": "^1.13.2",
     "country-state-city": "^3.2.1",
+    "date-fns": "^4.1.0",
     "flatpickr": "^4.6.13",
     "framer-motion": "^12.23.26",
     "gsap": "^3.14.2",
