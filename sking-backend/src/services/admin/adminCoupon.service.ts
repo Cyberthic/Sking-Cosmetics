@@ -7,11 +7,17 @@ import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
 import { IUserOrderRepository } from "../../core/interfaces/repositories/user/IUserOrder.repository";
 
+import { IUserAuthRepository } from "../../core/interfaces/repositories/user/IUserAuth.repository";
+import { IEmailService } from "../../core/interfaces/services/IEmail.service";
+import logger from "../../utils/logger";
+
 @injectable()
 export class AdminCouponService implements IAdminCouponService {
     constructor(
         @inject(TYPES.IAdminCouponRepository) private _couponRepository: IAdminCouponRepository,
-        @inject(TYPES.IUserOrderRepository) private _orderRepository: IUserOrderRepository
+        @inject(TYPES.IUserOrderRepository) private _orderRepository: IUserOrderRepository,
+        @inject(TYPES.IUserAuthRepository) private _userAuthRepository: IUserAuthRepository,
+        @inject(TYPES.IEmailService) private _emailService: IEmailService
     ) { }
 
     async createCoupon(data: Partial<ICoupon>): Promise<ICoupon> {
@@ -25,7 +31,33 @@ export class AdminCouponService implements IAdminCouponService {
             throw new CustomError("Start date must be before end date", StatusCode.BAD_REQUEST);
         }
 
-        return await this._couponRepository.create(data);
+        const coupon = await this._couponRepository.create(data);
+
+        // Send New Offer Email to all users (Fire and Forget)
+        this._sendNewOfferEmail(coupon).catch(err => logger.error("Failed to send new offer emails", err));
+
+        return coupon;
+    }
+
+    private async _sendNewOfferEmail(coupon: ICoupon): Promise<void> {
+        try {
+            // Fetch all users with only email field
+            const users = await this._userAuthRepository.find({}, { email: 1 });
+            if (!users || users.length === 0) return;
+
+            const emailPromises = users.map(user => {
+                if (user.email) {
+                    return this._emailService.sendNewOfferEmail(user.email, coupon)
+                        .catch(e => logger.error(`Failed to send offer email to ${user.email}`, e));
+                }
+                return Promise.resolve();
+            });
+
+            await Promise.all(emailPromises);
+            logger.info(`New offer emails sent for coupon: ${coupon.code}`);
+        } catch (error) {
+            logger.error("Error in _sendNewOfferEmail", error);
+        }
     }
 
     async getCoupons(limit: number, page: number, search?: string, status?: string, sort?: string): Promise<{ coupons: ICoupon[]; total: number; totalPages: number }> {

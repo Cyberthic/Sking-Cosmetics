@@ -10,13 +10,17 @@ import logger from "../../utils/logger";
 
 import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
 
+import { IEmailService } from "../../core/interfaces/services/IEmail.service";
+
 @injectable()
 export class AdminOrderService implements IAdminOrderService {
     constructor(
         @inject(TYPES.IAdminOrderRepository) private _orderRepository: IAdminOrderRepository,
         @inject(TYPES.IUserProductRepository) private _productRepository: IUserProductRepository,
-        @inject(TYPES.IWhatsappService) private _whatsappService: IWhatsappService
+        @inject(TYPES.IWhatsappService) private _whatsappService: IWhatsappService,
+        @inject(TYPES.IEmailService) private _emailService: IEmailService
     ) { }
+
 
     async getOrders(limit: number, page: number, search?: string, status?: string, sort?: string, orderType?: string): Promise<{ orders: IOrder[]; total: number; totalPages: number }> {
         const skip = (page - 1) * limit;
@@ -62,6 +66,7 @@ export class AdminOrderService implements IAdminOrderService {
         return order;
     }
 
+
     async updateOrderStatus(id: string, status: string, isCritical?: boolean, message?: string): Promise<IOrder | null> {
         const existingOrder = await this._orderRepository.findById(id);
         if (!existingOrder) {
@@ -94,6 +99,16 @@ export class AdminOrderService implements IAdminOrderService {
             } catch (error) {
                 logger.error(`Error sending order status update WhatsApp message for order ${id}`, error);
             }
+        }
+
+        // Send Email Status Update
+        try {
+            const emailToSend = order.shippingAddress?.email;
+            if (emailToSend) {
+                await this._emailService.sendOrderStatusUpdateEmail(emailToSend, order, status);
+            }
+        } catch (error) {
+            logger.error(`Error sending order status update email for order ${id}`, error);
         }
 
         return order;
@@ -130,6 +145,16 @@ export class AdminOrderService implements IAdminOrderService {
             } catch (error) {
                 logger.error(`Error sending order status update WhatsApp message for order ${id}`, error);
             }
+        }
+
+        // Send Confirmation Email
+        try {
+            const emailToSend = order.shippingAddress?.email;
+            if (emailToSend) {
+                await this._emailService.sendOrderConfirmationEmail(emailToSend, order);
+            }
+        } catch (error) {
+            logger.error(`Error sending order confirmation email for order ${id}`, error);
         }
 
         return order;

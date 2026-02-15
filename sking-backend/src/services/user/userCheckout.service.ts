@@ -13,6 +13,7 @@ import logger from "../../utils/logger";
 import { IUserCouponService } from "../../core/interfaces/services/user/IUserCoupon.service";
 import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
 import { IAdminDeliveryRepository } from "../../core/interfaces/repositories/admin/IAdminDelivery.repository";
+import { IEmailService } from "../../core/interfaces/services/IEmail.service";
 
 @injectable()
 export class UserCheckoutService implements IUserCheckoutService {
@@ -22,7 +23,8 @@ export class UserCheckoutService implements IUserCheckoutService {
         @inject(TYPES.IUserAddressRepository) private _addressRepository: IUserAddressRepository,
         @inject(TYPES.IUserProductRepository) private _productRepository: IUserProductRepository,
         @inject(TYPES.IUserCouponService) private _couponService: IUserCouponService,
-        @inject(TYPES.IAdminDeliveryRepository) private _deliveryRepository: IAdminDeliveryRepository
+        @inject(TYPES.IAdminDeliveryRepository) private _deliveryRepository: IAdminDeliveryRepository,
+        @inject(TYPES.IEmailService) private _emailService: IEmailService
     ) { }
 
     async getDeliverySettings(): Promise<{ deliveryCharge: number; freeShippingThreshold: number; }> {
@@ -160,6 +162,18 @@ export class UserCheckoutService implements IUserCheckoutService {
             }
         } catch (error) {
             logger.error("Error reserving stock for order: " + (order as any)._id, error);
+        }
+
+        // Send Email Confirmation for WhatsApp orders (Payment Pending)
+        if (order.paymentMethod === 'whatsapp') {
+            try {
+                const emailToSend = order.shippingAddress?.email;
+                if (emailToSend) {
+                    await this._emailService.sendOrderConfirmationEmail(emailToSend, order);
+                }
+            } catch (error) {
+                logger.error("Error sending order confirmation email for WhatsApp order", error);
+            }
         }
 
         return order;

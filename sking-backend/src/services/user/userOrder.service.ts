@@ -14,6 +14,7 @@ import logger from "../../utils/logger";
 import mongoose from "mongoose";
 import razorpay from "../../config/razorpay";
 import { IWhatsappService } from "../../core/interfaces/services/IWhatsapp.service";
+import { IEmailService } from "../../core/interfaces/services/IEmail.service";
 
 @injectable()
 export class UserOrderService implements IUserOrderService {
@@ -23,7 +24,8 @@ export class UserOrderService implements IUserOrderService {
         @inject(TYPES.ICartRepository) private _cartRepository: ICartRepository,
         @inject(TYPES.IUserCouponService) private _couponService: IUserCouponService,
         @inject(TYPES.IAdminTransactionRepository) private _transactionRepository: IAdminTransactionRepository,
-        @inject(TYPES.IWhatsappService) private _whatsappService: IWhatsappService
+        @inject(TYPES.IWhatsappService) private _whatsappService: IWhatsappService,
+        @inject(TYPES.IEmailService) private _emailService: IEmailService
     ) { }
 
     async getUserOrders(userId: string): Promise<IOrder[]> {
@@ -261,6 +263,19 @@ export class UserOrderService implements IUserOrderService {
             } catch (error) {
                 logger.error("Error sending order success WhatsApp message", error);
             }
+        }
+
+        // Send Email Confirmation
+        try {
+            // Ensure we have an email to send to. Use shipping address email as primary contact for the order.
+            const emailToSend = updatedOrder.shippingAddress?.email;
+            if (emailToSend) {
+                await this._emailService.sendOrderConfirmationEmail(emailToSend, updatedOrder);
+            } else {
+                logger.warn(`No email found for order ${updatedOrder._id} to send confirmation.`);
+            }
+        } catch (error) {
+            logger.error("Error sending order confirmation email", error);
         }
 
         return updatedOrder;

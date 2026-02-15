@@ -11,11 +11,16 @@ import { IUserOrderRepository } from "../../core/interfaces/repositories/user/IU
 import streamifier from "streamifier";
 import logger from "../../utils/logger";
 
+import { IUserAuthRepository } from "../../core/interfaces/repositories/user/IUserAuth.repository";
+import { IEmailService } from "../../core/interfaces/services/IEmail.service";
+
 @injectable()
 export class AdminProductService implements IAdminProductService {
     constructor(
         @inject(TYPES.IAdminProductRepository) private _repo: IAdminProductRepository,
-        @inject(TYPES.IUserOrderRepository) private _orderRepo: IUserOrderRepository
+        @inject(TYPES.IUserOrderRepository) private _orderRepo: IUserOrderRepository,
+        @inject(TYPES.IUserAuthRepository) private _userRepo: IUserAuthRepository,
+        @inject(TYPES.IEmailService) private _emailService: IEmailService
     ) { }
 
     private calculateEffectivePrice(product: IProduct): any {
@@ -56,7 +61,35 @@ export class AdminProductService implements IAdminProductService {
         }
 
         productData.slug = slug;
-        return await this._repo.create(productData);
+        const newProduct = await this._repo.create(productData);
+
+        // Send Product Launch Email to all users (Fire and Forget)
+        this._sendProductLaunchEmails(newProduct).catch(err => logger.error("Failed to send product launch emails", err));
+
+        return newProduct;
+    }
+
+    private async _sendProductLaunchEmails(product: IProduct): Promise<void> {
+        try {
+            // Fetch all users with only email field
+            const users = await this._userRepo.find({}, { email: 1 });
+            if (!users || users.length === 0) return;
+
+            // Send in batches or one by one. Nodemailer with many separate calls might be slow but okay for < 1000 users.
+            // For production, a queue system is better. Here we just loop.
+            const emailPromises = users.map(user => {
+                if (user.email) {
+                    return this._emailService.sendProductLaunchEmail(user.email, product)
+                        .catch(e => logger.error(`Failed to send launch email to ${user.email}`, e));
+                }
+                return Promise.resolve();
+            });
+
+            await Promise.all(emailPromises);
+            logger.info(`Product launch emails sent for product: ${product.name}`);
+        } catch (error) {
+            logger.error("Error in _sendProductLaunchEmails", error);
+        }
     }
 
     async getProducts(limit: number, page: number, search?: string, categoryId?: string, sortBy?: string): Promise<{ products: any[]; total: number; totalPages: number }> {
