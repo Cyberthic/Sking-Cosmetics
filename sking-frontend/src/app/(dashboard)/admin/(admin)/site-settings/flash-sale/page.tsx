@@ -4,7 +4,7 @@ import PageBreadCrumb from "@/components/admin/common/PageBreadCrumb";
 import { adminFlashSaleApiService } from "@/services/admin/adminFlashSaleApiService";
 import { adminProductService } from "@/services/admin/adminProductApiService";
 import { Zap, Search, Clock, Save, Trash2, Plus, AlertCircle, ArrowLeft } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
