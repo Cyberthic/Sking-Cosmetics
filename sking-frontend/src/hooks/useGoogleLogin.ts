@@ -11,7 +11,7 @@ export const useGoogleLogin = () => {
 
     const initiateGoogleLogin = () => {
         const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-        const redirectUri = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/callback`;
+        const redirectUri = `${window.location.origin}/auth/google/callback`;
         const scope = 'email profile openid';
 
         if (!clientId) {
