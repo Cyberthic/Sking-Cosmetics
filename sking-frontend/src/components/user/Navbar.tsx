@@ -189,13 +189,29 @@ export default function Navbar() {
 
                         </div>
 
-                        {/* MOBILE MENU TOGGLE */}
-                        <button
-                            className="lg:hidden p-2 text-black"
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        >
-                            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                        </button>
+                        {/* MOBILE ACTIONS */}
+                        <div className="flex lg:hidden items-center gap-1">
+                            {/* MINI CART MOBILE */}
+                            <button
+                                onClick={() => setIsCartOpen(true)}
+                                className="p-2.5 relative group text-black transition-all active:scale-90"
+                            >
+                                <ShoppingBag className="w-6 h-6" />
+                                {totalItems > 0 && (
+                                    <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-sking-red text-[9px] text-white font-black shadow-sm">
+                                        {totalItems}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* MOBILE MENU TOGGLE */}
+                            <button
+                                className="p-2.5 text-black transition-all active:scale-90"
+                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            >
+                                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
