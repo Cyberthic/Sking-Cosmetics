@@ -41,6 +41,12 @@ export interface RecentOrderDto {
     productImage: string;
 }
 
+export interface DemographicDataDto {
+    country: string;
+    orderCount: number;
+    percentage: number;
+}
+
 export interface AdminDashboardStatsDto {
     customerStats: CustomerStatsDto;
     orderStats: OrderStatsDto;
@@ -48,4 +54,5 @@ export interface AdminDashboardStatsDto {
     monthlyTarget: MonthlyTargetDto;
     customerPerformance: PerformanceDataPointDto[];
     recentOrders: RecentOrderDto[];
+    demographics: DemographicDataDto[];
 }

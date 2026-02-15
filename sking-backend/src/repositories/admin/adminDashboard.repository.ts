@@ -178,12 +178,45 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
     }
 
     async getRecentOrders(count: number): Promise<any[]> {
-        // Explicitly use ProductModel to ensure it's registered
         return await OrderModel.find()
             .sort({ createdAt: -1 })
             .limit(count)
             .populate("user", "name email")
             .populate("items.product", "images")
             .exec();
+    }
+
+    async getDemographics(): Promise<{ country: string, orderCount: number, percentage: number }[]> {
+        const totalOrders = await OrderModel.countDocuments({ orderStatus: { $ne: 'cancelled' } });
+        if (totalOrders === 0) return [];
+
+        const demographics = await OrderModel.aggregate([
+            {
+                $match: {
+                    orderStatus: { $ne: 'cancelled' }
+                }
+            },
+            {
+                $group: {
+                    _id: "$shippingAddress.country",
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    country: "$_id",
+                    orderCount: "$count",
+                    percentage: {
+                        $multiply: [{ $divide: ["$count", totalOrders] }, 100]
+                    }
+                }
+            },
+            {
+                $sort: { orderCount: -1 }
+            }
+        ]);
+
+        return demographics;
     }
 }

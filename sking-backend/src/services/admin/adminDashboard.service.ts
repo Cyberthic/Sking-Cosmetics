@@ -91,6 +91,9 @@ export class AdminDashboardService implements IAdminDashboardService {
             };
         });
 
+        // Demographics
+        const demographics = await this._adminDashboardRepository.getDemographics();
+
         // Monthly Target
         const target = await this._adminDashboardRepository.getMonthlyTarget(currentMonth, currentYear);
 
@@ -142,7 +145,8 @@ export class AdminDashboardService implements IAdminDashboardService {
                 growthFromLastMonth: safeFixed(growthFromLastMonth)
             },
             customerPerformance,
-            recentOrders
+            recentOrders,
+            demographics
         };
     }
 
