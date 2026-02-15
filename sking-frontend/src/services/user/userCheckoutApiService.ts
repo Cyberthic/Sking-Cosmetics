@@ -2,7 +2,7 @@ import axiosInstance from "../../lib/axios";
 
 export interface CheckoutPayload {
     addressId: string;
-    paymentMethod: "online";
+    paymentMethod: "online" | "whatsapp";
     couponCode?: string;
     whatsappOptIn?: boolean;
 }

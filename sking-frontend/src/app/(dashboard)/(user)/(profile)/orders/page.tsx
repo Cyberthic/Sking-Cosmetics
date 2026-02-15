@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Package, Search, ChevronRight, Clock, CheckCircle2, Truck, AlertCircle, CreditCard } from 'lucide-react';
+import { Package, Search, ChevronRight, Clock, CheckCircle2, Truck, AlertCircle, CreditCard, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { userOrderService } from '@/services/user/userOrderApiService';
 import Link from 'next/link';
@@ -174,7 +174,14 @@ export default function OrdersPage() {
                                             Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 self-start sm:self-center">
+                                        {/* WhatsApp Order Badge */}
+                                        {order.paymentMethod === 'whatsapp' && (
+                                            <div className="bg-green-50 text-green-700 px-3 py-1.5 rounded-full border border-green-100 flex items-center gap-1.5">
+                                                <MessageSquare className="w-3 h-3" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">WhatsApp Order</span>
+                                            </div>
+                                        )}
                                         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${order.orderStatus === 'delivered' ? 'bg-green-50 border-green-100 text-green-600' :
                                             order.orderStatus === 'cancelled' ? 'bg-red-50 border-red-100 text-red-600' :
                                                 'bg-orange-50 border-orange-100 text-orange-600'
@@ -214,7 +221,7 @@ export default function OrdersPage() {
                                     </div>
 
                                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                                        {order.orderStatus === 'payment_pending' && order.paymentStatus !== 'completed' && (
+                                        {order.orderStatus === 'payment_pending' && order.paymentStatus !== 'completed' && order.paymentMethod !== 'whatsapp' && (
                                             <button
                                                 onClick={() => handleRetry(order._id, order)}
                                                 className="bg-sking-pink text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg"
@@ -262,13 +269,14 @@ export default function OrdersPage() {
                         Start Shopping
                     </Link>
                 </motion.div>
-            )}
+            )
+            }
 
             <RateProductsModal
                 isOpen={isRateModalOpen}
                 onClose={() => setIsRateModalOpen(false)}
                 order={selectedOrderForRate}
             />
-        </div>
+        </div >
     );
 }

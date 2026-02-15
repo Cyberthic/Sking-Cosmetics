@@ -11,6 +11,7 @@ import userCheckoutRoutes from "./userRoutes/userCheckout.routes";
 import userOrderRoutes from "./userRoutes/userOrder.routes";
 import userCouponRoutes from "./userRoutes/userCoupon.routes";
 import userReviewRoutes from "./userRoutes/userReview.routes";
+import userOrderSettingsRouter from "./userRoutes/orderSettings.routes";
 
 const userRouter = Router();
 
@@ -26,5 +27,6 @@ userRouter.use("/checkout", userCheckoutRoutes);
 userRouter.use("/orders", userOrderRoutes);
 userRouter.use("/coupons", userCouponRoutes);
 userRouter.use("/reviews", userReviewRoutes);
+userRouter.use("/order-settings", userOrderSettingsRouter);
 
 export default userRouter;

@@ -9,5 +9,6 @@ const _orderController = container.get<IAdminOrderController>(TYPES.IAdminOrderC
 adminOrderRouter.get("/", _orderController.getOrders);
 adminOrderRouter.get("/:id", _orderController.getOrderById);
 adminOrderRouter.patch("/:id/status", _orderController.updateOrderStatus);
+adminOrderRouter.post("/:id/confirm-payment", _orderController.confirmManualPayment);
 
 export default adminOrderRouter;

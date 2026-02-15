@@ -40,21 +40,48 @@ export class AdminOrderRepository implements IAdminOrderRepository {
             .populate("items.product");
     }
 
-    async updateStatus(id: string, status: string, isCritical?: boolean): Promise<IOrder | null> {
-        const message = isCritical
+    async updateStatus(id: string, status: string, isCritical?: boolean, message?: string): Promise<IOrder | null> {
+        const historyMessage = message || (isCritical
             ? `Order status CRITICALLY modified to ${status} by Admin`
-            : `Order marked as ${status} by Admin`;
+            : `Order marked as ${status} by Admin`);
 
         return await Order.findByIdAndUpdate(
             id,
             {
-                $set: { orderStatus: status },
+                $set: {
+                    orderStatus: status,
+                    ...(status === 'cancelled' ? { paymentStatus: 'cancelled' } : {})
+                },
                 $push: {
                     statusHistory: {
                         status,
                         timestamp: new Date(),
-                        message,
+                        message: historyMessage,
                         isCritical: !!isCritical
+                    }
+                }
+            },
+            { new: true }
+        ).populate("user", "name email phoneNumber").populate("items.product");
+    }
+
+    async confirmManualPayment(id: string, data: { upiTransactionId?: string, paymentScreenshot?: string, verifiedBy: string }): Promise<IOrder | null> {
+        return await Order.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    paymentStatus: "completed",
+                    orderStatus: "processing",
+                    manualPaymentDetails: {
+                        ...data,
+                        verifiedAt: new Date()
+                    }
+                },
+                $push: {
+                    statusHistory: {
+                        status: "processing",
+                        timestamp: new Date(),
+                        message: `Manual payment confirmed by Admin (${data.verifiedBy}). Trans ID: ${data.upiTransactionId || 'N/A'}`
                     }
                 }
             },

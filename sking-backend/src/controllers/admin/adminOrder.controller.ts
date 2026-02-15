@@ -56,7 +56,7 @@ export class AdminOrderController implements IAdminOrderController {
     updateOrderStatus = async (req: Request, res: Response): Promise<Response> => {
         try {
             const { id } = req.params;
-            const { status, isCritical } = req.body;
+            const { status, isCritical, message } = req.body;
 
             if (!status) {
                 return res.status(StatusCode.BAD_REQUEST).json({
@@ -65,7 +65,7 @@ export class AdminOrderController implements IAdminOrderController {
                 });
             }
 
-            const order = await this._orderService.updateOrderStatus(id, status, isCritical);
+            const order = await this._orderService.updateOrderStatus(id, status, isCritical, message);
             return res.status(StatusCode.OK).json({
                 success: true,
                 message: "Order status updated successfully",
@@ -73,6 +73,34 @@ export class AdminOrderController implements IAdminOrderController {
             });
         } catch (error: any) {
             logger.error("Error updating order status:", error);
+            const status = error instanceof CustomError ? error.statusCode : StatusCode.INTERNAL_SERVER_ERROR;
+            return res.status(status).json({
+                success: false,
+                message: error.message
+            });
+        }
+    };
+
+    confirmManualPayment = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const { id } = req.params;
+            const { upiTransactionId, paymentScreenshot } = req.body;
+
+            const adminName = (req as any).user?.name || "Admin";
+
+            const order = await this._orderService.confirmManualPayment(id, {
+                upiTransactionId,
+                paymentScreenshot,
+                adminName
+            });
+
+            return res.status(StatusCode.OK).json({
+                success: true,
+                message: "Manual payment confirmed and order moved to processing",
+                order
+            });
+        } catch (error: any) {
+            logger.error("Error confirming manual payment:", error);
             const status = error instanceof CustomError ? error.statusCode : StatusCode.INTERNAL_SERVER_ERROR;
             return res.status(status).json({
                 success: false,

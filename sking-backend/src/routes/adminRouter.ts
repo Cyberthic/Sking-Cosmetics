@@ -8,6 +8,7 @@ import adminCouponRoutes from "./adminRoutes/adminCoupon.routes";
 import adminTransactionRoutes from "./adminRoutes/adminTransaction.routes";
 import adminReviewRouter from "./adminRoutes/adminReview.routes";
 import dashboardRouter from "./adminRoutes/adminDashboard.routes";
+import adminOrderSettingsRouter from "./adminRoutes/orderSettings.routes";
 
 const adminRouter = Router();
 
@@ -20,5 +21,6 @@ adminRouter.use("/orders", adminOrderRouter);
 adminRouter.use("/coupons", adminCouponRoutes);
 adminRouter.use("/transactions", adminTransactionRoutes);
 adminRouter.use("/reviews", adminReviewRouter);
+adminRouter.use("/order-settings", adminOrderSettingsRouter);
 
 export default adminRouter;

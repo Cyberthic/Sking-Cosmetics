@@ -21,12 +21,42 @@ import {
     X,
     Gift,
     BadgePercent,
-    ExternalLink
+    ExternalLink,
+    MessageSquare,
+    Smartphone,
+    AlertCircle
 } from "lucide-react";
 import { userCouponApiService } from "@/services/user/userCouponApiService";
 import { userAddressService, Address } from "@/services/user/userAddressApiService";
 import { userCheckoutService } from "@/services/user/userCheckoutApiService";
+import { userOrderSettingsService, OrderSettings } from "@/services/admin/adminOrderSettingsApiService";
 import { AddressModal } from "@/components/user/modals/AddressModal";
+
+const generateWhatsAppMessage = (order: any, items: any[], finalTotal: number, address: any, totalAmount: number, shippingFee: number, discountAmount: number) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    let message = `*New Order from Sking Cosmetics*\n\n`;
+    message += `*Order ID:* ${order.displayId} (${order._id})\n`;
+    message += `*Customer:* ${address?.name}\n`;
+    message += `*Phone:* ${address?.phoneNumber}\n`;
+    message += `*Address:* ${address?.street}, ${address?.city}, ${address?.state} - ${address?.postalCode}\n\n`;
+
+    message += `*Items:*\n`;
+    items.forEach((item, index) => {
+        message += `${index + 1}. ${item.product.name} (${item.variantName || 'Universal'}) x ${item.quantity} - ₹${(item.price * item.quantity).toFixed(2)}\n`;
+        message += `🔗 _Product Link: ${origin}/product/${item.product.slug || item.product._id}_\n\n`;
+    });
+
+    message += `*--- Order Summary ---*\n`;
+    message += `Subtotal: ₹${totalAmount.toFixed(2)}\n`;
+    message += `Shipping: ${shippingFee === 0 ? 'FREE' : `₹${shippingFee.toFixed(2)}`}\n`;
+    if (discountAmount > 0) {
+        message += `Discount: -₹${discountAmount.toFixed(2)}\n`;
+    }
+    message += `*Grand Total: ₹${finalTotal.toFixed(2)}*\n\n`;
+    message += `Please confirm my order. Thank you!`;
+
+    return encodeURIComponent(message);
+};
 
 function CheckoutPageContent() {
     const router = useRouter();
@@ -39,6 +69,9 @@ function CheckoutPageContent() {
     const [isLoading, setIsLoading] = useState(true);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
+    // Order Settings
+    const [orderSettings, setOrderSettings] = useState<OrderSettings | null>(null);
+
     // Coupon State
     const [coupons, setCoupons] = useState<any[]>([]);
     const [couponCode, setCouponCode] = useState("");
@@ -47,6 +80,7 @@ function CheckoutPageContent() {
     const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
     const [couponError, setCouponError] = useState("");
     const [whatsappOptIn, setWhatsappOptIn] = useState(true);
+    const [paymentMethod, setPaymentMethod] = useState<"online" | "whatsapp">("online");
 
     // Shipping & Total Logic
     const shippingFee = totalAmount > 1000 ? 0 : 49;
@@ -63,7 +97,21 @@ function CheckoutPageContent() {
     useEffect(() => {
         fetchAddresses();
         fetchCoupons();
+        fetchOrderSettings();
     }, []);
+
+    const fetchOrderSettings = async () => {
+        try {
+            const res = await userOrderSettingsService.getSettings();
+            if (res.success) {
+                setOrderSettings(res.data);
+                // Set default payment method based on allowed options
+                if (!res.data.isOnlinePaymentEnabled && res.data.isWhatsappOrderingEnabled) {
+                    setPaymentMethod("whatsapp");
+                }
+            }
+        } catch (e) { }
+    };
 
     const fetchAddresses = async () => {
         try {
@@ -137,15 +185,30 @@ function CheckoutPageContent() {
             setIsPlacingOrder(true);
             const response = await userCheckoutService.placeOrder({
                 addressId: selectedAddressId,
-                paymentMethod: "online",
+                paymentMethod: paymentMethod,
                 couponCode: appliedCoupon?.code,
                 whatsappOptIn: whatsappOptIn
             });
 
             if (response.success) {
                 const order = response.data;
-                // Redirect to the new payment page using displayId
-                router.push(`/checkout/payment/${order.displayId}`);
+                if (paymentMethod === "online") {
+                    router.push(`/checkout/payment/${order.displayId}`);
+                } else {
+                    const selectedAddress = addresses.find(a => a._id === selectedAddressId);
+                    const message = generateWhatsAppMessage(order, items, finalTotal, selectedAddress, totalAmount, shippingFee, discountAmount);
+                    const cleanNumber = (orderSettings?.whatsappNumber || "+918848886919").replace(/\+/g, "").replace(/\s/g, "");
+                    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${message}`;
+
+                    dispatch(clearCartLocally());
+                    toast.success("Order placed! Redirecting to WhatsApp...");
+
+                    // Open WhatsApp in a new tab
+                    window.open(whatsappUrl, '_blank');
+
+                    // Redirect current tab to the order status/payment page
+                    router.push(`/checkout/payment/${order._id}`);
+                }
             }
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to place order");
@@ -251,24 +314,74 @@ function CheckoutPageContent() {
                                 <h2 className="text-xl font-bold uppercase tracking-tight">Payment Method</h2>
                             </div>
 
-                            <div className="p-4 rounded-2xl border-2 border-black bg-black/[0.02] flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
-                                        <ShieldCheck className="w-6 h-6 text-green-500" />
+                            <div className="space-y-4">
+                                {(orderSettings === null || orderSettings.isOnlinePaymentEnabled) && (
+                                    <div
+                                        onClick={() => setPaymentMethod("online")}
+                                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${paymentMethod === "online" ? 'border-black bg-black/[0.02]' : 'border-gray-100 hover:border-gray-200'
+                                            } flex items-center justify-between`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                                                <ShieldCheck className={`w-6 h-6 ${paymentMethod === "online" ? 'text-green-500' : 'text-gray-400'}`} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-sm text-black uppercase tracking-wide">Online Secure Payment</h3>
+                                                <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-0.5">UPI, Cards, Netbanking</p>
+                                            </div>
+                                        </div>
+                                        {paymentMethod === "online" && (
+                                            <div className="bg-black rounded-full p-1">
+                                                <Check className="w-3 h-3 text-white" />
+                                            </div>
+                                        )}
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-sm text-black uppercase tracking-wide">Online Secure Payment</h3>
-                                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-0.5">UPI, Cards, Netbanking</p>
+                                )}
+
+                                {(orderSettings === null || orderSettings.isWhatsappOrderingEnabled) && (
+                                    <div
+                                        onClick={() => setPaymentMethod("whatsapp")}
+                                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${paymentMethod === "whatsapp" ? 'border-black bg-black/[0.02]' : 'border-gray-100 hover:border-gray-200'
+                                            } flex items-center justify-between`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-green-50 rounded-xl shadow-sm border border-green-100 flex items-center justify-center text-green-600">
+                                                <MessageSquare className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-sm text-black uppercase tracking-wide">WhatsApp Chat Ordering</h3>
+                                                <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-0.5">Order directly on WhatsApp</p>
+                                            </div>
+                                        </div>
+                                        {paymentMethod === "whatsapp" && (
+                                            <div className="bg-black rounded-full p-1">
+                                                <Check className="w-3 h-3 text-white" />
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                                <div className="bg-black rounded-full p-1">
-                                    <Check className="w-3 h-3 text-white" />
-                                </div>
+                                )}
+
+                                {orderSettings !== null && !orderSettings.isOnlinePaymentEnabled && !orderSettings.isWhatsappOrderingEnabled && (
+                                    <div className="p-8 text-center bg-red-50 rounded-2xl border-2 border-red-100">
+                                        <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                                        <p className="text-sm font-bold text-red-600 uppercase tracking-tight">Checkout Currently Unavailable</p>
+                                        <p className="text-xs text-red-500 font-medium mt-1">Please contact support or try again later.</p>
+                                    </div>
+                                )}
                             </div>
 
                             <p className="mt-6 text-xs text-gray-400 font-medium leading-relaxed flex items-center gap-2">
-                                <Clock className="w-3 h-3" />
-                                Secure 128-bit SSL Encrypted Payment
+                                {paymentMethod === "online" ? (
+                                    <>
+                                        <ShieldCheck className="w-3 h-3" />
+                                        Secure 128-bit SSL Encrypted Payment
+                                    </>
+                                ) : (
+                                    <>
+                                        <Smartphone className="w-3 h-3" />
+                                        Redirects to official WhatsApp chat
+                                    </>
+                                )}
                             </p>
                         </div>
                     </div>

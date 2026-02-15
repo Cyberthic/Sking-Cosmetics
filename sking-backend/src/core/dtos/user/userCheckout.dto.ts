@@ -1,6 +1,6 @@
 export interface PlaceOrderDto {
     addressId: string;
-    paymentMethod: "online";
+    paymentMethod: "online" | "whatsapp";
     couponCode?: string;
     whatsappOptIn?: boolean;
 }

@@ -18,8 +18,13 @@ export const adminOrderService = {
         return response.data;
     },
 
-    updateOrderStatus: async (id: string, status: string, isCritical?: boolean) => {
-        const response = await axiosInstance.patch(`/api/admin/orders/${id}/status`, { status, isCritical });
+    updateOrderStatus: async (id: string, status: string, isCritical?: boolean, message?: string) => {
+        const response = await axiosInstance.patch(`/api/admin/orders/${id}/status`, { status, isCritical, message });
+        return response.data;
+    },
+
+    confirmManualPayment: async (id: string, data: { upiTransactionId?: string; paymentScreenshot?: string }) => {
+        const response = await axiosInstance.post(`/api/admin/orders/${id}/confirm-payment`, data);
         return response.data;
     }
 };

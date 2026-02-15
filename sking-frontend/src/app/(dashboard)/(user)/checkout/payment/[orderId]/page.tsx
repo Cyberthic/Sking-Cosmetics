@@ -67,6 +67,11 @@ export default function OrderPaymentPage() {
             }
 
             // After getting order, load script and initiate if not done
+            // For WhatsApp orders, we do NOT initiate Razorpay
+            if (orderData.paymentMethod === 'whatsapp') {
+                return;
+            }
+
             const res = await loadRazorpayScript();
             setRazorpayLoaded(!!res);
 
@@ -262,23 +267,37 @@ export default function OrderPaymentPage() {
                                     </div>
 
                                     <div className="space-y-3">
-                                        <button
-                                            onClick={() => initiatePayment(order)}
-                                            disabled={isVerifying || isLoading || isCancelling}
-                                            className="w-full bg-black hover:bg-neutral-800 text-white font-black py-5 rounded-2xl uppercase tracking-[0.2em] text-sm transition-all shadow-lg flex items-center justify-center gap-3 disabled:opacity-50"
-                                        >
-                                            {isVerifying ? (
-                                                <>
-                                                    <RefreshCw className="w-4 h-4 animate-spin" />
-                                                    Verifying...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    Pay Now
-                                                    <ChevronRight size={18} />
-                                                </>
-                                            )}
-                                        </button>
+                                        {order.paymentMethod === 'whatsapp' ? (
+                                            <div className="w-full bg-green-50 text-green-700 font-bold p-5 rounded-2xl border border-green-200 text-center">
+                                                <div className="flex justify-center items-center gap-2 mb-2">
+                                                    <div className="bg-green-100 p-2 rounded-full">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path></svg>
+                                                    </div>
+                                                    <span className="text-lg">WhatsApp Order</span>
+                                                </div>
+                                                <p className="text-xs">
+                                                    This order was placed via WhatsApp. Please check your WhatsApp messages or contact support to complete the payment manually.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => initiatePayment(order)}
+                                                disabled={isVerifying || isLoading || isCancelling}
+                                                className="w-full bg-black hover:bg-neutral-800 text-white font-black py-5 rounded-2xl uppercase tracking-[0.2em] text-sm transition-all shadow-lg flex items-center justify-center gap-3 disabled:opacity-50"
+                                            >
+                                                {isVerifying ? (
+                                                    <>
+                                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                                        Verifying...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        Pay Now
+                                                        <ChevronRight size={18} />
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
 
                                         <button
                                             onClick={() => setShowCancelModal(true)}

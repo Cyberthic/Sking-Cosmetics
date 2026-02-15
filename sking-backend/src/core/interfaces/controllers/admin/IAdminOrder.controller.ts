@@ -4,4 +4,5 @@ export interface IAdminOrderController {
     getOrders(req: Request, res: Response): Promise<Response>;
     getOrderById(req: Request, res: Response): Promise<Response>;
     updateOrderStatus(req: Request, res: Response): Promise<Response>;
+    confirmManualPayment(req: Request, res: Response): Promise<Response>;
 }

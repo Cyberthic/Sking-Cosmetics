@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const checkoutSchema = z.object({
     addressId: z.string().min(1, "Please select a shipping address"),
-    paymentMethod: z.enum(["online"]),
+    paymentMethod: z.enum(["online", "whatsapp"]),
 });
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;

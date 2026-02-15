@@ -17,6 +17,7 @@ import {
     Star
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { userOrderSettingsService, OrderSettings } from "@/services/admin/adminOrderSettingsApiService";
 import { userOrderService } from "@/services/user/userOrderApiService";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export default function OrderDetailPage() {
     const [timeLeft, setTimeLeft] = useState<string>("");
     const [isExpired, setIsExpired] = useState(false);
     const [isRetrying, setIsRetrying] = React.useState(false);
+    const [whatsappNumber, setWhatsappNumber] = useState<string>("");
 
     // Modal State
     const [isRateModalOpen, setIsRateModalOpen] = useState(false);
@@ -48,11 +50,26 @@ export default function OrderDetailPage() {
     };
 
     useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await userOrderSettingsService.getSettings();
+                if (res.success && res.data && res.data.whatsappNumber) {
+                    setWhatsappNumber(res.data.whatsappNumber);
+                } else if (res.whatsappNumber) {
+                    setWhatsappNumber(res.whatsappNumber);
+                }
+            } catch (error) {
+                console.error("Failed to fetch settings", error);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    useEffect(() => {
         if (orderId) {
             fetchOrderDetail();
         }
     }, [orderId]);
-
     const fetchOrderDetail = async () => {
         try {
             setLoading(true);
@@ -219,15 +236,22 @@ export default function OrderDetailPage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        {order.orderStatus === 'payment_pending' && !isExpired && (
-                            <button
-                                onClick={handleRetry}
-                                disabled={isRetrying}
-                                className="bg-sking-pink text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-black transition-all shadow-lg"
-                            >
-                                {isRetrying ? <Clock className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                                Pay Now ({timeLeft})
-                            </button>
+                        {order.orderStatus === 'payment_pending' && (
+                            order.paymentMethod === 'whatsapp' ? (
+                                <div className="bg-green-50 text-green-700 px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 border border-green-200">
+                                    <MessageCircle className="w-4 h-4" />
+                                    <span>Confirm via WhatsApp</span>
+                                </div>
+                            ) : !isExpired && (
+                                <button
+                                    onClick={handleRetry}
+                                    disabled={isRetrying}
+                                    className="bg-sking-pink text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:bg-black transition-all shadow-lg"
+                                >
+                                    {isRetrying ? <Clock className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                                    Pay Now ({timeLeft})
+                                </button>
+                            )
                         )}
                         {order.orderStatus === 'delivered' && (
                             <button
@@ -260,6 +284,25 @@ export default function OrderDetailPage() {
                                     <span className="text-[10px] font-black uppercase tracking-widest">{order.orderStatus}</span>
                                 </div>
                             </div>
+
+                            {/* Cancellation Reason */}
+                            {order.orderStatus === 'cancelled' && order.statusHistory && order.statusHistory.length > 0 && (() => {
+                                const lastStatus = order.statusHistory[order.statusHistory.length - 1];
+                                if (lastStatus.status === 'cancelled' && lastStatus.message) {
+                                    return (
+                                        <div className="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl">
+                                            <div className="flex items-start gap-3">
+                                                <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                                <div>
+                                                    <h3 className="text-sm font-black text-red-700 uppercase tracking-tight mb-1">Cancellation Reason</h3>
+                                                    <p className="text-sm text-red-600 font-medium">{lastStatus.message}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
 
                             <div className="relative flex justify-between items-start max-w-2xl mx-auto">
                                 {/* Connector Line */}
@@ -380,7 +423,7 @@ export default function OrderDetailPage() {
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-400">
                                     <span>Method</span>
-                                    <span className="text-black">Online Payment</span>
+                                    <span className="text-black italic">{order.paymentMethod === 'whatsapp' ? 'WhatsApp Ordering' : 'Online Secure Payment'}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-400">
                                     <span>Status</span>
@@ -424,9 +467,21 @@ export default function OrderDetailPage() {
                         <div className="bg-sking-pink/5 rounded-[32px] p-8 border border-sking-pink/10 text-center">
                             <h3 className="text-sm font-black uppercase tracking-tight mb-2">Need Help?</h3>
                             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6">Our experts are here 24/7</p>
-                            <button className="w-full bg-sking-pink text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-sm hover:scale-105 transition-transform">
-                                Contact Support
-                            </button>
+
+                            {order.paymentMethod === 'whatsapp' ? (
+                                <Link
+                                    href={`https://wa.me/${(whatsappNumber || "918848886919").replace(/\+/g, "").replace(/\s/g, "")}?text=${encodeURIComponent(`Hi, I have a query regarding my order: #${order._id.slice(-8).toUpperCase()} (ID: ${order.displayId || ''})`)}`}
+                                    target="_blank"
+                                    className="w-full inline-flex justify-center items-center gap-2 bg-green-500 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all hover:scale-105"
+                                >
+                                    <MessageCircle className="w-4 h-4" />
+                                    Chat on WhatsApp
+                                </Link>
+                            ) : (
+                                <button className="w-full bg-sking-pink text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-sm hover:scale-105 transition-transform">
+                                    Contact Support
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -31,7 +31,7 @@ export interface IOrder extends Document {
         postalCode: string;
         addressType?: string;
     };
-    paymentMethod: "online";
+    paymentMethod: "online" | "whatsapp";
     paymentStatus: "pending" | "completed" | "failed" | "refunded" | "expired";
     orderStatus: "payment_pending" | "processing" | "shipped" | "delivered" | "cancelled";
     paymentExpiresAt: Date;
@@ -41,6 +41,12 @@ export interface IOrder extends Document {
         gatewaySignature?: string;
         paymentGateway?: string;
         paidAt?: Date;
+    };
+    manualPaymentDetails?: {
+        upiTransactionId?: string;
+        paymentScreenshot?: string;
+        verifiedAt?: Date;
+        verifiedBy?: string; // Admin ID or Name
     };
 
     // Coupon fields
@@ -81,8 +87,8 @@ const OrderSchema: Schema = new Schema({
         postalCode: { type: String, required: true },
         addressType: { type: String }
     },
-    paymentMethod: { type: String, enum: ["online"], default: "online" },
-    paymentStatus: { type: String, enum: ["pending", "completed", "failed", "refunded", "expired"], default: "pending" },
+    paymentMethod: { type: String, enum: ["online", "whatsapp"], default: "online" },
+    paymentStatus: { type: String, enum: ["pending", "completed", "failed", "refunded", "expired", "cancelled"], default: "pending" },
     orderStatus: { type: String, enum: ["payment_pending", "processing", "shipped", "delivered", "cancelled"], default: "payment_pending" },
     paymentExpiresAt: { type: Date, required: true },
     paymentDetails: {
@@ -91,6 +97,12 @@ const OrderSchema: Schema = new Schema({
         gatewaySignature: { type: String },
         paymentGateway: { type: String },
         paidAt: { type: Date }
+    },
+    manualPaymentDetails: {
+        upiTransactionId: { type: String },
+        paymentScreenshot: { type: String },
+        verifiedAt: { type: Date },
+        verifiedBy: { type: String }
     },
 
     coupon: { type: Schema.Types.ObjectId, ref: "Coupon" },

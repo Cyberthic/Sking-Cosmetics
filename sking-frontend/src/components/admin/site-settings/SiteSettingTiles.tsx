@@ -72,6 +72,14 @@ const SettingTile = ({ title, description, icon, href, className, color, delay =
 export const SiteSettingTiles = () => {
     const tiles = [
         {
+            title: "Order Config",
+            description: "Control ordering flow. Toggle WhatsApp ordering and Online Secure Payments.",
+            icon: <Settings2 size={28} />,
+            href: "/admin/site-settings/orders",
+            className: "col-span-12 md:col-span-6 lg:col-span-1 row-span-1",
+            color: "bg-orange-600",
+        },
+        {
             title: "Hero Section",
             description: "Craft your first impression. Manage home page sliders, hero banners, and primary marketing nodes.",
             icon: <Monitor size={28} />,
@@ -191,6 +199,7 @@ export const SiteSettingTiles = () => {
             className: "col-span-12 md:col-span-6 lg:col-span-1 row-span-1",
             color: "bg-violet-600",
         },
+
         {
             title: "Maintenance",
             description: "Safe updates. Toggle maintenance mode and customize the temporary status page.",

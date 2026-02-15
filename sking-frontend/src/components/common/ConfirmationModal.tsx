@@ -14,6 +14,7 @@ interface ConfirmationModalProps {
     cancelText?: string;
     type?: 'danger' | 'warning' | 'info' | 'success';
     isLoading?: boolean;
+    children?: React.ReactNode;
 }
 
 const icons = {
@@ -47,6 +48,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     cancelText = 'Cancel',
     type = 'danger',
     isLoading = false,
+    children,
 }) => {
     return (
         <AnimatePresence>
@@ -88,6 +90,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                                         </button>
                                     </div>
                                     <p className="text-gray-500 dark:text-gray-400 font-medium leading-relaxed">{message}</p>
+                                    {children}
                                 </div>
                             </div>
 

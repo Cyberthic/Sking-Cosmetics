@@ -267,5 +267,17 @@ container.bind<IAdminReviewController>(TYPES.IAdminReviewController).to(AdminRev
 
 container.bind<IWhatsappService>(TYPES.IWhatsappService).to(WhatsappService);
 
+// Order Settings
+import { IOrderSettingsRepository } from "./interfaces/repositories/admin/IOrderSettings.repository";
+import { IOrderSettingsService } from "./interfaces/services/admin/IOrderSettings.service";
+import { IOrderSettingsController } from "./interfaces/controllers/admin/IOrderSettings.controller";
+import { OrderSettingsRepository } from "../repositories/admin/orderSettings.repository";
+import { OrderSettingsService } from "../services/admin/orderSettings.service";
+import { OrderSettingsController } from "../controllers/admin/orderSettings.controller";
+
+container.bind<IOrderSettingsRepository>(TYPES.IOrderSettingsRepository).to(OrderSettingsRepository);
+container.bind<IOrderSettingsService>(TYPES.IOrderSettingsService).to(OrderSettingsService);
+container.bind<IOrderSettingsController>(TYPES.IOrderSettingsController).to(OrderSettingsController);
+
 export { container };
 export default container;

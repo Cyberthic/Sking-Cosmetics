@@ -13,8 +13,6 @@ import logger from "../../utils/logger";
 import { IUserCouponService } from "../../core/interfaces/services/user/IUserCoupon.service";
 import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
 
-const ORDER_EXPIRY_MINUTES = 15;
-
 @injectable()
 export class UserCheckoutService implements IUserCheckoutService {
     constructor(
@@ -70,8 +68,12 @@ export class UserCheckoutService implements IUserCheckoutService {
         const shippingFee = totalAmount > 1000 ? 0 : 49;
         const finalAmount = Math.max(0, totalAmount + shippingFee - discountAmount);
 
+        const ORDER_EXPIRY_MINUTES_ONLINE = 15;
+        const ORDER_EXPIRY_MINUTES_WHATSAPP = 48 * 60; // 48 hours
+
+        const expiryMinutes = data.paymentMethod === "whatsapp" ? ORDER_EXPIRY_MINUTES_WHATSAPP : ORDER_EXPIRY_MINUTES_ONLINE;
         const expiryTime = new Date();
-        expiryTime.setMinutes(expiryTime.getMinutes() + ORDER_EXPIRY_MINUTES);
+        expiryTime.setMinutes(expiryTime.getMinutes() + expiryMinutes);
 
         const displayId = `SKN-${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -105,11 +107,13 @@ export class UserCheckoutService implements IUserCheckoutService {
             paymentMethod: data.paymentMethod,
             paymentStatus: "pending",
             orderStatus: "payment_pending",
-            paymentDetails: { paymentGateway: "razorpay" },
+            paymentDetails: { paymentGateway: data.paymentMethod === "online" ? "razorpay" : "whatsapp" },
             statusHistory: [{
                 status: "payment_pending",
                 timestamp: new Date(),
-                message: "Order initiated. Awaiting payment confirmation."
+                message: data.paymentMethod === "whatsapp"
+                    ? "Order placed via WhatsApp. Awaiting manual payment verification."
+                    : "Order initiated. Awaiting online payment confirmation."
             }],
             paymentExpiresAt: expiryTime,
             whatsappOptIn: data.whatsappOptIn !== undefined ? data.whatsappOptIn : true
@@ -141,7 +145,7 @@ export class UserCheckoutService implements IUserCheckoutService {
                 );
             }
         } catch (error) {
-            logger.error("Error reserving stock for order: " + order._id, error);
+            logger.error("Error reserving stock for order: " + (order as any)._id, error);
         }
 
         return order;

@@ -18,11 +18,14 @@ import {
     Mail,
     Phone,
     Copy,
-    ArrowRight
+    ArrowRight,
+    MessageSquare,
+    ShieldCheck
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
+import { ManualPaymentModal } from "@/components/admin/orders/ManualPaymentModal";
 
 export default function OrderDetailPage() {
     const { id } = useParams();
@@ -31,9 +34,18 @@ export default function OrderDetailPage() {
     const [loading, setLoading] = useState(true);
     const [statusLoading, setStatusLoading] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [isManualPaymentModalOpen, setIsManualPaymentModalOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [pendingStatus, setPendingStatus] = useState("");
+    const [statusMessage, setStatusMessage] = useState("");
     const [isCriticalUpdate, setIsCriticalUpdate] = useState(false);
+
+    const CANCELLATION_TEMPLATES = [
+        { label: "Payment Not Done", message: "Order cancelled because payment was not received within the required timeframe." },
+        { label: "Not Confirmed", message: "WhatsApp ordering was not confirmed by the customer via chat." },
+        { label: "Out of Stock", message: "Unfortunately, some items in your order are currently out of stock." },
+        { label: "Invalid Details", message: "The shipping or contact details provided were invalid/incomplete." },
+    ];
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -71,6 +83,7 @@ export default function OrderDetailPage() {
     const handleStatusUpdate = (status: string, isCritical: boolean = false) => {
         setPendingStatus(status);
         setIsCriticalUpdate(isCritical);
+        setStatusMessage(""); // Reset message
         setIsDropdownOpen(false);
         setIsConfirmModalOpen(true);
     };
@@ -79,7 +92,7 @@ export default function OrderDetailPage() {
         if (!pendingStatus) return;
         try {
             setStatusLoading(true);
-            const res = await adminOrderService.updateOrderStatus(id as string, pendingStatus, isCriticalUpdate);
+            const res = await adminOrderService.updateOrderStatus(id as string, pendingStatus, isCriticalUpdate, statusMessage);
             if (res.success) {
                 setOrder(res.order);
                 toast.success(`Order status ${isCriticalUpdate ? 'CRITICALLY ' : ''}updated to ${pendingStatus.replace('_', ' ')}`);
@@ -89,6 +102,22 @@ export default function OrderDetailPage() {
         } finally {
             setStatusLoading(false);
             setIsConfirmModalOpen(false);
+        }
+    };
+
+    const confirmManualPayment = async (data: { upiTransactionId?: string }) => {
+        try {
+            setStatusLoading(true);
+            const res = await adminOrderService.confirmManualPayment(id as string, data);
+            if (res.success) {
+                setOrder(res.order);
+                toast.success("Payment confirmed! Order moved to processing.");
+                setIsManualPaymentModalOpen(false);
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to confirm payment");
+        } finally {
+            setStatusLoading(false);
         }
     };
 
@@ -139,6 +168,15 @@ export default function OrderDetailPage() {
                             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-[0.2em]">
                                 {isCancelled ? 'This order was cancelled and will not be processed.' : `The order is currently being ${steps[currentStepIndex]?.label.toLowerCase()}.`}
                             </p>
+
+                            {order.orderStatus === 'payment_pending' && order.paymentExpiresAt && (
+                                <div className="mt-4 flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-2xl w-fit">
+                                    <Clock size={14} className="text-amber-600 animate-pulse" />
+                                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest whitespace-nowrap">
+                                        Expiring: {new Date(order.paymentExpiresAt).toLocaleString()}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <div className="flex flex-col items-center md:items-end bg-gray-50 dark:bg-white/5 p-4 rounded-3xl border border-gray-100 dark:border-white/5">
                             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Last Update Received</span>
@@ -187,6 +225,16 @@ export default function OrderDetailPage() {
                     <Button variant="outline" className="flex-1 md:flex-none flex items-center gap-2">
                         <Printer size={16} /> Print
                     </Button>
+
+                    {order.paymentMethod === 'whatsapp' && order.paymentStatus === 'pending' && (
+                        <Button
+                            variant="primary"
+                            className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 border-none flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                            onClick={() => setIsManualPaymentModalOpen(true)}
+                        >
+                            <CreditCard size={16} /> Confirm Payment
+                        </Button>
+                    )}
                     <div className="relative flex-1 md:flex-none" id="status-dropdown-container">
                         <Button
                             variant="primary"
@@ -443,8 +491,26 @@ export default function OrderDetailPage() {
                         </div>
                         <div className="space-y-4">
                             <div className="flex justify-between items-center pb-4 border-b border-gray-50 dark:border-white/[0.05]">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Method</span>
-                                <span className="text-xs font-black uppercase text-black dark:text-white italic">Gateway: Razorpay</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Order Type</span>
+                                <div className="flex items-center gap-2 text-xs font-black uppercase text-black dark:text-white italic">
+                                    {order.paymentMethod === 'whatsapp' ? (
+                                        <>
+                                            <MessageSquare size={14} className="text-emerald-500" />
+                                            WhatsApp Order
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ShieldCheck size={14} className="text-brand-500" />
+                                            Online Secure Order
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center pb-4 border-b border-gray-50 dark:border-white/[0.05]">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Gateway</span>
+                                <span className="text-xs font-black uppercase text-black dark:text-white italic">
+                                    {order.paymentMethod === 'whatsapp' ? 'Direct Chat' : 'Razorpay'}
+                                </span>
                             </div>
                             <div className="flex justify-between items-center pb-4 border-b border-gray-50 dark:border-white/[0.05]">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Flow Status</span>
@@ -459,8 +525,16 @@ export default function OrderDetailPage() {
                                 </div>
                                 <div>
                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Transaction ID</h4>
-                                    <p className="text-[10px] font-mono font-medium text-black dark:text-white truncate uppercase">{order.paymentDetails?.gatewayPaymentId || 'N/A'}</p>
+                                    <p className="text-[10px] font-mono font-medium text-black dark:text-white truncate uppercase">
+                                        {order.paymentDetails?.gatewayPaymentId || order.manualPaymentDetails?.upiTransactionId || 'N/A'}
+                                    </p>
                                 </div>
+                                {order.manualPaymentDetails?.verifiedBy && (
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Verified By</h4>
+                                        <p className="text-[10px] font-bold text-emerald-500 uppercase">{order.manualPaymentDetails.verifiedBy}</p>
+                                    </div>
+                                )}
                                 {order.paymentDetails?.paidAt && (
                                     <div>
                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Settlement Time</h4>
@@ -511,7 +585,49 @@ export default function OrderDetailPage() {
                 confirmText={isCriticalUpdate ? "Force Update Status" : "Update Status"}
                 type={(pendingStatus === 'cancelled' || isCriticalUpdate) ? 'danger' : 'success'}
                 isLoading={statusLoading}
+            >
+                <div className="mt-6 space-y-4">
+                    <div className="flex justify-between items-center px-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Optional Status Message</label>
+                        {pendingStatus === 'cancelled' && (
+                            <span className="text-[9px] font-bold text-sking-red uppercase italic">Recommended for cancellations</span>
+                        )}
+                    </div>
+
+                    {pendingStatus === 'cancelled' && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {CANCELLATION_TEMPLATES.map((template, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setStatusMessage(template.message)}
+                                    className="px-3 py-1.5 rounded-lg border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02] text-[9px] font-bold uppercase tracking-widest hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all"
+                                >
+                                    {template.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <textarea
+                        value={statusMessage}
+                        onChange={(e) => setStatusMessage(e.target.value)}
+                        placeholder="e.g. Items shipped via BlueDart. Tracking: 12345..."
+                        className="w-full min-h-[100px] p-4 bg-gray-50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/[0.08] rounded-2xl text-xs font-medium placeholder:text-gray-300 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white transition-all outline-none resize-none"
+                    />
+                    <p className="text-[10px] text-gray-400 font-medium italic px-1">
+                        This message will be visible in the order history {pendingStatus === 'cancelled' ? 'and sent to the customer.' : 'for internal tracking.'}
+                    </p>
+                </div>
+            </ConfirmationModal>
+
+            <ManualPaymentModal
+                isOpen={isManualPaymentModalOpen}
+                onClose={() => setIsManualPaymentModalOpen(false)}
+                onConfirm={confirmManualPayment}
+                isLoading={statusLoading}
+                orderAmount={order.finalAmount}
             />
-        </div>
+        </div >
     );
 }
