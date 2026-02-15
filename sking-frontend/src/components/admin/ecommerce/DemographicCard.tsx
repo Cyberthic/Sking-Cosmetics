@@ -5,39 +5,16 @@ import { useEffect, useState, useMemo } from "react";
 import { MoreDotIcon } from "@/icons";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
 import { adminDashboardApiService, DemographicData, StateDemographic } from "@/services/admin/adminDashboardApiService";
 import { Modal } from "../ui/modal";
 
 export default function DemographicCard() {
+  const { data: demographics, stateData: stateDemographics, loading } = useSelector((state: RootState) => state.adminDashboard.demographics);
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [demographics, setDemographics] = useState<DemographicData[]>([]);
-  const [stateDemographics, setStateDemographics] = useState<StateDemographic[]>([]);
-  const [loading, setLoading] = useState(true);
   const [mapType, setMapType] = useState<"world" | "india">("india");
-
-  useEffect(() => {
-    const fetchDemographics = async () => {
-      try {
-        const data = await adminDashboardApiService.getDashboardStats();
-        if (data) {
-          setDemographics(data.demographics || []);
-          setStateDemographics(data.stateDemographics || []);
-        }
-      } catch (error: any) {
-        console.error("Error fetching demographics detailed:", {
-          message: error?.message,
-          response: error?.response?.data,
-          status: error?.response?.status,
-          error
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDemographics();
-  }, []);
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -64,13 +41,13 @@ export default function DemographicCard() {
   // Memoize map data based on active switch
   const activeMapData = useMemo(() => {
     if (mapType === "world") {
-      return demographics.map(d => ({
+      return (demographics || []).map((d: DemographicData) => ({
         code: d.code || "",
         name: d.country,
         value: d.orderCount
       }));
     } else {
-      return stateDemographics.map(s => ({
+      return (stateDemographics || []).map((s: StateDemographic) => ({
         code: s.code || "",
         name: s.state,
         value: s.orderCount

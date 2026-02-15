@@ -16,10 +16,7 @@ export default function StatisticsChart() {
   const { data: stats, loading, startDate, endDate, period } = useSelector((state: RootState) => state.adminDashboard.performanceChart);
   const datePickerRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const range = startDate && endDate ? { startDate, endDate } : undefined;
-    dispatch(fetchPerformanceChart(range));
-  }, [dispatch, startDate, endDate]);
+  // Initial fetch handled by DashboardInit
 
   const handlePeriodChange = (selectedPeriod: "Monthly" | "Quarterly" | "Annually") => {
     const now = new Date();
@@ -36,11 +33,17 @@ export default function StatisticsChart() {
       start = new Date(now.getFullYear() - 2, 0, 1);
     }
 
-    dispatch(setPerformanceRange({
+    const range = {
       startDate: start.toISOString(),
-      endDate: end.toISOString(),
+      endDate: end.toISOString()
+    };
+
+    dispatch(setPerformanceRange({
+      ...range,
       period: selectedPeriod
     }));
+
+    dispatch(fetchPerformanceChart(range));
   };
 
   useEffect(() => {
@@ -65,11 +68,17 @@ export default function StatisticsChart() {
         if (selectedDates.length === 2) {
           // Use 'Monthly' as default period placeholder if custom range selected, 
           // or we could add a 'Custom' type to the slice. Keeping it simple for now.
-          dispatch(setPerformanceRange({
+          const range = {
             startDate: selectedDates[0].toISOString(),
-            endDate: selectedDates[1].toISOString(),
-            period: period // Keep current period highlight or maybe clear it?
+            endDate: selectedDates[1].toISOString()
+          };
+
+          dispatch(setPerformanceRange({
+            ...range,
+            period: period
           }));
+
+          dispatch(fetchPerformanceChart(range));
         }
       },
       prevArrow:
@@ -145,7 +154,7 @@ export default function StatisticsChart() {
     },
     xaxis: {
       type: "category",
-      categories: stats?.customerPerformance.map(p => p.month) || [],
+      categories: stats?.map((p: any) => p.month) || [],
       axisBorder: {
         show: false,
       },
@@ -175,11 +184,11 @@ export default function StatisticsChart() {
   const series = [
     {
       name: "Acquisition (New)",
-      data: stats?.customerPerformance.map(p => p.acquisition) || [],
+      data: stats?.map((p: any) => p.acquisition) || [],
     },
     {
       name: "Retention (Returning)",
-      data: stats?.customerPerformance.map(p => p.retention) || [],
+      data: stats?.map((p: any) => p.retention) || [],
     },
   ];
 

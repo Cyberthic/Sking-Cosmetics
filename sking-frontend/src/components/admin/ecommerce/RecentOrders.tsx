@@ -10,39 +10,13 @@ import {
 import Badge from "../ui/badge/Badge";
 import Link from "next/link";
 import Image from "next/image";
-import { adminDashboardApiService, RecentOrder as BaseRecentOrder } from "@/services/admin/adminDashboardApiService";
-
-// Force TypeScript to recognize the new field
-interface RecentOrder extends BaseRecentOrder {
-  productImage: string;
-}
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
 
 export default function RecentOrders() {
-  const [orders, setOrders] = useState<RecentOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: orders, loading } = useSelector((state: RootState) => state.adminDashboard.recentOrders);
 
-  useEffect(() => {
-    const fetchRecentOrders = async () => {
-      try {
-        const data = await adminDashboardApiService.getDashboardStats();
-        // Cast to our extended interface if data exists
-        if (data && data.recentOrders) {
-          setOrders((data.recentOrders as RecentOrder[]) || []);
-        }
-      } catch (error: any) {
-        console.error("Error fetching recent orders detailed:", {
-          message: error?.message,
-          response: error?.response?.data,
-          status: error?.response?.status,
-          error
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRecentOrders();
-  }, []);
+  // Initial fetch handled by DashboardInit
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {

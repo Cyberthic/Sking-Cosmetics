@@ -14,10 +14,12 @@ export const metadata: Metadata = {
 };
 
 import { DashboardHeader } from "@/components/admin/ecommerce/DashboardHeader";
+import { DashboardInit } from "@/components/admin/ecommerce/DashboardInit";
 
 export default function Ecommerce() {
   return (
     <>
+      <DashboardInit />
       <DashboardHeader />
       <div className="grid grid-cols-12 gap-4 md:gap-6">
         <div className="col-span-12 space-y-6 xl:col-span-7">

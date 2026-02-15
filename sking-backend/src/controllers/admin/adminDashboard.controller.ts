@@ -71,4 +71,83 @@ export class AdminDashboardController implements IAdminDashboardController {
             });
         }
     }
+    async getSummaryStats(req: Request, res: Response): Promise<void> {
+        try {
+            const customerPeriod = (req.query.customerPeriod as DashboardPeriod) || 'weekly';
+            const orderPeriod = (req.query.orderPeriod as DashboardPeriod) || 'weekly';
+
+            const stats = await this._adminDashboardService.getSummaryStats(customerPeriod, orderPeriod);
+
+            res.status(200).json({
+                success: true,
+                data: stats
+            });
+        } catch (error: any) {
+            console.error("Summary Stats Error:", error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    async getSalesChart(req: Request, res: Response): Promise<void> {
+        try {
+            let startDate: Date | undefined;
+            let endDate: Date | undefined;
+
+            if (req.query.startDate) startDate = new Date(req.query.startDate as string);
+            if (req.query.endDate) endDate = new Date(req.query.endDate as string);
+
+            const data = await this._adminDashboardService.getSalesChart(startDate, endDate);
+
+            res.status(200).json({ success: true, data });
+        } catch (error: any) {
+            console.error("Sales Chart Error:", error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    async getCustomerPerformance(req: Request, res: Response): Promise<void> {
+        try {
+            let startDate: Date | undefined;
+            let endDate: Date | undefined;
+
+            if (req.query.startDate) startDate = new Date(req.query.startDate as string);
+            if (req.query.endDate) endDate = new Date(req.query.endDate as string);
+
+            const data = await this._adminDashboardService.getCustomerPerformance(startDate, endDate);
+            res.status(200).json({ success: true, data });
+        } catch (error: any) {
+            console.error("Performance Chart Error:", error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    async getRecentOrders(req: Request, res: Response): Promise<void> {
+        try {
+            const data = await this._adminDashboardService.getRecentOrdersData();
+            res.status(200).json({ success: true, data });
+        } catch (error: any) {
+            console.error("Recent Orders Error:", error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    async getDemographics(req: Request, res: Response): Promise<void> {
+        try {
+            const data = await this._adminDashboardService.getDemographicsData();
+            res.status(200).json({ success: true, data });
+        } catch (error: any) {
+            console.error("Demographics Error:", error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    async getMonthlyTarget(req: Request, res: Response): Promise<void> {
+        try {
+            const data = await this._adminDashboardService.getMonthlyTargetData();
+            res.status(200).json({ success: true, data });
+        } catch (error: any) {
+            console.error("Monthly Target Error:", error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
 }

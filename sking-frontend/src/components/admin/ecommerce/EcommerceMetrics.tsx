@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { fetchMetrics, setMetricsPeriods } from "@/redux/features/adminDashboardSlice";
+import { fetchSummary, setMetricsPeriods } from "@/redux/features/adminDashboardSlice";
 import Badge from "../ui/badge/Badge";
 import { ArrowDownIcon, ArrowUpIcon, BoxIconLine, GroupIcon, MoreDotIcon } from "@/icons";
 import { DashboardPeriod } from "@/services/admin/adminDashboardApiService";
@@ -11,23 +11,23 @@ import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 export const EcommerceMetrics = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { data: stats, loading, customerPeriod, orderPeriod } = useSelector((state: RootState) => state.adminDashboard.metrics);
+  const { customerStats, orderStats, loading, customerPeriod, orderPeriod } = useSelector((state: RootState) => state.adminDashboard.summary);
 
   // Dropdown states
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [isOrderDropdownOpen, setIsOrderDropdownOpen] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchMetrics({ customerPeriod, orderPeriod }));
-  }, [dispatch, customerPeriod, orderPeriod]);
+  // Initial fetch handled by DashboardInit
 
   const handleCustomerPeriodChange = (period: DashboardPeriod) => {
     dispatch(setMetricsPeriods({ customerPeriod: period, orderPeriod }));
+    dispatch(fetchSummary({ customerPeriod: period, orderPeriod }));
     setIsCustomerDropdownOpen(false);
   };
 
   const handleOrderPeriodChange = (period: DashboardPeriod) => {
     dispatch(setMetricsPeriods({ customerPeriod, orderPeriod: period }));
+    dispatch(fetchSummary({ customerPeriod, orderPeriod: period }));
     setIsOrderDropdownOpen(false);
   };
 
@@ -79,14 +79,14 @@ export const EcommerceMetrics = () => {
               Customers
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              {loading ? "..." : stats?.customerStats.totalCustomers.toLocaleString()}
+              {loading ? "..." : customerStats?.totalCustomers.toLocaleString()}
             </h4>
           </div>
-          {!loading && stats && (
+          {!loading && customerStats && (
             <div className="flex flex-col items-end gap-1">
-              <Badge color={stats.customerStats.isGrowthPositive ? "success" : "error"}>
-                {stats.customerStats.isGrowthPositive ? <ArrowUpIcon /> : <ArrowDownIcon className="text-error-500" />}
-                {Math.abs(stats.customerStats.growthPercentage)}%
+              <Badge color={customerStats.isGrowthPositive ? "success" : "error"}>
+                {customerStats.isGrowthPositive ? <ArrowUpIcon /> : <ArrowDownIcon className="text-error-500" />}
+                {Math.abs(customerStats.growthPercentage)}%
               </Badge>
               <span className="text-[10px] text-gray-400 dark:text-gray-500">
                 vs last {customerPeriod.replace('ly', '')}
@@ -136,15 +136,15 @@ export const EcommerceMetrics = () => {
               Orders
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              {loading ? "..." : stats?.orderStats.totalOrders.toLocaleString()}
+              {loading ? "..." : orderStats?.totalOrders.toLocaleString()}
             </h4>
           </div>
 
-          {!loading && stats && (
+          {!loading && orderStats && (
             <div className="flex flex-col items-end gap-1">
-              <Badge color={stats.orderStats.isGrowthPositive ? "success" : "error"}>
-                {stats.orderStats.isGrowthPositive ? <ArrowUpIcon /> : <ArrowDownIcon className="text-error-500" />}
-                {Math.abs(stats.orderStats.growthPercentage)}%
+              <Badge color={orderStats.isGrowthPositive ? "success" : "error"}>
+                {orderStats.isGrowthPositive ? <ArrowUpIcon /> : <ArrowDownIcon className="text-error-500" />}
+                {Math.abs(orderStats.growthPercentage)}%
               </Badge>
               <span className="text-[10px] text-gray-400 dark:text-gray-500">
                 vs last {orderPeriod.replace('ly', '')}

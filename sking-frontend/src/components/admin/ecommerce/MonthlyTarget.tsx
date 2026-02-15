@@ -4,6 +4,9 @@ import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { Modal } from "../ui/modal";
 import { adminDashboardApiService, MonthlyTarget as IMonthlyTarget } from "@/services/admin/adminDashboardApiService";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { fetchMonthlyTarget } from "@/redux/features/adminDashboardSlice";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -11,35 +14,28 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 export default function MonthlyTarget() {
-  const [targetData, setTargetData] = useState<IMonthlyTarget | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch<AppDispatch>();
+  const { data: targetData, loading } = useSelector((state: RootState) => state.adminDashboard.monthlyTarget);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTarget, setNewTarget] = useState<string>("");
   const [updating, setUpdating] = useState(false);
 
-  const fetchTarget = async () => {
-    setLoading(true);
-    try {
-      const data = await adminDashboardApiService.getDashboardStats();
-      setTargetData(data.monthlyTarget);
-      setNewTarget(data.monthlyTarget.target.toString());
-    } catch (error) {
-      console.error("Error fetching target:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Initial fetch handled by DashboardInit
 
+  // Sync local state with Redux state
   useEffect(() => {
-    fetchTarget();
-  }, []);
+    if (targetData) {
+      setNewTarget(targetData.target.toString());
+    }
+  }, [targetData]);
 
   const handleUpdateTarget = async () => {
     if (!newTarget) return;
     setUpdating(true);
     try {
       await adminDashboardApiService.updateMonthlyTarget(Number(newTarget));
-      await fetchTarget();
+      dispatch(fetchMonthlyTarget());
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error updating target:", error);

@@ -8,6 +8,7 @@ import { Dropdown } from "../ui/dropdown/Dropdown"; // Fixed import path - assum
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchSalesChart, setSalesChartYear } from "@/redux/features/adminDashboardSlice";
+import { SalesDataPoint } from "@/services/admin/adminDashboardApiService";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -19,15 +20,14 @@ export default function MonthlySalesChart() {
   const { data: stats, loading, year: selectedYear } = useSelector((state: RootState) => state.adminDashboard.salesChart);
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchSalesChart(selectedYear));
-  }, [selectedYear, dispatch]);
+  // Initial fetch handled by DashboardInit
 
   const toggleDropdown = () => setIsOpen(!isOpen);
   const closeDropdown = () => setIsOpen(false);
 
   const handleYearChange = (year: number) => {
     dispatch(setSalesChartYear(year));
+    dispatch(fetchSalesChart(year));
     closeDropdown();
   }
 
@@ -61,7 +61,7 @@ export default function MonthlySalesChart() {
       colors: ["transparent"],
     },
     xaxis: {
-      categories: stats?.monthlySales.map(s => s.month) || [
+      categories: stats?.map((s: SalesDataPoint) => s.month) || [
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
       ],
@@ -102,7 +102,7 @@ export default function MonthlySalesChart() {
       },
       y: {
         formatter: (val: number, { dataPointIndex }: any) => {
-          const orders = stats?.monthlySales?.[dataPointIndex]?.orders ?? 0;
+          const orders = stats?.[dataPointIndex]?.orders ?? 0;
           return `₹ ${val.toLocaleString()} (Orders: ${orders})`;
         },
       },
@@ -112,7 +112,7 @@ export default function MonthlySalesChart() {
   const series = [
     {
       name: "Sales",
-      data: stats?.monthlySales?.map(s => s.sales) || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      data: stats?.map((s: SalesDataPoint) => s.sales) || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
   ];
 

@@ -71,16 +71,57 @@ export interface DashboardStats {
 }
 
 export const adminDashboardApiService = {
-    getDashboardStats: async (
+    async getDashboardStats(
         customerPeriod: DashboardPeriod = 'weekly',
         orderPeriod: DashboardPeriod = 'weekly',
         range?: { startDate: string; endDate: string }
-    ): Promise<DashboardStats> => {
+    ): Promise<DashboardStats> {
         let url = `/api/admin/dashboard/stats?customerPeriod=${customerPeriod}&orderPeriod=${orderPeriod}`;
         if (range) {
             url += `&startDate=${range.startDate}&endDate=${range.endDate}`;
         }
         const response = await axiosInstance.get(url);
+        return response.data.data;
+    },
+
+    async getSummaryStats(
+        customerPeriod: DashboardPeriod = 'weekly',
+        orderPeriod: DashboardPeriod = 'weekly'
+    ): Promise<Pick<DashboardStats, 'customerStats' | 'orderStats'>> {
+        const response = await axiosInstance.get(`/api/admin/dashboard/summary?customerPeriod=${customerPeriod}&orderPeriod=${orderPeriod}`);
+        return response.data.data;
+    },
+
+    async getSalesChart(startDate?: string, endDate?: string): Promise<SalesDataPoint[]> {
+        let url = `/api/admin/dashboard/sales-chart`;
+        if (startDate && endDate) {
+            url += `?startDate=${startDate}&endDate=${endDate}`;
+        }
+        const response = await axiosInstance.get(url);
+        return response.data.data;
+    },
+
+    async getCustomerPerformance(startDate?: string, endDate?: string): Promise<PerformanceDataPoint[]> {
+        let url = `/api/admin/dashboard/customer-performance`;
+        if (startDate && endDate) {
+            url += `?startDate=${startDate}&endDate=${endDate}`;
+        }
+        const response = await axiosInstance.get(url);
+        return response.data.data;
+    },
+
+    async getRecentOrders(): Promise<RecentOrder[]> {
+        const response = await axiosInstance.get(`/api/admin/dashboard/recent-orders`);
+        return response.data.data;
+    },
+
+    async getDemographics(): Promise<{ demographics: DemographicData[], stateDemographics: StateDemographic[] }> {
+        const response = await axiosInstance.get(`/api/admin/dashboard/demographics`);
+        return response.data.data;
+    },
+
+    async getMonthlyTarget(): Promise<MonthlyTarget> {
+        const response = await axiosInstance.get(`/api/admin/dashboard/monthly-target`);
         return response.data.data;
     },
     updateMonthlyTarget: async (target: number): Promise<void> => {

@@ -10,26 +10,39 @@ export class AdminDashboardService implements IAdminDashboardService {
         @inject(TYPES.IAdminDashboardRepository) private _adminDashboardRepository: IAdminDashboardRepository
     ) { }
 
-    async getDashboardStats(
+    async getSummaryStats(
         customerPeriod: DashboardPeriod,
         orderPeriod: DashboardPeriod,
         startDate?: Date,
         endDate?: Date
-    ): Promise<AdminDashboardStatsDto> {
+    ): Promise<Pick<AdminDashboardStatsDto, 'customerStats' | 'orderStats'>> {
         const now = new Date();
-        const currentMonth = now.getMonth() + 1;
-        const currentYear = now.getFullYear();
+        const safeFixed = (val: any) => {
+            const num = parseFloat(val);
+            return Number.isFinite(num) ? parseFloat(num.toFixed(2)) : 0;
+        };
 
-        // Default range is current year if not provided
-        const chartStart = startDate || new Date(currentYear, 0, 1);
-        const chartEnd = endDate || new Date(currentYear, 11, 31, 23, 59, 59, 999);
+        // Helper to get ranges either from custom dates or period
+        const getRanges = (period: DashboardPeriod, start?: Date, end?: Date) => {
+            if (start && end) {
+                const duration = end.getTime() - start.getTime();
+                const currentStart = start;
+                const previousEnd = new Date(start.getTime() - 1);
+                const previousStart = new Date(previousEnd.getTime() - duration);
+                return { currentStart, previousStart, previousEnd: new Date(end) }; // Ensure end covers the full range if needed, here we assume 'end' is inclusive or handled by caller
+            }
+            return this._getDateRanges(period, now);
+        };
 
         const totalCustomers = await this._adminDashboardRepository.getCustomerCount();
         const totalOrders = await this._adminDashboardRepository.getOrderCount();
 
         // Customer growth
-        const customerRanges = this._getDateRanges(customerPeriod, now);
-        const currentPeriodCustomers = await this._adminDashboardRepository.getCustomerCount(customerRanges.currentStart, now);
+        const customerRanges = getRanges(customerPeriod, startDate, endDate);
+        // Ensure endDate covers the full day if it was just a date string converted to 00:00:00
+        const custEnd = startDate && endDate ? endDate : now;
+
+        const currentPeriodCustomers = await this._adminDashboardRepository.getCustomerCount(customerRanges.currentStart, custEnd);
         const previousPeriodCustomers = await this._adminDashboardRepository.getCustomerCount(customerRanges.previousStart, customerRanges.previousEnd);
 
         let customerGrowth = 0;
@@ -40,8 +53,10 @@ export class AdminDashboardService implements IAdminDashboardService {
         }
 
         // Order growth
-        const orderRanges = this._getDateRanges(orderPeriod, now);
-        const currentPeriodOrders = await this._adminDashboardRepository.getOrderCount(orderRanges.currentStart, now);
+        const orderRanges = getRanges(orderPeriod, startDate, endDate);
+        const orderEnd = startDate && endDate ? endDate : now;
+
+        const currentPeriodOrders = await this._adminDashboardRepository.getOrderCount(orderRanges.currentStart, orderEnd);
         const previousPeriodOrders = await this._adminDashboardRepository.getOrderCount(orderRanges.previousStart, orderRanges.previousEnd);
 
         let orderGrowth = 0;
@@ -51,26 +66,51 @@ export class AdminDashboardService implements IAdminDashboardService {
             orderGrowth = 100;
         }
 
-        // Monthly Sales (using the provided or default range)
+        return {
+            customerStats: {
+                totalCustomers,
+                growthPercentage: safeFixed(customerGrowth),
+                isGrowthPositive: customerGrowth >= 0
+            },
+            orderStats: {
+                totalOrders,
+                growthPercentage: safeFixed(orderGrowth),
+                isGrowthPositive: orderGrowth >= 0
+            }
+        };
+    }
+
+    async getSalesChart(startDate?: Date, endDate?: Date): Promise<SalesDataPointDto[]> {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const chartStart = startDate || new Date(currentYear, 0, 1);
+        const chartEnd = endDate || new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
         const salesData = await this._adminDashboardRepository.getMonthlySales(chartStart, chartEnd);
-        const monthlySales: SalesDataPointDto[] = salesData.map(s => ({
+        return salesData.map(s => ({
             month: s.label,
             sales: Number(s.totalSales || 0),
             orders: Number(s.orderCount || 0)
         }));
+    }
 
-        // Customer Performance (using the provided or default range)
+    async getCustomerPerformance(startDate?: Date, endDate?: Date): Promise<PerformanceDataPointDto[]> {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const chartStart = startDate || new Date(currentYear, 0, 1);
+        const chartEnd = endDate || new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
         const performanceData = await this._adminDashboardRepository.getCustomerPerformance(chartStart, chartEnd);
-        const customerPerformance: PerformanceDataPointDto[] = performanceData.map(p => ({
+        return performanceData.map(p => ({
             month: p.label,
             acquisition: Number(p.acquisition || 0),
             retention: Number(p.retention || 0)
         }));
+    }
 
-        // Recent Orders
+    async getRecentOrdersData(): Promise<RecentOrderDto[]> {
         const rOrders = await this._adminDashboardRepository.getRecentOrders(5);
-        const recentOrders: RecentOrderDto[] = rOrders.map(o => {
-            // Get image from the first item's product
+        return rOrders.map(o => {
             let productImage = "";
             if (o.items && o.items.length > 0 && o.items[0].product && o.items[0].product.images && o.items[0].product.images.length > 0) {
                 const img = o.items[0].product.images[0];
@@ -90,12 +130,19 @@ export class AdminDashboardService implements IAdminDashboardService {
                 productImage: productImage
             };
         });
+    }
 
-        // Demographics
+    async getDemographicsData(): Promise<{ demographics: any[], stateDemographics: any[] }> {
         const demographics = await this._adminDashboardRepository.getDemographics();
         const stateDemographics = await this._adminDashboardRepository.getStateDemographics();
+        return { demographics, stateDemographics };
+    }
 
-        // Monthly Target
+    async getMonthlyTargetData(): Promise<any> {
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+
         const target = await this._adminDashboardRepository.getMonthlyTarget(currentMonth, currentYear);
 
         const startOfMonth = new Date(currentYear, now.getMonth(), 1);
@@ -127,28 +174,35 @@ export class AdminDashboardService implements IAdminDashboardService {
         };
 
         return {
-            customerStats: {
-                totalCustomers,
-                growthPercentage: safeFixed(customerGrowth),
-                isGrowthPositive: customerGrowth >= 0
-            },
-            orderStats: {
-                totalOrders,
-                growthPercentage: safeFixed(orderGrowth),
-                isGrowthPositive: orderGrowth >= 0
-            },
-            monthlySales,
-            monthlyTarget: {
-                target: target || 0,
-                revenue: revenue || 0,
-                todayRevenue: todayRevenue || 0,
-                progressPercentage: safeFixed(progressPercentage),
-                growthFromLastMonth: safeFixed(growthFromLastMonth)
-            },
-            customerPerformance,
-            recentOrders,
-            demographics,
-            stateDemographics
+            target: target || 0,
+            revenue: revenue || 0,
+            todayRevenue: todayRevenue || 0,
+            progressPercentage: safeFixed(progressPercentage),
+            growthFromLastMonth: safeFixed(growthFromLastMonth)
+        };
+    }
+
+    async getDashboardStats(
+        customerPeriod: DashboardPeriod,
+        orderPeriod: DashboardPeriod,
+        startDate?: Date,
+        endDate?: Date
+    ): Promise<AdminDashboardStatsDto> {
+        // Fallback or aggregate method if needed, using the new methods
+        const summary = await this.getSummaryStats(customerPeriod, orderPeriod, startDate, endDate);
+        const sales = await this.getSalesChart(startDate, endDate);
+        const performance = await this.getCustomerPerformance(startDate, endDate);
+        const orders = await this.getRecentOrdersData();
+        const demo = await this.getDemographicsData();
+        const target = await this.getMonthlyTargetData();
+
+        return {
+            ...summary,
+            monthlySales: sales,
+            customerPerformance: performance,
+            recentOrders: orders,
+            monthlyTarget: target,
+            ...demo
         };
     }
 
