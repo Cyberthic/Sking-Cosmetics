@@ -56,7 +56,7 @@ const FeaturedProducts = () => {
                     <h2 className="text-3xl font-bold uppercase text-black">
                         Featured Products
                     </h2>
-                    <Link href="/shop/featured" className="text-sking-pink font-bold hover:underline">
+                    <Link href="/shop" className="text-sking-pink font-bold hover:underline">
                         View All
                     </Link>
                 </div>

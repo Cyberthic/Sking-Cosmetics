@@ -81,7 +81,7 @@ const NewInStore = () => {
                     <h2 className="text-3xl font-bold uppercase text-black">
                         New In Store
                     </h2>
-                    <Link href="/shop/new" className="text-sking-pink font-bold hover:underline">
+                    <Link href="/shop" className="text-sking-pink font-bold hover:underline">
                         View All
                     </Link>
                 </div>

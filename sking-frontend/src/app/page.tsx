@@ -8,7 +8,6 @@ import FlashSale from "@/components/user/home/FlashSale";
 import FeaturedProducts from "@/components/user/home/FeaturedProducts";
 import TrendingBanner from "@/components/user/home/TrendingBanner";
 import NewInStore from "@/components/user/home/NewInStore";
-import ServicePromo from "@/components/user/home/ServicePromo";
 import InstagramSection from "@/components/user/home/InstagramSection";
 import FAQSection from "@/components/user/home/FAQSection";
 import NewsletterSection from "@/components/user/home/NewsletterSection";
@@ -45,7 +44,6 @@ export default function Home() {
         <FeaturedProducts />
         <TrendingBanner />
         <NewInStore />
-        <ServicePromo />
         <InstagramSection />
         <FAQSection />
         <NewsletterSection />

@@ -104,7 +104,7 @@ const FlashSale = () => {
                         </div>
                     </div>
 
-                    <Link href="/shop/flash-sale" className="text-sking-pink font-bold hover:underline">
+                    <Link href="/shop" className="text-sking-pink font-bold hover:underline">
                         View All
                     </Link>
                 </div>
