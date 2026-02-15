@@ -27,6 +27,8 @@ import { RateProductsModal } from "@/components/user/RateProductsModal";
 import { useReactToPrint } from "react-to-print";
 import { useRef } from "react";
 import { InvoicePrintView } from "@/components/user/orders/InvoicePrintView";
+import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
 
 export default function OrderDetailPage() {
     const { orderId } = useParams();
@@ -55,6 +57,71 @@ export default function OrderDetailPage() {
             router.push(`/product/${item.product?.slug || item.product?._id}?orderId=${order._id}&writeReview=true`);
         } else {
             setIsRateModalOpen(true);
+        }
+    };
+
+    const handleWhatsappClick = async () => {
+        if (!componentRef.current || !order) return;
+
+        const toastId = toast.loading("Generating Invoice PDF...");
+
+        try {
+            const element = componentRef.current;
+            // Temporarily show the element for capture
+            if (element.parentElement) {
+                element.parentElement.style.display = 'block';
+                element.parentElement.style.position = 'absolute';
+                element.parentElement.style.left = '-9999px';
+                element.parentElement.style.top = '0';
+            }
+
+            // Small delay to ensure styles are computed
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const imgData = await toPng(element, {
+                quality: 0.95,
+                backgroundColor: '#ffffff'
+            });
+
+            // Re-hide the element
+            if (element.parentElement) {
+                element.parentElement.style.display = 'none';
+                element.parentElement.style.position = '';
+                element.parentElement.style.left = '';
+                element.parentElement.style.top = '';
+            }
+
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`sking-invoice-${order.displayId || order._id.slice(-8)}.pdf`);
+
+            toast.success("Invoice downloaded! Please attach it to your WhatsApp message.", { id: toastId });
+
+            const message = `Hi, I have a query regarding my order: #${order.displayId || order._id.slice(-8).toUpperCase()} \n\nI have attached the invoice for your reference.`;
+            const cleanNumber = (whatsappNumber || "918848886919").replace(/\+/g, "").replace(/\s/g, "");
+            const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+
+            setTimeout(() => {
+                window.open(url, '_blank');
+            }, 2000);
+
+        } catch (error) {
+            console.error("PDF Gen Error with html-to-image:", error);
+
+            // Fallback: if even this fails, just open WhatsApp
+            toast.error("Could not generate PDF automatically. Opening WhatsApp...", { id: toastId });
+
+            const message = `Hi, I have a query regarding my order: #${order.displayId || order._id.slice(-8).toUpperCase()}`;
+            const cleanNumber = (whatsappNumber || "918848886919").replace(/\+/g, "").replace(/\s/g, "");
+            const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+
+            setTimeout(() => {
+                window.open(url, '_blank');
+            }, 1000);
         }
     };
 
@@ -492,20 +559,13 @@ export default function OrderDetailPage() {
                             <h3 className="text-sm font-black uppercase tracking-tight mb-2">Need Help?</h3>
                             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6">Our experts are here 24/7</p>
 
-                            {order.paymentMethod === 'whatsapp' ? (
-                                <Link
-                                    href={`https://wa.me/${(whatsappNumber || "918848886919").replace(/\+/g, "").replace(/\s/g, "")}?text=${encodeURIComponent(`Hi, I have a query regarding my order: #${order.displayId || order._id.slice(-8).toUpperCase()}`)}`}
-                                    target="_blank"
-                                    className="w-full inline-flex justify-center items-center gap-2 bg-green-500 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all hover:scale-105"
-                                >
-                                    <MessageCircle className="w-4 h-4" />
-                                    Chat on WhatsApp
-                                </Link>
-                            ) : (
-                                <button className="w-full bg-sking-pink text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-sm hover:scale-105 transition-transform">
-                                    Contact Support
-                                </button>
-                            )}
+                            <button
+                                onClick={handleWhatsappClick}
+                                className="w-full inline-flex justify-center items-center gap-2 bg-green-500 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all hover:scale-105"
+                            >
+                                <MessageCircle className="w-4 h-4" />
+                                Chat on WhatsApp
+                            </button>
                         </div>
                     </div>
                 </div>
