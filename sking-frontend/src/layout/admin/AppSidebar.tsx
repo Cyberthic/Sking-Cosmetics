@@ -60,10 +60,7 @@ const navItems: NavItem[] = [
   {
     icon: <ShoppingCart size={20} />,
     name: "Orders",
-    subItems: [
-      { name: "Order Management", path: "/admin/orders", pro: false },
-      { name: "Order Details", path: "/admin/order-details", pro: false },
-    ],
+    path: "/admin/orders"
   },
   {
     icon: <TicketSlash size={20} />,

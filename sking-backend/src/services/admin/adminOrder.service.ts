@@ -18,9 +18,9 @@ export class AdminOrderService implements IAdminOrderService {
         @inject(TYPES.IWhatsappService) private _whatsappService: IWhatsappService
     ) { }
 
-    async getOrders(limit: number, page: number, search?: string, status?: string, sort?: string): Promise<{ orders: IOrder[]; total: number; totalPages: number }> {
+    async getOrders(limit: number, page: number, search?: string, status?: string, sort?: string, orderType?: string): Promise<{ orders: IOrder[]; total: number; totalPages: number }> {
         const skip = (page - 1) * limit;
-        const { orders, total } = await this._orderRepository.findAll(limit, skip, search, status, sort);
+        const { orders, total } = await this._orderRepository.findAll(limit, skip, search, status, sort, orderType);
 
         // Lazy cancellation check
         const checkedOrders = await Promise.all(orders.map(order => this._checkAndCancelIfExpired(order)));

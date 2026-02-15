@@ -4,22 +4,49 @@ import { IAdminOrderRepository } from "../../core/interfaces/repositories/admin/
 
 @injectable()
 export class AdminOrderRepository implements IAdminOrderRepository {
-    async findAll(limit: number, skip: number, search?: string, status?: string, sort?: string): Promise<{ orders: IOrder[]; total: number }> {
-        const filter: any = {};
+    async findAll(limit: number, skip: number, search?: string, status?: string, sort?: string, orderType?: string): Promise<{ orders: IOrder[]; total: number }> {
+        const andConditions: any[] = [];
 
         if (search) {
-            // Search by order ID or user name/email if populated, 
-            // but usually searching by order ID suffix or partial ID is common in admin
-            filter.$or = [
-                { _id: search.match(/^[0-9a-fA-F]{24}$/) ? search : undefined },
+            const searchOrConditions: any[] = [
+                { displayId: { $regex: search, $options: "i" } },
                 { "shippingAddress.name": { $regex: search, $options: "i" } },
                 { "shippingAddress.email": { $regex: search, $options: "i" } }
-            ].filter(query => query._id !== undefined || query["shippingAddress.name"] !== undefined);
+            ];
+
+            // MongoDB ID search (Exact match only)
+            if (search.match(/^[0-9a-fA-F]{24}$/)) {
+                searchOrConditions.push({ _id: search });
+            }
+
+            // Price search
+            const searchAmount = parseFloat(search);
+            if (!isNaN(searchAmount)) {
+                searchOrConditions.push({ finalAmount: searchAmount });
+            }
+
+            andConditions.push({ $or: searchOrConditions });
         }
 
         if (status && status !== 'all') {
-            filter.orderStatus = status;
+            andConditions.push({ orderStatus: status });
         }
+
+        if (orderType && orderType !== 'all') {
+            if (orderType === 'online') {
+                andConditions.push({
+                    $or: [
+                        { paymentMethod: "online" },
+                        { paymentMethod: { $exists: false } },
+                        { paymentMethod: null }
+                    ]
+                });
+            } else {
+                andConditions.push({ paymentMethod: orderType });
+            }
+        }
+
+        const filter = andConditions.length > 0 ? { $and: andConditions } : {};
 
         const sortCriteria: any = { createdAt: sort === 'asc' ? 1 : -1 };
 

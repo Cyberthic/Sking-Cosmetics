@@ -20,8 +20,9 @@ export class AdminOrderController implements IAdminOrderController {
             const search = req.query.search as string;
             const status = req.query.status as string;
             const sort = req.query.sort as string;
+            const orderType = req.query.orderType as string;
 
-            const result = await this._orderService.getOrders(limit, page, search, status, sort);
+            const result = await this._orderService.getOrders(limit, page, search, status, sort, orderType);
             return res.status(StatusCode.OK).json({
                 success: true,
                 ...result

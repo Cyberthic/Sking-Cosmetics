@@ -16,9 +16,10 @@ import {
     Package,
     User,
     Calendar,
-    ChevronRight,
     LayoutGrid,
-    List
+    List,
+    MessageSquare,
+    CreditCard
 } from "lucide-react";
 import Pagination from "@/components/admin/tables/Pagination";
 import { toast } from "sonner";
@@ -34,9 +35,17 @@ function OrdersContent() {
     const [filters, setFilters] = useUrlState({
         page: 1,
         status: "all",
+        orderType: "all",
         search: "",
         sort: "desc"
     });
+
+    // Handle legacy 'whatsapp' status from URL if present
+    useEffect(() => {
+        if (filters.status === 'whatsapp') {
+            setFilters({ status: 'all', orderType: 'whatsapp', page: 1 });
+        }
+    }, [filters.status, setFilters]);
 
     const [view, setView] = useState<'grid' | 'list'>('grid');
 
@@ -61,6 +70,7 @@ function OrdersContent() {
                 limit: 10,
                 search: currentFilters.search,
                 status: currentFilters.status,
+                orderType: currentFilters.orderType,
                 sort: currentFilters.sort
             });
             if (res.success) {
@@ -156,6 +166,18 @@ function OrdersContent() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
                     <FormSelect
+                        value={filters.orderType}
+                        onChange={(value) => {
+                            setFilters({ orderType: value, page: 1 });
+                        }}
+                        options={[
+                            { value: "all", label: "All Types" },
+                            { value: "online", label: "Razorpay Orders" },
+                            { value: "whatsapp", label: "WhatsApp Orders" }
+                        ]}
+                        className="min-w-[150px]"
+                    />
+                    <FormSelect
                         value={filters.status}
                         onChange={(value) => {
                             setFilters({ status: value, page: 1 });
@@ -205,7 +227,17 @@ function OrdersContent() {
                             <div className="relative z-10 flex flex-col h-full">
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="bg-black/5 dark:bg-white/10 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors">
-                                        <span className="font-black text-xs uppercase tracking-wider font-mono">#{order._id.slice(-8).toUpperCase()}</span>
+                                        {/* WhatsApp Badge */}
+                                        {order.paymentMethod === 'whatsapp' ? (
+                                            <div title="WhatsApp Order" className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white shrink-0">
+                                                <MessageSquare size={10} />
+                                            </div>
+                                        ) : (
+                                            <div title="Razorpay Order" className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white shrink-0">
+                                                <CreditCard size={10} />
+                                            </div>
+                                        )}
+                                        <span className="font-black text-xs uppercase tracking-wider font-mono">#{order.displayId || order._id.slice(-8).toUpperCase()}</span>
                                     </div>
                                     <Badge color={getStatusColor(order.orderStatus)} size="sm" className="bg-white dark:bg-black text-[10px] uppercase font-black tracking-widest">
                                         {order.orderStatus.replace('_', ' ')}
@@ -298,10 +330,21 @@ function OrdersContent() {
                                                         <Package size={16} />
                                                     )}
                                                 </div>
-                                                <div>
-                                                    <div className="font-black text-xs uppercase tracking-tight dark:text-white">#{order._id.slice(-8).toUpperCase()}</div>
-                                                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1 mt-0.5">
-                                                        <Calendar size={10} /> {new Date(order.createdAt).toLocaleDateString()}
+                                                <div className="flex items-center gap-2">
+                                                    {order.paymentMethod === 'whatsapp' ? (
+                                                        <div title="WhatsApp Order" className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white shrink-0">
+                                                            <MessageSquare size={8} />
+                                                        </div>
+                                                    ) : (
+                                                        <div title="Razorpay Order" className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white shrink-0">
+                                                            <CreditCard size={8} />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <div className="font-black text-xs uppercase tracking-tight dark:text-white">#{order.displayId || order._id.slice(-8).toUpperCase()}</div>
+                                                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1 mt-0.5">
+                                                            <Calendar size={10} /> {new Date(order.createdAt).toLocaleDateString()}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
