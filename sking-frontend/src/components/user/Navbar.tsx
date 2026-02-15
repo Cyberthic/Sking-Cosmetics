@@ -67,6 +67,18 @@ export default function Navbar() {
         setIsMobileMenuOpen(false);
     }, [pathname]);
 
+    // Body scroll lock for mobile menu
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, [isMobileMenuOpen]);
+
     const handleLogout = async () => {
         try {
             await userAuthService.logout();
@@ -91,7 +103,7 @@ export default function Navbar() {
 
     return (
         <>
-            <header className={`w-full z-[999] sticky top-0 transition-all duration-300 ${isScrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-white"}`}>
+            <header className={`w-full z-[1100] sticky top-0 transition-all duration-300 ${isScrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-white"}`}>
 
                 {/* --- TOP SECTION --- */}
                 <div className="border-b border-gray-200">
@@ -283,104 +295,140 @@ export default function Navbar() {
                     </div>
                 </div>
 
-                {/* --- MOBILE MENU --- */}
-                <div className={`fixed inset-0 top-[80px] bg-white z-40 lg:hidden overflow-y-auto transition-transform duration-300 ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
-                    <div className="flex flex-col p-6 gap-2">
-                        {/* Search Mobile */}
-                        <div className="relative mb-8">
-                            <input
-                                type="text"
-                                placeholder="Search products..."
-                                className="w-full h-14 pl-4 pr-10 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-sking-pink outline-none transition-all"
-                            />
-                            <Search className="absolute right-4 top-[18px] w-5 h-5 text-gray-400" />
+                <CartDrawer isOpen={isDrawerOpen} onClose={() => setIsCartOpen(false)} />
+            </header>
+
+            {/* --- MOBILE MENU (Moved outside header for better fixed positioning) --- */}
+            <div
+                className={`fixed inset-0 top-20 bg-white z-[1001] lg:hidden overflow-y-auto transition-transform duration-500 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+            >
+                <div className="flex flex-col p-6 pt-10 gap-2 min-h-full">
+                    {/* Search Mobile */}
+                    <div className="relative mb-8">
+                        <input
+                            type="text"
+                            placeholder="Search products..."
+                            className="w-full h-14 pl-4 pr-10 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:border-sking-pink outline-none transition-all shadow-sm"
+                        />
+                        <Search className="absolute right-4 top-[18px] w-5 h-5 text-gray-400" />
+                    </div>
+
+                    {/* Navigation Links */}
+                    <div className="flex flex-col divide-y divide-gray-50">
+                        {mainLinks.map((link) => (
+                            <Link
+                                key={link.name}
+                                href={link.href}
+                                className="text-xl font-black uppercase tracking-widest py-5 text-gray-900 flex items-center justify-between group"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                {link.name}
+                                <ChevronDown className="w-5 h-5 -rotate-90 opacity-20 group-hover:opacity-100 group-hover:text-sking-pink transition-all" />
+                            </Link>
+                        ))}
+
+                        {/* All Categories Mobile */}
+                        <div className="py-5">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-4">Categories</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {categories.map(cat => (
+                                    <Link
+                                        key={cat._id}
+                                        href={`/shop?category=${cat._id}`}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="px-4 py-2 bg-gray-50 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-sking-pink hover:text-white transition-all border border-gray-100"
+                                    >
+                                        {cat.name}
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Navigation Links */}
-                        <div className="flex flex-col">
-                            {mainLinks.map((link) => (
-                                <Link
-                                    key={link.name}
-                                    href={link.href}
-                                    className="text-lg font-bold uppercase tracking-wider py-4 border-b border-gray-50 text-gray-900"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    {link.name}
-                                </Link>
-                            ))}
-
-                            {/* Utility Links */}
+                        {/* Utility Links */}
+                        <div className="space-y-1">
                             <Link
                                 href="/wishlist"
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className="flex items-center justify-between py-4 border-b border-gray-50 text-gray-900"
+                                className="flex items-center justify-between py-5 text-gray-900"
                             >
-                                <span className="text-lg font-bold uppercase tracking-wider">Wishlist</span>
+                                <span className="text-xl font-black uppercase tracking-widest">Wishlist</span>
                                 <div className="flex items-center gap-3">
-                                    <Heart className="w-5 h-5" />
-                                    <span className="bg-black text-white text-[10px] font-black px-2 py-1 rounded-full">{wishlistItems.length}</span>
+                                    <Heart className="w-6 h-6" />
+                                    <span className="bg-black text-white text-[10px] font-black px-2.5 py-1 rounded-full">{wishlistItems.length}</span>
                                 </div>
                             </Link>
 
                             <button
                                 onClick={() => { setIsCartOpen(true); setIsMobileMenuOpen(false); }}
-                                className="flex items-center justify-between py-4 border-b border-gray-50 text-gray-900 text-left"
+                                className="flex items-center justify-between py-5 text-gray-900 text-left w-full"
                             >
-                                <span className="text-lg font-bold uppercase tracking-wider">My Bag</span>
+                                <span className="text-xl font-black uppercase tracking-widest">My Bag</span>
                                 <div className="flex items-center gap-3">
-                                    <ShoppingBag className="w-5 h-5" />
-                                    <span className="bg-sking-red text-white text-[10px] font-black px-2 py-1 rounded-full">{totalItems}</span>
+                                    <ShoppingBag className="w-6 h-6" />
+                                    <span className="bg-sking-red text-white text-[10px] font-black px-2.5 py-1 rounded-full">{totalItems}</span>
                                 </div>
                             </button>
                         </div>
+                    </div>
 
-                        {/* User Section */}
-                        {isAuthenticated ? (
-                            <div className="mt-8 pt-8 border-t-2 border-gray-100 pb-20">
-                                <div className="flex items-center gap-4 mb-10 p-4 bg-gray-50 rounded-3xl">
-                                    <div className="w-14 h-14 border-2 border-black rounded-full flex items-center justify-center bg-white shadow-sm">
-                                        <User className="w-7 h-7" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-black uppercase tracking-widest text-black truncate">{user?.username}</p>
-                                        <p className="text-[11px] text-gray-500 truncate mt-1">{user?.email}</p>
-                                    </div>
+                    {/* User Section */}
+                    {isAuthenticated ? (
+                        <div className="mt-8 pt-8 border-t-2 border-gray-100 pb-20">
+                            <div className="flex items-center gap-4 mb-10 p-5 bg-gray-50 rounded-[2rem] border border-gray-100">
+                                <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center bg-white shadow-xl">
+                                    <User className="w-8 h-8" />
                                 </div>
-                                <div className="grid grid-cols-1 gap-2 pl-2">
-                                    <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 py-4 text-sm font-black uppercase tracking-[0.2em] text-gray-900">
-                                        Profile Settings
-                                    </Link>
-                                    <Link href="/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 py-4 text-sm font-black uppercase tracking-[0.2em] text-gray-900">
-                                        My Order History
-                                    </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex items-center gap-3 py-6 mt-4 text-sm font-black uppercase tracking-[0.2em] text-sking-red border-t border-gray-100"
-                                    >
-                                        Sign Out Account
-                                    </button>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-black uppercase tracking-widest text-black truncate">{user?.username || 'Member'}</p>
+                                    <p className="text-[11px] text-gray-500 truncate mt-1">{user?.email}</p>
                                 </div>
                             </div>
-                        ) : (
-                            <div className="grid grid-cols-2 gap-4 mt-12 pb-20">
-                                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="py-4 text-center border-2 border-black rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-gray-50 transition-all">
-                                    Login
+                            <div className="flex flex-col gap-4 pl-2">
+                                <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 hover:text-sking-pink transition-colors">
+                                    Profile Settings
                                 </Link>
-                                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="py-4 text-center bg-black text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-sking-pink transition-all">
-                                    Register
+                                <Link href="/orders" onClick={() => setIsMobileMenuOpen(false)} className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 hover:text-sking-pink transition-colors">
+                                    My Order History
                                 </Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-2 py-6 mt-6 text-sm font-black uppercase tracking-[0.2em] text-sking-red border-t border-gray-100 group"
+                                >
+                                    Sign Out Account <ChevronDown className="w-4 h-4 -rotate-90 group-hover:translate-x-1 transition-transform" />
+                                </button>
                             </div>
-                        )}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-4 mt-12 pb-20">
+                            <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="py-5 text-center bg-black text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-sking-pink transition-all shadow-xl shadow-black/10">
+                                Login / Sign In
+                            </Link>
+                            <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="py-5 text-center border-2 border-black rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-gray-50 transition-all">
+                                Create Account
+                            </Link>
+                        </div>
+                    )}
+
+                    {/* Support Info Mobile */}
+                    <div className="mt-auto pt-10 pb-10 text-center">
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-300 mb-2">Need Help?</p>
+                        <p className="text-lg font-black text-black tracking-tight">+91 70127 47466</p>
                     </div>
                 </div>
+            </div>
 
-                {/* Overlay for user menu click-outside */}
-                {showUserMenu && (
-                    <div className="fixed inset-0 z-[55]" onClick={() => setShowUserMenu(false)} />
-                )}
+            {/* Overlay for user menu click-outside */}
+            {showUserMenu && (
+                <div className="fixed inset-0 z-[55]" onClick={() => setShowUserMenu(false)} />
+            )}
 
-                <CartDrawer isOpen={isDrawerOpen} onClose={() => setIsCartOpen(false)} />
-            </header>
+            {/* Backdrop Overlay for mobile menu */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000] lg:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
         </>
     );
 }
