@@ -10,6 +10,8 @@ import adminReviewRouter from "./adminRoutes/adminReview.routes";
 import dashboardRouter from "./adminRoutes/adminDashboard.routes";
 import adminOrderSettingsRouter from "./adminRoutes/orderSettings.routes";
 import adminDeliveryRoutes from "./adminRoutes/adminDelivery.routes";
+import flashSaleRoutes from "./adminRoutes/flashSale.routes";
+import featuredProductRoutes from "./adminRoutes/featuredProduct.routes";
 
 const adminRouter = Router();
 
@@ -24,5 +26,7 @@ adminRouter.use("/transactions", adminTransactionRoutes);
 adminRouter.use("/reviews", adminReviewRouter);
 adminRouter.use("/order-settings", adminOrderSettingsRouter);
 adminRouter.use("/delivery-settings", adminDeliveryRoutes);
+adminRouter.use("/flash-sale", flashSaleRoutes);
+adminRouter.use("/featured-products", featuredProductRoutes);
 
 export default adminRouter;

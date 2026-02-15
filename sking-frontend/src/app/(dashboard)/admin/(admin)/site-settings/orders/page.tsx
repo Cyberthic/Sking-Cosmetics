@@ -10,14 +10,17 @@ import {
     MessageSquare,
     ShieldCheck,
     AlertCircle,
-    Check
+    Check,
+    ArrowLeft
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function OrderSettingsPage() {
     const [settings, setSettings] = useState<OrderSettings | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         fetchSettings();
@@ -66,7 +69,19 @@ export default function OrderSettingsPage() {
 
     return (
         <div className="p-4 md:p-8">
-            <PageBreadCrumb pageTitle="Order Configuration" />
+            <div className="flex items-center gap-4 mb-6">
+                <button
+                    onClick={() => router.back()}
+                    className="p-2 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-white/5 text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+                <PageBreadCrumb
+                    pageTitle="Order Configuration"
+                    parentPage="Site Settings"
+                    parentHref="/admin/site-settings"
+                />
+            </div>
 
             <div className="mt-10 max-w-5xl">
                 <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-white/5 p-8 md:p-12 shadow-2xl shadow-brand-500/5">

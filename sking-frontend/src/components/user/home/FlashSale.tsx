@@ -3,155 +3,130 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Zap, Star } from "lucide-react";
+import { motion } from "framer-motion";
 
-const flashProducts = [
-    {
-        id: 1,
-        name: "Rosewater Hydrating Mist",
-        brand: "GLOWIFY BEAUTY",
-        price: 19.99,
-        originalPrice: 23.50,
-        rating: 5,
-        reviews: 871,
-        stock: 10,
-        image: "https://images.unsplash.com/photo-1601049541289-9b39e25d4810?q=80&w=800&auto=format&fit=crop",
-        discount: "20%"
-    },
-    {
-        id: 2,
-        name: "Silk Lash Extensions",
-        brand: "LUXE LASHES",
-        price: 24.99,
-        originalPrice: 30.50,
-        rating: 4.5,
-        reviews: 110,
-        stock: 5,
-        image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=800&auto=format&fit=crop",
-        discount: "15%"
-    },
-    {
-        id: 3,
-        name: "Vitamin C Serum",
-        brand: "RADIANT SKINCARE",
-        price: 29.99,
-        originalPrice: 45.99,
-        rating: 5,
-        reviews: 1100,
-        stock: 8,
-        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=800&auto=format&fit=crop",
-        discount: "25%"
-    },
-    {
-        id: 4,
-        name: "Charcoal Face Mask",
-        brand: "GLOWIFY BEAUTY",
-        price: 19.99,
-        originalPrice: 23.50,
-        rating: 4,
-        reviews: 871,
-        stock: 10,
-        image: "https://images.unsplash.com/photo-1596704017382-30508d71b65d?q=80&w=800&auto=format&fit=crop",
-        discount: "20%"
-    },
-    {
-        id: 5,
-        name: "Eco Green Mist",
-        brand: "GLOWIFY BEAUTY",
-        price: 19.99,
-        originalPrice: 23.50,
-        rating: 4.5,
-        reviews: 871,
-        stock: 10,
-        image: "https://images.unsplash.com/photo-1608248597279-f99d160bfbc8?q=80&w=800&auto=format&fit=crop",
-        discount: "20%"
-    }
-];
+interface FlashSaleProps {
+    data: any;
+}
 
-const FlashSale = () => {
-    const [timeLeft, setTimeLeft] = useState({ hours: 15, minutes: 29, seconds: 20 });
+const FlashSale = ({ data }: FlashSaleProps) => {
+    const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
     useEffect(() => {
+        if (!data || !data.currentEndTime) return;
+
         const timer = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-                if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-                if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-                return prev;
-            });
+            const now = new Date().getTime();
+            const end = new Date(data.currentEndTime).getTime();
+            const diff = end - now;
+
+            if (diff <= 0) {
+                setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+                return;
+            }
+
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            setTimeLeft({ hours, minutes, seconds });
         }, 1000);
+
         return () => clearInterval(timer);
-    }, []);
+    }, [data]);
+
+    if (!data || !data.products || data.products.length === 0) {
+        return (
+            <section className="py-16 bg-white overflow-hidden">
+                <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8">
+                    <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-[3rem] border border-dashed border-gray-200">
+                        <Zap size={64} className="text-gray-200 mb-6" />
+                        <h2 className="text-2xl font-bold text-gray-400">Currently no flash sale</h2>
+                        <p className="text-gray-400 mt-2">Check back later for exciting deals!</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="py-16 bg-white">
             <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
+                <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-6">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-3xl font-bold flex items-center gap-2">
-                            Fla<Zap className="fill-sking-pink text-sking-pink rotate-12" size={28} />h sale
+                        <h2 className="text-4xl md:text-5xl font-black flex items-center gap-3 text-gray-900 tracking-tight">
+                            Fla<Zap className="fill-sking-pink text-sking-pink -rotate-12 animate-pulse" size={40} />h Sale
                         </h2>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm font-medium text-gray-500">Ends in</span>
-                        <div className="flex gap-2 text-white font-bold text-lg">
-                            <div className="bg-sking-pink px-3 py-1 rounded">{String(timeLeft.hours).padStart(2, '0')}</div>
+                    <div className="flex items-center gap-6 bg-gray-50 p-4 rounded-3xl border border-gray-100 shadow-sm">
+                        <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Ending In</span>
+                        <div className="flex gap-3 text-white font-black text-2xl">
+                            <div className="bg-sking-pink w-14 h-14 flex items-center justify-center rounded-2xl shadow-lg shadow-sking-pink/20">{String(timeLeft.hours).padStart(2, '0')}</div>
                             <span className="text-sking-pink flex items-center">:</span>
-                            <div className="bg-sking-pink px-3 py-1 rounded">{String(timeLeft.minutes).padStart(2, '0')}</div>
+                            <div className="bg-sking-pink w-14 h-14 flex items-center justify-center rounded-2xl shadow-lg shadow-sking-pink/20">{String(timeLeft.minutes).padStart(2, '0')}</div>
                             <span className="text-sking-pink flex items-center">:</span>
-                            <div className="bg-sking-pink px-3 py-1 rounded">{String(timeLeft.seconds).padStart(2, '0')}</div>
+                            <div className="bg-sking-pink w-14 h-14 flex items-center justify-center rounded-2xl shadow-lg shadow-sking-pink/20">{String(timeLeft.seconds).padStart(2, '0')}</div>
                         </div>
                     </div>
 
-                    <Link href="/shop" className="text-sking-pink font-bold hover:underline">
-                        View All
+                    <Link href="/shop" className="group flex items-center gap-2 text-sking-pink font-black text-lg hover:gap-4 transition-all">
+                        View All Deals <span className="text-2xl">→</span>
                     </Link>
                 </div>
 
                 {/* Products */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-                    {flashProducts.map((product) => (
-                        <div key={product.id} className="group flex flex-col">
-                            {/* Image */}
-                            <div className="relative h-64 w-full bg-gray-50 rounded-xl overflow-hidden mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                    {data.products.map((product: any) => (
+                        <div key={product._id} className="group flex flex-col relative">
+                            {/* Image Container */}
+                            <div className="relative h-80 w-full bg-gray-50 rounded-[2.5rem] overflow-hidden mb-6 shadow-sm border border-gray-100 group-hover:shadow-xl transition-all duration-500">
                                 <Image
-                                    src={product.image}
+                                    src={product.images[0]}
                                     alt={product.name}
                                     fill
-                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    className="object-cover group-hover:scale-110 transition-all duration-700"
                                 />
-                                <div className="absolute top-2 right-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded">
-                                    {product.discount} OFF
+                                {/* Discount Badge */}
+                                <div className="absolute top-4 right-4 bg-gray-900 text-white text-xs font-black px-4 py-2 rounded-full shadow-xl">
+                                    {product.flashSalePercentage}% OFF
+                                </div>
+
+                                {/* Hover Add to Cart Overlay */}
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                                    <Link
+                                        href={`/product/${product.slug}`}
+                                        className="bg-white text-black font-black px-8 py-3 rounded-2xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-sking-pink hover:text-white"
+                                    >
+                                        GRAB DEAL
+                                    </Link>
                                 </div>
                             </div>
 
-                            {/* Info */}
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] text-gray-500 uppercase tracking-widest">{product.brand}</span>
-                                <h3 className="font-bold text-sm truncate text-black">{product.name}</h3>
+                            {/* Product Info */}
+                            <div className="flex flex-col gap-2 px-2">
+                                <span className="text-[10px] font-black text-sking-pink uppercase tracking-[0.2em]">{product.category?.name || "SKING EXCLUSIVE"}</span>
+                                <h3 className="font-bold text-lg text-gray-900 group-hover:text-sking-pink transition-colors line-clamp-1">{product.name}</h3>
 
-                                <div className="flex items-end gap-2 mt-1">
-                                    <span className="font-bold text-lg">₹{product.price}</span>
-                                    <span className="text-xs text-gray-400 line-through mb-1">₹{product.originalPrice}</span>
+                                <div className="flex items-baseline gap-3">
+                                    <span className="font-black text-2xl text-gray-900">₹{Math.round(product.price * (1 - product.flashSalePercentage / 100))}</span>
+                                    <span className="text-sm text-gray-400 line-through font-medium">₹{product.price}</span>
                                 </div>
 
-                                {/* Rating */}
-                                <div className="flex items-center gap-1 mt-1">
-                                    <div className="flex text-sking-pink">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star key={i} size={10} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className={i < Math.floor(product.rating) ? "" : "text-gray-300"} />
-                                        ))}
+                                {/* Stock Indicator */}
+                                <div className="mt-2 space-y-2">
+                                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                                        <span>Limited Stock</span>
+                                        <span className="text-sking-pink">{product.variants?.[0]?.stock || 5} Left</span>
                                     </div>
-                                    <span className="text-[10px] text-gray-400">({product.reviews})</span>
-                                </div>
-
-                                {/* Stock Bar */}
-                                <div className="mt-2">
-                                    <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                        <div className="h-full bg-purple-600 w-1/2 rounded-full"></div>
+                                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            whileInView={{ width: "35%" }}
+                                            className="h-full bg-linear-to-r from-sking-pink to-purple-600 rounded-full"
+                                        />
                                     </div>
-                                    <p className="text-[10px] text-gray-500 mt-1">Stock: {product.stock}</p>
                                 </div>
                             </div>
                         </div>

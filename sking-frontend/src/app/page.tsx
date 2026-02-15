@@ -16,15 +16,17 @@ import { userHomeService } from "@/services/user/userHomeApiService";
 
 export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
+  const [flashSale, setFlashSale] = useState<any>(null);
+  const [featured, setFeatured] = useState<any[]>([]);
 
   useEffect(() => {
-    // Optional: Fetch real data if needed, otherwise components use mock data
     const fetchData = async () => {
       try {
         const data = await userHomeService.getHomeData();
-        if (data.success && data.newArrivals) {
-          // We could map these to our components if the schema matches
-          setProducts(data.newArrivals);
+        if (data.success) {
+          setProducts(data.newArrivals || []);
+          setFlashSale(data.flashSale);
+          setFeatured(data.featured || []);
         }
       } catch (err) {
         console.error("Failed to fetch home data", err);
@@ -40,10 +42,10 @@ export default function Home() {
       <main className="flex flex-col w-full">
         <HeroSection />
         <CategoryPromo />
-        <FlashSale />
-        <FeaturedProducts />
+        <FlashSale data={flashSale} />
+        <FeaturedProducts data={featured} />
         <TrendingBanner />
-        <NewInStore />
+        <NewInStore products={products} />
         <InstagramSection />
         <FAQSection />
         <NewsletterSection />

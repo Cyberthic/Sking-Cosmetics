@@ -4,191 +4,125 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star, ChevronLeft, ChevronRight, Heart, ShoppingBag } from "lucide-react";
 
-// Left Grid Products
-const newInProducts = [
-    {
-        id: 1,
-        name: "Radiant Creamy Concealer",
-        category: "MAKEUP",
-        price: 39.99,
-        reviews: 20,
-        image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?q=80&w=400&auto=format&fit=crop"
-    },
-    {
-        id: 2,
-        name: "Eyeshadow Palette",
-        category: "EYES MAKEUP",
-        price: 29.99,
-        reviews: 31,
-        image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=400&auto=format&fit=crop"
-    },
-    {
-        id: 3,
-        name: "Hyaluronic Acid Serum",
-        category: "SKINCARE",
-        price: 19.99,
-        reviews: 19,
-        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=400&auto=format&fit=crop"
-    },
-    {
-        id: 4,
-        name: "Curl Defining Cream",
-        category: "HAIRCARE",
-        price: 24.99,
-        reviews: 17,
-        image: "https://images.unsplash.com/photo-1596704017382-30508d71b65d?q=80&w=400&auto=format&fit=crop"
-    },
-    {
-        id: 5,
-        name: "Liquid Eyeliner",
-        category: "EYES MAKEUP",
-        price: 14.99,
-        reviews: 26,
-        image: "https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?q=80&w=400&auto=format&fit=crop"
-    },
-    {
-        id: 6,
-        name: "Matte Setting Powder",
-        category: "FACE MAKEUP",
-        price: 12.99,
-        reviews: 18,
-        image: "https://images.unsplash.com/photo-1596462502278-27bfdd403348?q=80&w=400&auto=format&fit=crop"
-    }
-];
+interface NewInStoreProps {
+    products: any[];
+}
 
-// Right Featured Product
-const featuredNew = {
-    id: 101,
-    name: "Mascara Perfect Black",
-    category: "EYES MAKEUP",
-    price: 12.99,
-    reviews: 56,
-    images: [
-        "https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?q=80&w=800&auto=format&fit=crop", // Main Mascara
-        "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=400&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?q=80&w=400&auto=format&fit=crop"
-    ]
-};
+const NewInStore = ({ products }: NewInStoreProps) => {
+    const [quantity, setQuantity] = useState(1);
 
-const NewInStore = () => {
-    const [quantity, setQuantity] = useState(0);
+    const displayProducts = products.length > 0 ? products.slice(0, 6) : [];
+    const featuredProduct = products.length > 6 ? products[6] : (products.length > 0 ? products[0] : null);
+
+    if (!displayProducts.length) return null;
 
     return (
-        <section className="py-16 bg-white">
+        <section className="py-24 bg-gray-50/50">
             <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-10">
-                    <h2 className="text-3xl font-bold uppercase text-black">
-                        New In Store
-                    </h2>
-                    <Link href="/shop" className="text-sking-pink font-bold hover:underline">
-                        View All
+                <div className="flex flex-col md:flex-row items-baseline justify-between mb-16 gap-4">
+                    <div>
+                        <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+                            NEW IN <span className="text-sking-pink italic">STORE</span>
+                        </h2>
+                        <p className="text-gray-500 mt-2 font-medium">Discover our latest arrivals and fresh additions.</p>
+                    </div>
+                    <Link href="/shop" className="text-sking-pink font-black text-lg hover:underline underline-offset-8">
+                        View All Collections
                     </Link>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-8">
+                <div className="flex flex-col lg:flex-row gap-12">
 
                     {/* Left Grid (2/3 width) */}
-                    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10">
-                        {newInProducts.map((product) => (
-                            <div key={product.id} className="group flex flex-col">
-                                <div className="relative h-48 w-full bg-gray-50 rounded-lg overflow-hidden mb-3 p-4 flex items-center justify-center">
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-12">
+                        {displayProducts.map((product) => (
+                            <Link href={`/product/${product.slug}`} key={product._id} className="group flex flex-col">
+                                <div className="relative h-64 w-full bg-white rounded-[2rem] overflow-hidden mb-5 p-6 flex items-center justify-center border border-gray-100 group-hover:shadow-2xl group-hover:scale-[1.02] transition-all duration-500">
                                     <Image
-                                        src={product.image}
+                                        src={product.images[0]}
                                         alt={product.name}
                                         fill
-                                        className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                                        className="object-contain p-6 group-hover:scale-110 transition-transform duration-700"
                                     />
+                                    {product.offerPercentage > 0 && (
+                                        <div className="absolute top-4 left-4 bg-sking-pink text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg">
+                                            -{product.offerPercentage}%
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] text-gray-500 uppercase font-bold">{product.category}</span>
-                                    <h3 className="font-bold text-sm text-black line-clamp-2 leading-tight h-9">{product.name}</h3>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="font-bold text-lg">₹{product.price}</span>
+                                <div className="flex flex-col gap-2 px-1">
+                                    <span className="text-[10px] text-sking-pink font-black uppercase tracking-widest">{product.category?.name || "SKING"}</span>
+                                    <h3 className="font-bold text-base text-gray-900 line-clamp-2 leading-tight h-10 group-hover:text-sking-pink transition-colors">{product.name}</h3>
+                                    <div className="flex items-center justify-between mt-2">
+                                        <div className="flex flex-col">
+                                            <span className="font-black text-xl text-gray-900">₹{product.offerPercentage > 0 ? Math.round(product.price * (1 - product.offerPercentage / 100)) : product.price}</span>
+                                            {product.offerPercentage > 0 && <span className="text-xs text-gray-400 line-through font-medium">₹{product.price}</span>}
+                                        </div>
                                         <div className="flex text-sking-pink">
                                             <Star size={10} fill="currentColor" />
                                             <Star size={10} fill="currentColor" />
                                             <Star size={10} fill="currentColor" />
                                             <Star size={10} fill="currentColor" />
-                                            <Star size={10} fill="currentColor" className="text-gray-300" />
+                                            <Star size={10} fill="currentColor" />
                                         </div>
-                                        <span className="text-[10px] text-gray-400">({product.reviews} Sold)</span>
                                     </div>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
 
                     {/* Right Featured Card (1/3 width) */}
-                    <div className="w-full lg:w-[400px] bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-6 flex flex-col">
+                    {featuredProduct && (
+                        <div className="w-full lg:w-[450px] bg-white rounded-[3rem] shadow-2xl shadow-gray-200/50 overflow-hidden border border-gray-100 p-8 flex flex-col hover:shadow-sking-pink/5 transition-all duration-500">
 
-                        {/* Main Image Carousel Area */}
-                        <div className="relative w-full h-80 mb-6 bg-gray-50 rounded-xl overflow-hidden">
-                            <Image
-                                src={featuredNew.images[0]}
-                                alt={featuredNew.name}
-                                fill
-                                className="object-contain p-4"
-                            />
-                        </div>
-
-                        {/* Thumbnails */}
-                        <div className="flex items-center justify-between mb-6 px-4">
-                            <button className="text-gray-400 hover:text-black"><ChevronLeft size={20} /></button>
-                            <div className="flex gap-2">
-                                {featuredNew.images.map((img, i) => (
-                                    <div key={i} className={`w-12 h-12 rounded border ${i === 0 ? 'border-sking-pink' : 'border-gray-200'} p-1 relative`}>
-                                        <Image src={img} alt="" fill className="object-contain" />
-                                    </div>
-                                ))}
-                            </div>
-                            <button className="text-gray-400 hover:text-black"><ChevronRight size={20} /></button>
-                        </div>
-
-                        {/* Product Details */}
-                        <div className="space-y-3">
-                            <span className="text-[10px] text-gray-500 uppercase font-bold">{featuredNew.category}</span>
-                            <div className="flex items-start justify-between">
-                                <h3 className="text-xl font-bold text-black">{featuredNew.name}</h3>
-                                <span className="text-2xl font-bold text-black">₹{featuredNew.price}</span>
+                            <div className="flex items-center justify-between mb-8">
+                                <span className="bg-gray-900 text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest">Editor&apos;s Pick</span>
+                                <button className="text-gray-400 hover:text-sking-pink transition-colors"><Heart size={24} /></button>
                             </div>
 
-                            <div className="flex items-center gap-1">
-                                <div className="flex text-sking-pink">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} size={12} fill="currentColor" />
-                                    ))}
-                                </div>
-                                <span className="text-xs text-gray-400 ml-2">({featuredNew.reviews} Sold)</span>
+                            {/* Main Image */}
+                            <div className="relative w-full h-80 mb-8 p-10 bg-gray-50 rounded-[2.5rem] overflow-hidden group/feat">
+                                <Image
+                                    src={featuredProduct.images[0]}
+                                    alt={featuredProduct.name}
+                                    fill
+                                    className="object-contain p-8 group-hover/feat:scale-110 transition-transform duration-700"
+                                />
                             </div>
 
-                            {/* Actions */}
-                            <div className="pt-6 space-y-4">
-                                {/* Quantity */}
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="text-xs font-bold uppercase text-gray-500">Quantity</span>
-                                    <div className="flex items-center border border-gray-300 rounded">
-                                        <button onClick={() => setQuantity(Math.max(0, quantity - 1))} className="px-3 py-1 text-gray-500 hover:bg-gray-100">-</button>
-                                        <span className="w-8 text-center text-sm font-medium">{quantity}</span>
-                                        <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-1 text-gray-500 hover:bg-gray-100">+</button>
+                            {/* Product Details */}
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <span className="text-xs font-black text-sking-pink uppercase tracking-[0.2em]">{featuredProduct.category?.name || "PREMIUM"}</span>
+                                    <h3 className="text-3xl font-black text-gray-900 leading-tight">{featuredProduct.name}</h3>
+                                    <div className="flex items-center gap-4 pt-2">
+                                        <span className="text-4xl font-black text-gray-900">₹{featuredProduct.offerPercentage > 0 ? Math.round(featuredProduct.price * (1 - featuredProduct.offerPercentage / 100)) : featuredProduct.price}</span>
+                                        {featuredProduct.offerPercentage > 0 && <span className="text-lg text-gray-400 line-through font-bold">₹{featuredProduct.price}</span>}
                                     </div>
                                 </div>
 
-                                <div className="flex gap-3">
-                                    <button className="flex-1 py-3 border border-sking-pink text-sking-pink font-bold text-sm uppercase rounded hover:bg-sking-pink hover:text-white transition-colors flex items-center justify-center gap-2">
-                                        <ShoppingBag size={16} /> Add to Bag
-                                    </button>
-                                    <button className="flex-1 py-3 bg-sking-pink text-white font-bold text-sm uppercase rounded hover:bg-pink-600 transition-colors">
-                                        Buy Now
-                                    </button>
-                                    <button className="p-3 border border-gray-300 text-gray-400 rounded hover:border-red-500 hover:text-red-500 transition-colors">
-                                        <Heart size={20} />
-                                    </button>
+                                {/* Stock & Info */}
+                                <p className="text-gray-500 text-sm leading-relaxed line-clamp-3">
+                                    {featuredProduct.shortDescription || "Experience the pinnacle of skincare excellence with our latest premium selection. Crafted for perfection and glowing results."}
+                                </p>
+
+                                {/* Actions */}
+                                <div className="pt-4 space-y-4">
+                                    <Link
+                                        href={`/product/${featuredProduct.slug}`}
+                                        className="w-full py-5 bg-gray-900 text-white font-black text-sm uppercase rounded-[2rem] hover:bg-sking-pink transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95"
+                                    >
+                                        <ShoppingBag size={20} /> VIEW PRODUCT DETAILS
+                                    </Link>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button className="py-4 border border-gray-100 rounded-2xl font-bold text-xs uppercase hover:bg-gray-50 transition-all">Add to Wishlist</button>
+                                        <button className="py-4 border border-gray-100 rounded-2xl font-bold text-xs uppercase hover:bg-gray-50 transition-all">Quick View</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
+                    )}
                 </div>
             </div>
         </section>

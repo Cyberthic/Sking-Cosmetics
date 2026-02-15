@@ -291,5 +291,29 @@ container.bind<IAdminDeliveryRepository>(TYPES.IAdminDeliveryRepository).to(Admi
 container.bind<IAdminDeliveryService>(TYPES.IAdminDeliveryService).to(AdminDeliveryService);
 container.bind<IAdminDeliveryController>(TYPES.IAdminDeliveryController).to(AdminDeliveryController);
 
+// Flash Sale
+import { IFlashSaleRepository } from "./interfaces/repositories/admin/IFlashSale.repository";
+import { IFlashSaleService } from "./interfaces/services/admin/IFlashSale.service";
+import { IFlashSaleController } from "./interfaces/controllers/admin/IFlashSale.controller";
+import { FlashSaleRepository } from "../repositories/admin/flashSale.repository";
+import { FlashSaleService } from "../services/admin/flashSale.service";
+import { FlashSaleController } from "../controllers/admin/flashSale.controller";
+
+container.bind<IFlashSaleRepository>(TYPES.IFlashSaleRepository).to(FlashSaleRepository);
+container.bind<IFlashSaleService>(TYPES.IFlashSaleService).to(FlashSaleService);
+container.bind<IFlashSaleController>(TYPES.IFlashSaleController).to(FlashSaleController);
+
+// Featured Product
+import { IFeaturedProductRepository } from "./interfaces/repositories/admin/IFeaturedProduct.repository";
+import { IFeaturedProductService } from "./interfaces/services/admin/IFeaturedProduct.service";
+import { IFeaturedProductController } from "./interfaces/controllers/admin/IFeaturedProduct.controller";
+import { FeaturedProductRepository } from "../repositories/admin/featuredProduct.repository";
+import { FeaturedProductService } from "../services/admin/featuredProduct.service";
+import { FeaturedProductController } from "../controllers/admin/featuredProduct.controller";
+
+container.bind<IFeaturedProductRepository>(TYPES.IFeaturedProductRepository).to(FeaturedProductRepository);
+container.bind<IFeaturedProductService>(TYPES.IFeaturedProductService).to(FeaturedProductService);
+container.bind<IFeaturedProductController>(TYPES.IFeaturedProductController).to(FeaturedProductController);
+
 export { container };
 export default container;

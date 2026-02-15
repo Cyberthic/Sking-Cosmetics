@@ -9,13 +9,16 @@ import {
     Save,
     Truck,
     Package,
-    IndianRupee
+    IndianRupee,
+    ArrowLeft
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function DeliverySettingsPage() {
     const [settings, setSettings] = useState<{ deliveryCharge: number | string; freeShippingThreshold: number | string }>({ deliveryCharge: 49, freeShippingThreshold: 1000 });
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         fetchSettings();
@@ -62,7 +65,19 @@ export default function DeliverySettingsPage() {
 
     return (
         <div className="p-4 md:p-8">
-            <PageBreadCrumb pageTitle="Delivery Configuration" />
+            <div className="flex items-center gap-4 mb-6">
+                <button
+                    onClick={() => router.back()}
+                    className="p-2 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-white/5 text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+                <PageBreadCrumb
+                    pageTitle="Delivery Configuration"
+                    parentPage="Site Settings"
+                    parentHref="/admin/site-settings"
+                />
+            </div>
 
             <div className="mt-10 max-w-5xl">
                 <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-white/5 p-8 md:p-12 shadow-2xl shadow-brand-500/5">
