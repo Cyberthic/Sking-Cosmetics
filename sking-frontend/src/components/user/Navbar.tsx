@@ -365,9 +365,9 @@ export default function Navbar() {
                                         {link.hasDropdown && (
                                             <div className="absolute top-full left-0 w-48 bg-white shadow-xl border-t-2 border-sking-pink opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                                                 <div className="py-2">
-                                                    <Link href="#" className="block px-4 py-2 text-sm text-black hover:bg-gray-50 hover:text-sking-pink">New Arrival</Link>
-                                                    <Link href="#" className="block px-4 py-2 text-sm text-black hover:bg-gray-50 hover:text-sking-pink">Best Sellers</Link>
-                                                    <Link href="#" className="block px-4 py-2 text-sm text-black hover:bg-gray-50 hover:text-sking-pink">Featured</Link>
+                                                    <Link href="/shop?sort=newest" className="block px-4 py-2 text-sm text-black hover:bg-gray-50 hover:text-sking-pink transition-colors">New Arrival</Link>
+                                                    <Link href="/shop?sort=popularity" className="block px-4 py-2 text-sm text-black hover:bg-gray-50 hover:text-sking-pink transition-colors">Best Sellers</Link>
+                                                    <Link href="/shop" className="block px-4 py-2 text-sm text-black hover:bg-gray-50 hover:text-sking-pink transition-colors">Featured</Link>
                                                 </div>
                                             </div>
                                         )}
@@ -464,15 +464,30 @@ export default function Navbar() {
                     {/* Navigation Links */}
                     <div className="flex flex-col divide-y divide-gray-50">
                         {mainLinks.map((link) => (
-                            <Link
-                                key={link.name}
-                                href={link.href}
-                                className="text-xl font-black uppercase tracking-widest py-5 text-gray-900 flex items-center justify-between group"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                {link.name}
-                                <ChevronDown className="w-5 h-5 -rotate-90 opacity-20 group-hover:opacity-100 group-hover:text-sking-pink transition-all" />
-                            </Link>
+                            <div key={link.name} className="flex flex-col">
+                                <Link
+                                    href={link.href}
+                                    className="text-xl font-black uppercase tracking-widest py-5 text-gray-900 flex items-center justify-between group"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    {link.name}
+                                    <ChevronDown className="w-5 h-5 -rotate-90 opacity-20 group-hover:opacity-100 group-hover:text-sking-pink transition-all" />
+                                </Link>
+
+                                {link.name === "Shop" && (
+                                    <div className="flex flex-col gap-4 pb-6 pl-4">
+                                        <Link href="/shop?sort=newest" onClick={() => setIsMobileMenuOpen(false)} className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 hover:text-sking-pink transition-colors">
+                                            — New Arrivals
+                                        </Link>
+                                        <Link href="/shop?sort=popularity" onClick={() => setIsMobileMenuOpen(false)} className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 hover:text-sking-pink transition-colors">
+                                            — Best Sellers
+                                        </Link>
+                                        <Link href="/shop" onClick={() => setIsMobileMenuOpen(false)} className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 hover:text-sking-pink transition-colors">
+                                            — Featured Shop
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
                         ))}
 
                         {/* All Categories Mobile */}
