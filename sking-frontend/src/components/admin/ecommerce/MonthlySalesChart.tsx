@@ -3,7 +3,7 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { MoreDotIcon } from "@/icons";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { adminDashboardApiService, DashboardStats } from "@/services/admin/adminDashboardApiService";
 
@@ -15,21 +15,33 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 export default function MonthlySalesChart() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [isOpen, setIsOpen] = useState(false);
+
+  const fetchStats = useCallback(async (year: number) => {
+    setLoading(true);
+    try {
+      const startDate = new Date(year, 0, 1).toISOString();
+      const endDate = new Date(year, 11, 31, 23, 59, 59, 999).toISOString();
+
+      const data = await adminDashboardApiService.getDashboardStats('weekly', 'weekly', { startDate, endDate });
+      setStats(data);
+    } catch (error) {
+      console.error("Error fetching sales stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await adminDashboardApiService.getDashboardStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Error fetching sales stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchStats(selectedYear);
+  }, [selectedYear, fetchStats]);
 
-    fetchStats();
-  }, []);
+  const toggleDropdown = () => setIsOpen(!isOpen);
+  const closeDropdown = () => setIsOpen(false);
+
+  const currentYear = new Date().getFullYear();
+  const availableYears = [currentYear, currentYear - 1, currentYear - 2];
 
   const options: ApexOptions = {
     colors: ["#465fff"],
@@ -79,6 +91,9 @@ export default function MonthlySalesChart() {
       title: {
         text: undefined,
       },
+      labels: {
+        formatter: (val) => `₹${val.toLocaleString()}`
+      }
     },
     grid: {
       yaxis: {
@@ -90,14 +105,12 @@ export default function MonthlySalesChart() {
     fill: {
       opacity: 1,
     },
-
     tooltip: {
       x: {
-        show: false,
+        show: true,
       },
       y: {
         formatter: (val: number, { dataPointIndex }: any) => {
-          // Direct lookup from the component's stats state for maximum reliability
           const orders = stats?.monthlySales?.[dataPointIndex]?.orders ?? 0;
           return `₹ ${val.toLocaleString()} (Orders: ${orders})`;
         },
@@ -112,21 +125,11 @@ export default function MonthlySalesChart() {
     },
   ];
 
-  const [isOpen, setIsOpen] = useState(false);
-
-  function toggleDropdown() {
-    setIsOpen(!isOpen);
-  }
-
-  function closeDropdown() {
-    setIsOpen(false);
-  }
-
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Monthly Sales
+          Monthly Sales ({selectedYear})
         </h3>
 
         <div className="relative inline-block">
@@ -138,18 +141,21 @@ export default function MonthlySalesChart() {
             onClose={closeDropdown}
             className="w-40 p-2"
           >
-            <DropdownItem
-              onItemClick={closeDropdown}
-              className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-            >
-              View More
-            </DropdownItem>
-            <DropdownItem
-              onItemClick={closeDropdown}
-              className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-            >
-              Delete
-            </DropdownItem>
+            {availableYears.map((year) => (
+              <DropdownItem
+                key={year}
+                onItemClick={() => {
+                  setSelectedYear(year);
+                  closeDropdown();
+                }}
+                className={`flex w-full font-normal text-left rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5 dark:hover:text-gray-300 ${selectedYear === year
+                    ? "text-primary bg-primary/5"
+                    : "text-gray-500 dark:text-gray-400"
+                  }`}
+              >
+                Year {year}
+              </DropdownItem>
+            ))}
           </Dropdown>
         </div>
       </div>
