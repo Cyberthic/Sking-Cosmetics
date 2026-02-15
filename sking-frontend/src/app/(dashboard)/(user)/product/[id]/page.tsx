@@ -290,20 +290,20 @@ function ProductDetailContent() {
                     </div>
 
                     {/* Thumbnails */}
-                    <div className="flex items-center justify-center gap-4">
-                        <button className="text-gray-400 hover:text-black"><ChevronLeft /></button>
-                        <div className="flex gap-4">
+                    <div className="flex items-center gap-2 md:gap-4 max-w-full overflow-hidden">
+                        <button className="flex-shrink-0 text-gray-400 hover:text-black transition-colors hidden sm:block"><ChevronLeft /></button>
+                        <div className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-none pb-2 px-1 snap-x snap-proximity">
                             {product.images?.map((img: string, idx: number) => (
                                 <button
                                     key={idx}
                                     onClick={() => setMainImage(img)}
-                                    className={`relative w-20 h-20 bg-white border rounded-lg overflow-hidden p-2 transition-all ${mainImage === img ? "border-sking-pink ring-1 ring-sking-pink" : "border-gray-200 hover:border-gray-400"}`}
+                                    className={`relative w-16 h-16 md:w-20 md:h-20 bg-white border rounded-lg overflow-hidden p-1.5 transition-all flex-shrink-0 snap-center ${mainImage === img ? "border-sking-pink ring-1 ring-sking-pink shadow-md" : "border-gray-200 hover:border-gray-300"}`}
                                 >
                                     <Image src={img} alt={`View ${idx}`} fill className="object-contain p-1" />
                                 </button>
                             ))}
                         </div>
-                        <button className="text-gray-400 hover:text-black"><ChevronRight /></button>
+                        <button className="flex-shrink-0 text-gray-400 hover:text-black transition-colors hidden sm:block"><ChevronRight /></button>
                     </div>
 
                     {/* Share Icons */}
@@ -509,12 +509,12 @@ function ProductDetailContent() {
 
             {/* TABS & REVIEWS */}
             <div className="mb-20">
-                <div className="flex gap-8 border-b border-gray-200 mb-8 bg-gray-50 px-4 rounded-t-lg">
+                <div className="flex gap-6 md:gap-8 border-b border-gray-200 mb-8 bg-gray-50 px-4 rounded-t-lg overflow-x-auto scrollbar-none">
                     {['Description', 'Ingredients', 'How to Use'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab.toLowerCase())}
-                            className={`py-4 font-bold text-sm uppercase relative ${activeTab === tab.toLowerCase() ? "text-sking-pink" : "text-gray-500 hover:text-black"}`}
+                            className={`py-4 font-bold text-sm uppercase relative whitespace-nowrap transition-colors ${activeTab === tab.toLowerCase() ? "text-sking-pink" : "text-gray-500 hover:text-black"}`}
                         >
                             {tab}
                             {activeTab === tab.toLowerCase() && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sking-pink"></span>}
