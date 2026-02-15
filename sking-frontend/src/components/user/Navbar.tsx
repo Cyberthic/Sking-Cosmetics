@@ -271,30 +271,88 @@ export default function Navbar() {
                 <div className={`fixed inset-0 top-[80px] bg-white z-40 lg:hidden overflow-y-auto transition-transform duration-300 ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
                     <div className="flex flex-col p-6 gap-2">
                         {/* Search Mobile */}
-                        <div className="relative mb-6">
+                        <div className="relative mb-8">
                             <input
                                 type="text"
                                 placeholder="Search products..."
-                                className="w-full h-12 pl-4 pr-10 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+                                className="w-full h-14 pl-4 pr-10 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-sking-pink outline-none transition-all"
                             />
-                            <Search className="absolute right-4 top-3.5 w-5 h-5 text-gray-400" />
+                            <Search className="absolute right-4 top-[18px] w-5 h-5 text-gray-400" />
                         </div>
 
-                        {mainLinks.map((link) => (
-                            <Link
-                                key={link.name}
-                                href={link.href}
-                                className="text-lg font-medium uppercase tracking-wide py-3 border-b border-gray-50 text-gray-800"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                {link.name}
-                            </Link>
-                        ))}
+                        {/* Navigation Links */}
+                        <div className="flex flex-col">
+                            {mainLinks.map((link) => (
+                                <Link
+                                    key={link.name}
+                                    href={link.href}
+                                    className="text-lg font-bold uppercase tracking-wider py-4 border-b border-gray-50 text-gray-900"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    {link.name}
+                                </Link>
+                            ))}
 
-                        {!isAuthenticated && (
-                            <div className="grid grid-cols-2 gap-4 mt-6">
-                                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="py-3 text-center border border-black rounded font-medium uppercase text-sm">Login</Link>
-                                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="py-3 text-center bg-black text-white rounded font-medium uppercase text-sm">Register</Link>
+                            {/* Utility Links */}
+                            <Link
+                                href="/wishlist"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center justify-between py-4 border-b border-gray-50 text-gray-900"
+                            >
+                                <span className="text-lg font-bold uppercase tracking-wider">Wishlist</span>
+                                <div className="flex items-center gap-3">
+                                    <Heart className="w-5 h-5" />
+                                    <span className="bg-black text-white text-[10px] font-black px-2 py-1 rounded-full">{wishlistItems.length}</span>
+                                </div>
+                            </Link>
+
+                            <button
+                                onClick={() => { setIsCartOpen(true); setIsMobileMenuOpen(false); }}
+                                className="flex items-center justify-between py-4 border-b border-gray-50 text-gray-900 text-left"
+                            >
+                                <span className="text-lg font-bold uppercase tracking-wider">My Bag</span>
+                                <div className="flex items-center gap-3">
+                                    <ShoppingBag className="w-5 h-5" />
+                                    <span className="bg-sking-red text-white text-[10px] font-black px-2 py-1 rounded-full">{totalItems}</span>
+                                </div>
+                            </button>
+                        </div>
+
+                        {/* User Section */}
+                        {isAuthenticated ? (
+                            <div className="mt-8 pt-8 border-t-2 border-gray-100 pb-20">
+                                <div className="flex items-center gap-4 mb-10 p-4 bg-gray-50 rounded-3xl">
+                                    <div className="w-14 h-14 border-2 border-black rounded-full flex items-center justify-center bg-white shadow-sm">
+                                        <User className="w-7 h-7" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-black uppercase tracking-widest text-black truncate">{user?.username}</p>
+                                        <p className="text-[11px] text-gray-500 truncate mt-1">{user?.email}</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 gap-2 pl-2">
+                                    <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 py-4 text-sm font-black uppercase tracking-[0.2em] text-gray-900">
+                                        Profile Settings
+                                    </Link>
+                                    <Link href="/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 py-4 text-sm font-black uppercase tracking-[0.2em] text-gray-900">
+                                        My Order History
+                                    </Link>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="flex items-center gap-3 py-6 mt-4 text-sm font-black uppercase tracking-[0.2em] text-sking-red border-t border-gray-100"
+                                    >
+                                        Sign Out Account
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-4 mt-12 pb-20">
+                                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="py-4 text-center border-2 border-black rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-gray-50 transition-all">
+                                    Login
+                                </Link>
+                                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="py-4 text-center bg-black text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-sking-pink transition-all">
+                                    Register
+                                </Link>
                             </div>
                         )}
                     </div>
