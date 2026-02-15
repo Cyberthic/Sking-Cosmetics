@@ -6,6 +6,8 @@ import { IProduct } from "../../models/product.model";
 import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
 
+import { CategoryModel } from "../../models/category.model";
+
 @injectable()
 export class UserProductService implements IUserProductService {
     constructor(
@@ -18,17 +20,66 @@ export class UserProductService implements IUserProductService {
         const skip = (page - 1) * limit;
 
         const filter: any = {};
+
+        // Category Filter (handle single or comma-separated string)
         if (query.category) {
-            filter.category = query.category;
+            const categories = typeof query.category === 'string' ? query.category.split(',') : [query.category];
+            const validCategories = categories.filter(c => c.match(/^[0-9a-fA-F]{24}$/));
+
+            if (validCategories.length > 0) {
+                filter.category = validCategories.length > 1 ? { $in: validCategories } : validCategories[0];
+            }
         }
+
+        // Advanced Search (name, description, tags, brand, category name)
         if (query.search) {
-            filter.name = { $regex: query.search, $options: 'i' };
+            const searchRegex = { $regex: query.search as string, $options: 'i' };
+
+            // Find categories whose name matches the search term
+            const matchingCategories = await CategoryModel.find({
+                name: searchRegex,
+                isActive: true
+            }).select('_id');
+            const categoryIds = matchingCategories.map(cat => cat._id);
+
+            filter.$or = [
+                { name: searchRegex },
+                { description: searchRegex },
+                { shortDescription: searchRegex },
+                { tags: searchRegex },
+                { brand: searchRegex }
+            ];
+
+            if (categoryIds.length > 0) {
+                filter.$or.push({ category: { $in: categoryIds } });
+            }
+        }
+
+        // Price Filter
+        if (query.minPrice || query.maxPrice) {
+            filter.price = {};
+            const min = parseFloat(query.minPrice);
+            const max = parseFloat(query.maxPrice);
+            if (!isNaN(min)) filter.price.$gte = min;
+            if (!isNaN(max)) filter.price.$lte = max;
+            if (Object.keys(filter.price).length === 0) delete filter.price;
+        }
+
+        // Rating Filter (Mock logic for now using reviewsCount)
+        if (query.rating) {
+            const rating = parseInt(query.rating);
+            if (!isNaN(rating)) {
+                filter.reviewsCount = { $gte: rating };
+            }
         }
 
         // Sorting
-        let sort: any = { createdAt: -1 }; // Default new arrivals
+        let sort: any = { createdAt: -1 };
         if (query.sort === 'price_asc') sort = { price: 1 };
         if (query.sort === 'price_desc') sort = { price: -1 };
+        if (query.sort === 'newest') sort = { createdAt: -1 };
+        if (query.sort === 'popularity') sort = { soldCount: -1 };
+        if (query.sort === 'rating') sort = { reviewsCount: -1 };
 
         const products = await this._productRepository.findActive(filter, sort, skip, limit);
         const total = await this._productRepository.countActive(filter);

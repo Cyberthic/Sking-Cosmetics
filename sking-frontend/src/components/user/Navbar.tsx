@@ -9,16 +9,26 @@ import { logout } from "@/redux/features/authSlice";
 import { fetchCart, setDrawerOpen } from "@/redux/features/cartSlice"; // Import fetchCart and setDrawerOpen
 import { fetchWishlist } from "@/redux/features/wishlistSlice";
 import { userAuthService } from "@/services/user/userAuthApiService";
-import { userCategoryService } from "@/services/user/userCategoryApiService"; // Add this
+import { userProductService } from "@/services/user/userProductApiService";
+import { userCategoryService } from "@/services/user/userCategoryApiService";
+import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "sonner";
 import { RootState, AppDispatch } from "@/redux/store"; // Import AppDispatch
 import CartDrawer from "./CartDrawer";
+import Image from "next/image";
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
+
+    // Search States
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showResults, setShowResults] = useState(false);
+    const debouncedSearch = useDebounce(searchTerm, 400);
 
     // Redux
     const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -62,10 +72,42 @@ export default function Navbar() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // Close mobile menu on route change
+    // Close search results on route change
     useEffect(() => {
         setIsMobileMenuOpen(false);
+        setShowResults(false);
     }, [pathname]);
+
+    // Handle Search API Call
+    useEffect(() => {
+        const performSearch = async () => {
+            if (debouncedSearch.length < 2) {
+                setSearchResults([]);
+                return;
+            }
+            setIsSearching(true);
+            try {
+                const data = await userProductService.getProducts({ search: debouncedSearch, limit: 5 });
+                if (data.success) {
+                    setSearchResults(data.products);
+                }
+            } catch (error) {
+                console.error("Search failed", error);
+            } finally {
+                setIsSearching(false);
+            }
+        };
+        performSearch();
+    }, [debouncedSearch]);
+
+    const handleSearchSubmit = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (searchTerm.trim()) {
+            router.push(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
+            setShowResults(false);
+            setIsMobileMenuOpen(false);
+        }
+    };
 
     // Body scroll lock for mobile menu
     useEffect(() => {
@@ -121,14 +163,65 @@ export default function Navbar() {
 
                             {/* SEARCH BAR */}
                             <div className="relative group mr-2">
-                                <input
-                                    type="text"
-                                    placeholder="Search for products and brands"
-                                    className="w-80 h-11 pl-4 pr-10 bg-white border border-gray-400 rounded text-sm text-black focus:outline-none focus:border-sking-pink transition-all placeholder:text-gray-500"
-                                />
-                                <button className="absolute right-3 top-0 h-11 flex items-center justify-center text-gray-500 group-hover:text-sking-pink transition-colors">
-                                    <Search className="w-5 h-5" />
-                                </button>
+                                <form onSubmit={handleSearchSubmit} className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Search for products and brands"
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            setShowResults(true);
+                                        }}
+                                        onFocus={() => setShowResults(true)}
+                                        className="w-80 h-11 pl-4 pr-10 bg-white border border-gray-400 rounded text-sm text-black focus:outline-none focus:border-sking-pink transition-all placeholder:text-gray-500"
+                                    />
+                                    <button type="submit" className="absolute right-3 top-0 h-11 flex items-center justify-center text-gray-500 hover:text-sking-pink transition-colors">
+                                        <Search className="w-5 h-5" />
+                                    </button>
+                                </form>
+
+                                {/* Search Results Dropdown */}
+                                {showResults && (searchTerm.length >= 2) && (
+                                    <div className="absolute top-full left-0 mt-2 w-96 bg-white border border-gray-100 shadow-2xl rounded-xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2">
+                                        {isSearching ? (
+                                            <div className="p-8 text-center">
+                                                <div className="animate-spin h-6 w-6 border-2 border-sking-pink border-t-transparent rounded-full mx-auto"></div>
+                                                <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mt-4">Searching Products...</p>
+                                            </div>
+                                        ) : searchResults.length > 0 ? (
+                                            <div className="py-2">
+                                                <p className="px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 border-b border-gray-50">Results Found</p>
+                                                {searchResults.map((product) => (
+                                                    <Link
+                                                        key={product._id}
+                                                        href={`/product/${product.slug || product._id}`}
+                                                        className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors group"
+                                                    >
+                                                        <div className="relative w-12 h-12 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
+                                                            <Image src={product.images?.[0]} alt={product.name} fill className="object-cover" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-bold text-black truncate group-hover:text-sking-pink transition-colors">{product.name}</p>
+                                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{product.brand || 'Sking Cosmetics'}</p>
+                                                        </div>
+                                                        <p className="text-sm font-black text-black">₹{product.price.toLocaleString()}</p>
+                                                    </Link>
+                                                ))}
+                                                <button
+                                                    onClick={handleSearchSubmit}
+                                                    className="w-full text-center py-3 bg-gray-50 text-[10px] font-black uppercase tracking-widest text-sking-pink hover:bg-sking-pink hover:text-white transition-all"
+                                                >
+                                                    View All Results
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="p-8 text-center">
+                                                <p className="text-sm font-bold text-gray-900">No products found</p>
+                                                <p className="text-xs text-gray-400 mt-1">Try again with different keywords</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* LOGIN / SIGNUP */}
@@ -305,12 +398,67 @@ export default function Navbar() {
                 <div className="flex flex-col p-6 pt-10 gap-2 min-h-full">
                     {/* Search Mobile */}
                     <div className="relative mb-8">
-                        <input
-                            type="text"
-                            placeholder="Search products..."
-                            className="w-full h-14 pl-4 pr-10 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:border-sking-pink outline-none transition-all shadow-sm"
-                        />
-                        <Search className="absolute right-4 top-[18px] w-5 h-5 text-gray-400" />
+                        <form onSubmit={handleSearchSubmit} className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search products..."
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setShowResults(true);
+                                }}
+                                onFocus={() => setShowResults(true)}
+                                className="w-full h-14 pl-4 pr-12 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:border-sking-pink outline-none transition-all shadow-sm font-bold"
+                            />
+                            <button type="submit" className="absolute right-4 top-[18px] text-gray-400">
+                                <Search className="w-5 h-5" />
+                            </button>
+                        </form>
+
+                        {/* Mobile Search Results Dropdown */}
+                        {showResults && (searchTerm.length >= 2) && (
+                            <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-100 shadow-2xl rounded-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2">
+                                {isSearching ? (
+                                    <div className="p-8 text-center">
+                                        <div className="animate-spin h-6 w-6 border-2 border-sking-pink border-t-transparent rounded-full mx-auto"></div>
+                                        <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mt-4">Searching...</p>
+                                    </div>
+                                ) : searchResults.length > 0 ? (
+                                    <div className="py-2">
+                                        {searchResults.map((product) => (
+                                            <Link
+                                                key={product._id}
+                                                href={`/product/${product.slug || product._id}`}
+                                                className="flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                                                onClick={() => {
+                                                    setShowResults(false);
+                                                    setIsMobileMenuOpen(false);
+                                                }}
+                                            >
+                                                <div className="relative w-12 h-12 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
+                                                    <Image src={product.images?.[0]} alt={product.name} fill className="object-cover" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-black truncate">{product.name}</p>
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{product.brand || 'Sking Cosmetics'}</p>
+                                                </div>
+                                                <p className="text-sm font-black text-black">₹{product.price.toLocaleString()}</p>
+                                            </Link>
+                                        ))}
+                                        <button
+                                            onClick={handleSearchSubmit}
+                                            className="w-full text-center py-4 bg-black text-white text-[10px] font-black uppercase tracking-widest"
+                                        >
+                                            View All Results
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="p-8 text-center">
+                                        <p className="text-sm font-bold text-gray-900">No products found</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Navigation Links */}
@@ -417,9 +565,9 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* Overlay for user menu click-outside */}
-            {showUserMenu && (
-                <div className="fixed inset-0 z-[55]" onClick={() => setShowUserMenu(false)} />
+            {/* Overlay for search results / user menu click-outside */}
+            {(showUserMenu || showResults) && (
+                <div className="fixed inset-0 z-[55]" onClick={() => { setShowUserMenu(false); setShowResults(false); }} />
             )}
 
             {/* Backdrop Overlay for mobile menu */}

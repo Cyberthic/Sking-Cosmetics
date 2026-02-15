@@ -31,6 +31,9 @@ export interface IProduct extends Document {
     ingredients: IIngredient[];
     howToUse: string[];
 
+    brand?: string;                // Brand name
+    tags: string[];                // Search keywords
+
     soldCount: number;
     reviewsCount: number;
 
@@ -85,6 +88,9 @@ const ProductSchema = new Schema<IProduct>(
 
         /* ----- How to Use (Steps) ----- */
         howToUse: [{ type: String, required: true }],
+
+        brand: { type: String, default: "Sking Cosmetics" },
+        tags: [{ type: String, index: true }],
 
         soldCount: { type: Number, default: 0 },
         reviewsCount: { type: Number, default: 0 },

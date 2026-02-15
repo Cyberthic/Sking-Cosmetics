@@ -24,25 +24,33 @@ const ShopContent = () => {
             setLoading(true);
             const page = parseInt(searchParams.get('page') || '1');
             const category = searchParams.get('category') || undefined;
-            // You can add more filters here like minPrice, maxPrice, sort, etc., when FilterBar supports them via URL
+            const search = searchParams.get('search') || undefined;
+            const sort = searchParams.get('sort') || undefined;
+            const minPrice = searchParams.get('minPrice') || undefined;
+            const maxPrice = searchParams.get('maxPrice') || undefined;
 
             setCurrentPage(page);
 
-            const data = await userProductService.getProducts({ page, limit: 12, category });
+            const data = await userProductService.getProducts({
+                page,
+                limit: 12,
+                category,
+                search,
+                sort,
+                minPrice,
+                maxPrice
+            });
 
             if (data.success) {
-                // Map API response to ShopProduct interface if needed, or ensure backend matches
-                // Backend returns: _id, name, price, images, etc.
-                // ShopProduct expects: id, name, price, image, etc.
                 const mappedProducts = data.products.map((p: any) => ({
                     id: p._id,
                     slug: p.slug,
                     name: p.name,
-                    brand: p.brand || 'Sking Cosmetics', // Default brand if missing
-                    price: p.finalPrice || p.price, // Use effective price
-                    originalPrice: p.price !== p.finalPrice ? p.price : undefined,
-                    rating: 5.0, // Mock rating or fetch if available
-                    reviewCount: 0, // Mock count or fetch if available
+                    brand: p.brand || 'Sking Cosmetics',
+                    price: p.finalPrice || p.offerPrice || p.price, // Updated to use offerPrice virtual from backend
+                    originalPrice: (p.offerPercentage > 0) ? p.price : undefined,
+                    rating: 5.0,
+                    reviewCount: p.soldCount || 0,
                     image: p.images?.[0] || '',
                     offerPercentage: p.offerPercentage || 0
                 }));
