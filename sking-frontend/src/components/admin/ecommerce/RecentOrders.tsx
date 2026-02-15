@@ -25,10 +25,17 @@ export default function RecentOrders() {
     const fetchRecentOrders = async () => {
       try {
         const data = await adminDashboardApiService.getDashboardStats();
-        // Cast to our extended interface
-        setOrders((data.recentOrders as RecentOrder[]) || []);
-      } catch (error) {
-        console.error("Error fetching recent orders:", error);
+        // Cast to our extended interface if data exists
+        if (data && data.recentOrders) {
+          setOrders((data.recentOrders as RecentOrder[]) || []);
+        }
+      } catch (error: any) {
+        console.error("Error fetching recent orders detailed:", {
+          message: error?.message,
+          response: error?.response?.data,
+          status: error?.response?.status,
+          error
+        });
       } finally {
         setLoading(false);
       }

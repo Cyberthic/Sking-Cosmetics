@@ -20,10 +20,17 @@ export default function DemographicCard() {
     const fetchDemographics = async () => {
       try {
         const data = await adminDashboardApiService.getDashboardStats();
-        setDemographics(data.demographics || []);
-        setStateDemographics(data.stateDemographics || []);
-      } catch (error) {
-        console.error("Error fetching demographics:", error);
+        if (data) {
+          setDemographics(data.demographics || []);
+          setStateDemographics(data.stateDemographics || []);
+        }
+      } catch (error: any) {
+        console.error("Error fetching demographics detailed:", {
+          message: error?.message,
+          response: error?.response?.data,
+          status: error?.response?.status,
+          error
+        });
       } finally {
         setLoading(false);
       }

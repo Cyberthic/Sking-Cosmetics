@@ -10,6 +10,16 @@ const axiosInstance = axios.create({
     },
 });
 
+// Debug log for production API connection issues
+if (typeof window !== 'undefined') {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+        console.warn('⚠️ NEXT_PUBLIC_API_URL is not set. Defaulting to http://localhost:5000. This may cause connection issues in production.');
+    } else {
+        console.log('🌐 API configured:', apiUrl);
+    }
+}
+
 let store: any = null;
 let logoutAction: any = null;
 let adminLogoutAction: any = null;
