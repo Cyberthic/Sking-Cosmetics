@@ -1,44 +1,30 @@
 "use client";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { ApexOptions } from "apexcharts";
 import flatpickr from "flatpickr";
 import ChartTab from "../common/ChartTab";
 import { CalenderIcon } from "@/icons/index";
-import { adminDashboardApiService, DashboardStats } from "@/services/admin/adminDashboardApiService";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { fetchPerformanceChart, setPerformanceRange } from "@/redux/features/adminDashboardSlice";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function StatisticsChart() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { data: stats, loading, startDate, endDate, period } = useSelector((state: RootState) => state.adminDashboard.performanceChart);
   const datePickerRef = useRef<HTMLInputElement>(null);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState<{ startDate: string; endDate: string } | undefined>(undefined);
-  const [period, setPeriod] = useState<"Monthly" | "Quarterly" | "Annually">("Monthly");
-
-  const fetchStats = useCallback(async (currentRange?: { startDate: string; endDate: string }) => {
-    setLoading(true);
-    try {
-      // If we have a custom range from the calendar, use it. 
-      // Otherwise, the backend defaults to the current year.
-      const data = await adminDashboardApiService.getDashboardStats('weekly', 'weekly', currentRange);
-      setStats(data);
-    } catch (error) {
-      console.error("Error fetching statistics stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    fetchStats(range);
-  }, [range, fetchStats]);
+    const range = startDate && endDate ? { startDate, endDate } : undefined;
+    dispatch(fetchPerformanceChart(range));
+  }, [dispatch, startDate, endDate]);
 
   const handlePeriodChange = (selectedPeriod: "Monthly" | "Quarterly" | "Annually") => {
-    setPeriod(selectedPeriod);
     const now = new Date();
     let start = new Date();
-    let end = new Date(now);
+    const end = new Date(now);
 
     if (selectedPeriod === "Monthly") {
       start = new Date(now.getFullYear(), 0, 1);
@@ -50,34 +36,40 @@ export default function StatisticsChart() {
       start = new Date(now.getFullYear() - 2, 0, 1);
     }
 
-    const newRange = {
+    dispatch(setPerformanceRange({
       startDate: start.toISOString(),
-      endDate: end.toISOString()
-    };
-
-    setRange(newRange);
+      endDate: end.toISOString(),
+      period: selectedPeriod
+    }));
   };
 
   useEffect(() => {
     if (!datePickerRef.current) return;
 
+    // Default dates for initialization if state is empty, or use state
     const today = new Date();
-    const rangeStart = new Date();
-    rangeStart.setDate(today.getDate() - 30); // Default to last 30 days for visualization
+    const defaultStart = new Date();
+    defaultStart.setDate(today.getDate() - 30);
+
+    const initialStart = startDate ? new Date(startDate) : defaultStart;
+    const initialEnd = endDate ? new Date(endDate) : today;
 
     const fp = flatpickr(datePickerRef.current, {
       mode: "range",
       static: true,
       monthSelectorType: "static",
       dateFormat: "Y-m-d",
-      defaultDate: [rangeStart, today],
+      defaultDate: [initialStart, initialEnd],
       clickOpens: true,
       onChange: (selectedDates) => {
         if (selectedDates.length === 2) {
-          setRange({
+          // Use 'Monthly' as default period placeholder if custom range selected, 
+          // or we could add a 'Custom' type to the slice. Keeping it simple for now.
+          dispatch(setPerformanceRange({
             startDate: selectedDates[0].toISOString(),
-            endDate: selectedDates[1].toISOString()
-          });
+            endDate: selectedDates[1].toISOString(),
+            period: period // Keep current period highlight or maybe clear it?
+          }));
         }
       },
       prevArrow:
@@ -87,11 +79,10 @@ export default function StatisticsChart() {
     });
 
     return () => {
-      if (!Array.isArray(fp)) {
-        fp.destroy();
-      }
+      fp.destroy();
     };
-  }, []);
+  }, [dispatch]); // Only run once on mount to setup flatpickr, or we re-init if we want to sync perfectly bi-directionally.
+  // Ideally flatpickr should be updated if startDate/endDate changes externally, but for now this is fine.
 
   const options: ApexOptions = {
     legend: {
@@ -204,7 +195,7 @@ export default function StatisticsChart() {
           </p>
         </div>
         <div className="flex items-center gap-3 sm:justify-end">
-          <ChartTab onSelect={handlePeriodChange} defaultSelected="Monthly" />
+          <ChartTab onSelect={handlePeriodChange} defaultSelected={period} />
           <div className="relative inline-flex items-center">
             <CalenderIcon className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:left-3 lg:top-1/2 lg:translate-x-0 lg:-translate-y-1/2  text-gray-500 dark:text-gray-400 pointer-events-none z-10" />
             <input

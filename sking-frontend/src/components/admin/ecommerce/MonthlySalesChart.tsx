@@ -3,9 +3,11 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { MoreDotIcon } from "@/icons";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useEffect, useState, useCallback } from "react";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { adminDashboardApiService, DashboardStats } from "@/services/admin/adminDashboardApiService";
+import { useEffect, useState } from "react";
+import { Dropdown } from "../ui/dropdown/Dropdown"; // Fixed import path - assuming it is same as previous
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { fetchSalesChart, setSalesChartYear } from "@/redux/features/adminDashboardSlice";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -13,32 +15,21 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 export default function MonthlySalesChart() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const dispatch = useDispatch<AppDispatch>();
+  const { data: stats, loading, year: selectedYear } = useSelector((state: RootState) => state.adminDashboard.salesChart);
   const [isOpen, setIsOpen] = useState(false);
 
-  const fetchStats = useCallback(async (year: number) => {
-    setLoading(true);
-    try {
-      const startDate = new Date(year, 0, 1).toISOString();
-      const endDate = new Date(year, 11, 31, 23, 59, 59, 999).toISOString();
-
-      const data = await adminDashboardApiService.getDashboardStats('weekly', 'weekly', { startDate, endDate });
-      setStats(data);
-    } catch (error) {
-      console.error("Error fetching sales stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchStats(selectedYear);
-  }, [selectedYear, fetchStats]);
+    dispatch(fetchSalesChart(selectedYear));
+  }, [selectedYear, dispatch]);
 
   const toggleDropdown = () => setIsOpen(!isOpen);
   const closeDropdown = () => setIsOpen(false);
+
+  const handleYearChange = (year: number) => {
+    dispatch(setSalesChartYear(year));
+    closeDropdown();
+  }
 
   const currentYear = new Date().getFullYear();
   const availableYears = [currentYear, currentYear - 1, currentYear - 2];
@@ -121,7 +112,7 @@ export default function MonthlySalesChart() {
   const series = [
     {
       name: "Sales",
-      data: stats?.monthlySales.map(s => s.sales) || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      data: stats?.monthlySales?.map(s => s.sales) || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
   ];
 
@@ -144,13 +135,10 @@ export default function MonthlySalesChart() {
             {availableYears.map((year) => (
               <DropdownItem
                 key={year}
-                onItemClick={() => {
-                  setSelectedYear(year);
-                  closeDropdown();
-                }}
+                onClick={() => handleYearChange(year)}
                 className={`flex w-full font-normal text-left rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5 dark:hover:text-gray-300 ${selectedYear === year
-                    ? "text-primary bg-primary/5"
-                    : "text-gray-500 dark:text-gray-400"
+                  ? "text-primary bg-primary/5"
+                  : "text-gray-500 dark:text-gray-400"
                   }`}
               >
                 Year {year}

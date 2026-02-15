@@ -1,38 +1,35 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { fetchMetrics, setMetricsPeriods } from "@/redux/features/adminDashboardSlice";
 import Badge from "../ui/badge/Badge";
 import { ArrowDownIcon, ArrowUpIcon, BoxIconLine, GroupIcon, MoreDotIcon } from "@/icons";
-import { adminDashboardApiService, DashboardStats, DashboardPeriod } from "@/services/admin/adminDashboardApiService";
+import { DashboardPeriod } from "@/services/admin/adminDashboardApiService";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 export const EcommerceMetrics = () => {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Periods
-  const [customerPeriod, setCustomerPeriod] = useState<DashboardPeriod>("weekly");
-  const [orderPeriod, setOrderPeriod] = useState<DashboardPeriod>("weekly");
+  const dispatch = useDispatch<AppDispatch>();
+  const { data: stats, loading, customerPeriod, orderPeriod } = useSelector((state: RootState) => state.adminDashboard.metrics);
 
   // Dropdown states
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [isOrderDropdownOpen, setIsOrderDropdownOpen] = useState(false);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        const data = await adminDashboardApiService.getDashboardStats(customerPeriod, orderPeriod);
-        setStats(data);
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    dispatch(fetchMetrics({ customerPeriod, orderPeriod }));
+  }, [dispatch, customerPeriod, orderPeriod]);
 
-    fetchStats();
-  }, [customerPeriod, orderPeriod]);
+  const handleCustomerPeriodChange = (period: DashboardPeriod) => {
+    dispatch(setMetricsPeriods({ customerPeriod: period, orderPeriod }));
+    setIsCustomerDropdownOpen(false);
+  };
+
+  const handleOrderPeriodChange = (period: DashboardPeriod) => {
+    dispatch(setMetricsPeriods({ customerPeriod, orderPeriod: period }));
+    setIsOrderDropdownOpen(false);
+  };
 
   const periods: { label: string; value: DashboardPeriod }[] = [
     { label: "Weekly", value: "weekly" },
@@ -66,10 +63,7 @@ export const EcommerceMetrics = () => {
               {periods.map((p) => (
                 <DropdownItem
                   key={p.value}
-                  onClick={() => {
-                    setCustomerPeriod(p.value);
-                    setIsCustomerDropdownOpen(false);
-                  }}
+                  onClick={() => handleCustomerPeriodChange(p.value)}
                   className={customerPeriod === p.value ? "bg-gray-50 dark:bg-white/5" : ""}
                 >
                   {p.label}
@@ -126,10 +120,7 @@ export const EcommerceMetrics = () => {
               {periods.map((p) => (
                 <DropdownItem
                   key={p.value}
-                  onClick={() => {
-                    setOrderPeriod(p.value);
-                    setIsOrderDropdownOpen(false);
-                  }}
+                  onClick={() => handleOrderPeriodChange(p.value)}
                   className={orderPeriod === p.value ? "bg-gray-50 dark:bg-white/5" : ""}
                 >
                   {p.label}
