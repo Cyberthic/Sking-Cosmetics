@@ -41,6 +41,14 @@ export interface DemographicData {
     country: string;
     orderCount: number;
     percentage: number;
+    code?: string;
+}
+
+export interface StateDemographic {
+    state: string;
+    orderCount: number;
+    percentage: number;
+    code?: string;
 }
 
 export interface MonthlyTarget {
@@ -59,6 +67,7 @@ export interface DashboardStats {
     customerPerformance: PerformanceDataPoint[];
     recentOrders: RecentOrder[];
     demographics: DemographicData[];
+    stateDemographics: StateDemographic[];
 }
 
 export const adminDashboardApiService = {

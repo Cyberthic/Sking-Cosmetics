@@ -93,6 +93,7 @@ export class AdminDashboardService implements IAdminDashboardService {
 
         // Demographics
         const demographics = await this._adminDashboardRepository.getDemographics();
+        const stateDemographics = await this._adminDashboardRepository.getStateDemographics();
 
         // Monthly Target
         const target = await this._adminDashboardRepository.getMonthlyTarget(currentMonth, currentYear);
@@ -146,7 +147,8 @@ export class AdminDashboardService implements IAdminDashboardService {
             },
             customerPerformance,
             recentOrders,
-            demographics
+            demographics,
+            stateDemographics
         };
     }
 

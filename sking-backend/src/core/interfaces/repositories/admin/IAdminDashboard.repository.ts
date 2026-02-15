@@ -9,5 +9,6 @@ export interface IAdminDashboardRepository {
     updateMonthlyTarget(month: number, year: number, target: number): Promise<void>;
     getCustomerPerformance(startDate: Date, endDate: Date): Promise<{ label: string, acquisition: number, retention: number }[]>;
     getRecentOrders(count: number): Promise<any[]>;
-    getDemographics(): Promise<{ country: string, orderCount: number, percentage: number }[]>;
+    getDemographics(): Promise<{ country: string, orderCount: number, percentage: number, code?: string }[]>;
+    getStateDemographics(): Promise<{ state: string, orderCount: number, percentage: number, code?: string }[]>;
 }

@@ -45,6 +45,14 @@ export interface DemographicDataDto {
     country: string;
     orderCount: number;
     percentage: number;
+    code?: string; // ISO code for map
+}
+
+export interface StateDemographicDto {
+    state: string;
+    orderCount: number;
+    percentage: number;
+    code?: string; // JVectorMap code for states
 }
 
 export interface AdminDashboardStatsDto {
@@ -55,4 +63,5 @@ export interface AdminDashboardStatsDto {
     customerPerformance: PerformanceDataPointDto[];
     recentOrders: RecentOrderDto[];
     demographics: DemographicDataDto[];
+    stateDemographics: StateDemographicDto[];
 }

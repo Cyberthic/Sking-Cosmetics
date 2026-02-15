@@ -1,17 +1,18 @@
 "use client";
 import Image from "next/image";
 import CountryMap from "./CountryMap";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { MoreDotIcon } from "@/icons";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { adminDashboardApiService, DemographicData } from "@/services/admin/adminDashboardApiService";
+import { adminDashboardApiService, DemographicData, StateDemographic } from "@/services/admin/adminDashboardApiService";
 import { Modal } from "../ui/modal";
 
 export default function DemographicCard() {
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [demographics, setDemographics] = useState<DemographicData[]>([]);
+  const [stateDemographics, setStateDemographics] = useState<StateDemographic[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapType, setMapType] = useState<"world" | "india">("india");
 
@@ -20,6 +21,7 @@ export default function DemographicCard() {
       try {
         const data = await adminDashboardApiService.getDashboardStats();
         setDemographics(data.demographics || []);
+        setStateDemographics(data.stateDemographics || []);
       } catch (error) {
         console.error("Error fetching demographics:", error);
       } finally {
@@ -52,47 +54,34 @@ export default function DemographicCard() {
     closeDropdown();
   };
 
+  // Memoize map data based on active switch
+  const activeMapData = useMemo(() => {
+    if (mapType === "world") {
+      return demographics.map(d => ({
+        code: d.code || "",
+        name: d.country,
+        value: d.orderCount
+      }));
+    } else {
+      return stateDemographics.map(s => ({
+        code: s.code || "",
+        name: s.state,
+        value: s.orderCount
+      }));
+    }
+  }, [mapType, demographics, stateDemographics]);
+
   /**
-   * Helper to get a live flag URL from FlagCDN (a free public API)
-   * It maps common country names to their ISO 3166-1 alpha-2 codes.
+   * Helper to get a live flag URL from FlagCDN
    */
   const getFlag = (countryName: string) => {
-    if (!countryName) return "https://flagcdn.com/w80/un.png"; // United Nations flag as fallback
-
+    if (!countryName) return "https://flagcdn.com/w80/un.png";
     const name = countryName.toLowerCase().trim();
-
-    // Common mappings (Expanded for better coverage)
     const mapping: Record<string, string> = {
-      "india": "in",
-      "usa": "us",
-      "united states": "us",
-      "united states of america": "us",
-      "uk": "gb",
-      "united kingdom": "gb",
-      "france": "fr",
-      "canada": "ca",
-      "germany": "de",
-      "china": "cn",
-      "japan": "jp",
-      "brazil": "br",
-      "australia": "au",
-      "russia": "ru",
-      "italy": "it",
-      "spain": "es",
-      "uae": "ae",
-      "united arab emirates": "ae",
-      "singapore": "sg",
-      "malaysia": "my",
-      "nepal": "np",
-      "pakistan": "pk",
-      "bangladesh": "bd",
-      "sri lanka": "lk",
-      "thailand": "th",
-      "vietnam": "vn",
-      "indonesia": "id",
+      "india": "in", "usa": "us", "united states": "us", "uk": "gb", "france": "fr",
+      "canada": "ca", "germany": "de", "china": "cn", "japan": "jp", "uae": "ae"
     };
-
-    const code = mapping[name] || "un"; // Default to 'un' flag if not found
+    const code = mapping[name] || "un";
     return `https://flagcdn.com/w80/${code}.png`;
   };
 
@@ -104,7 +93,7 @@ export default function DemographicCard() {
             Orders Demographic
           </h3>
           <p className="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
-            Current view: <span className="capitalize text-brand-500 font-medium">{mapType} Map</span>
+            Current view: <span className="capitalize text-brand-500 font-medium">{mapType} Heatmap</span>
           </p>
         </div>
 
@@ -127,7 +116,7 @@ export default function DemographicCard() {
               onItemClick={openModal}
               className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300 border-t border-gray-100 dark:border-gray-800 mt-1 pt-2"
             >
-              View Percentages
+              Full Statistics
             </DropdownItem>
           </Dropdown>
         </div>
@@ -138,7 +127,7 @@ export default function DemographicCard() {
           id="mapOne"
           className="mapOne map-btn -mx-4 -my-6 h-[212px] w-[252px] 2xsm:w-[307px] xsm:w-[358px] sm:-mx-6 md:w-[668px] lg:w-[634px] xl:w-[393px] 2xl:w-[554px]"
         >
-          <CountryMap type={mapType} />
+          <CountryMap type={mapType} data={activeMapData} />
         </div>
       </div>
 
@@ -193,26 +182,32 @@ export default function DemographicCard() {
             Full Demographic Breakdown
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Distribution of orders across all countries
+            Current Analysis: {mapType === "india" ? "State-wise (India)" : "Country-wise (Global)"}
           </p>
         </div>
 
         <div className="max-h-[400px] overflow-y-auto pr-2 space-y-6 custom-scrollbar">
-          {demographics.map((item, index) => (
+          {(mapType === "india" ? stateDemographics : demographics).map((item, index) => (
             <div key={index} className="flex items-center justify-between group">
               <div className="flex items-center gap-4">
-                <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-100 flex-shrink-0">
-                  <Image
-                    fill
-                    src={getFlag(item.country)}
-                    alt={item.country}
-                    className="object-cover"
-                    unoptimized={true}
-                  />
+                <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-100 flex-shrink-0 bg-gray-50">
+                  {mapType === "world" ? (
+                    <Image
+                      fill
+                      src={getFlag((item as DemographicData).country)}
+                      alt={(item as DemographicData).country}
+                      className="object-cover"
+                      unoptimized={true}
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-brand-500">
+                      {(item as StateDemographic).code?.split('-')[1]}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-800 dark:text-white/90">
-                    {item.country}
+                    {mapType === "india" ? (item as StateDemographic).state : (item as DemographicData).country}
                   </h4>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {item.orderCount.toLocaleString()} total orders

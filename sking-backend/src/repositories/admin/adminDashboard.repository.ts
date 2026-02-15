@@ -2,32 +2,28 @@ import { injectable } from "inversify";
 import { UserModel } from "../../models/user.model";
 import OrderModel from "../../models/order.model";
 import DashboardConfigModel from "../../models/dashboardConfig.model";
-import { ProductModel } from "../../models/product.model"; // Import to ensure registration
+import { ProductModel } from "../../models/product.model";
 import { IAdminDashboardRepository } from "../../core/interfaces/repositories/admin/IAdminDashboard.repository";
 
 @injectable()
 export class AdminDashboardRepository implements IAdminDashboardRepository {
     async getCustomerCount(startDate?: Date, endDate?: Date): Promise<number> {
         const filter: any = { isAdmin: { $ne: true } };
-
         if (startDate || endDate) {
             filter.createdAt = {};
             if (startDate) filter.createdAt.$gte = startDate;
             if (endDate) filter.createdAt.$lte = endDate;
         }
-
         return await UserModel.countDocuments(filter);
     }
 
     async getOrderCount(startDate?: Date, endDate?: Date): Promise<number> {
         const filter: any = {};
-
         if (startDate || endDate) {
             filter.createdAt = {};
             if (startDate) filter.createdAt.$gte = startDate;
             if (endDate) filter.createdAt.$lte = endDate;
         }
-
         return await OrderModel.countDocuments(filter);
     }
 
@@ -52,7 +48,7 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
                         }
                     },
                     count: { $sum: 1 },
-                    firstDate: { $min: "$createdAt" } // For sorting
+                    firstDate: { $min: "$createdAt" }
                 }
             },
             {
@@ -68,7 +64,6 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
                 $sort: { firstDate: 1 }
             }
         ]);
-
         return sales;
     }
 
@@ -87,7 +82,6 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
                 }
             }
         ]);
-
         return result.length > 0 ? (result[0].totalRevenue || 0) : 0;
     }
 
@@ -110,9 +104,7 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
 
         const performance = await OrderModel.aggregate([
             {
-                $match: {
-                    paymentStatus: "completed"
-                }
+                $match: { paymentStatus: "completed" }
             },
             {
                 $sort: { createdAt: 1 }
@@ -173,7 +165,6 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
                 $sort: { firstDate: 1 }
             }
         ]);
-
         return performance;
     }
 
@@ -186,15 +177,13 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
             .exec();
     }
 
-    async getDemographics(): Promise<{ country: string, orderCount: number, percentage: number }[]> {
+    async getDemographics(): Promise<{ country: string, orderCount: number, percentage: number, code?: string }[]> {
         const totalOrders = await OrderModel.countDocuments({ orderStatus: { $ne: 'cancelled' } });
         if (totalOrders === 0) return [];
 
         const demographics = await OrderModel.aggregate([
             {
-                $match: {
-                    orderStatus: { $ne: 'cancelled' }
-                }
+                $match: { orderStatus: { $ne: 'cancelled' } }
             },
             {
                 $group: {
@@ -217,6 +206,106 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
             }
         ]);
 
-        return demographics;
+        const countryCodes: Record<string, string> = {
+            "india": "IN",
+            "usa": "US",
+            "united states": "US",
+            "united states of america": "US",
+            "united kingdom": "GB",
+            "uk": "GB",
+            "france": "FR",
+            "canada": "CA",
+            "germany": "DE",
+            "uae": "AE"
+        };
+
+        return demographics.map(d => ({
+            ...d,
+            code: countryCodes[d.country.toLowerCase().trim()] || "IN" // Fallback to IN or dynamic logic
+        }));
+    }
+
+    async getStateDemographics(): Promise<{ state: string, orderCount: number, percentage: number, code?: string }[]> {
+        // Broaden the search for India to handle variations
+        const totalIndiaOrders = await OrderModel.countDocuments({
+            orderStatus: { $ne: 'cancelled' },
+            "shippingAddress.country": { $regex: /india/i }
+        });
+
+        if (totalIndiaOrders === 0) return [];
+
+        const stateData = await OrderModel.aggregate([
+            {
+                $match: {
+                    orderStatus: { $ne: 'cancelled' },
+                    "shippingAddress.country": { $regex: /india/i }
+                }
+            },
+            {
+                $group: {
+                    _id: "$shippingAddress.state",
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    state: "$_id",
+                    orderCount: "$count",
+                    percentage: {
+                        $multiply: [{ $divide: ["$count", totalIndiaOrders] }, 100]
+                    }
+                }
+            },
+            {
+                $sort: { orderCount: -1 }
+            }
+        ]);
+
+        // Comprehensive JVectorMap India codes
+        const stateCodes: Record<string, string> = {
+            "andaman and nicobar islands": "IN-AN",
+            "andhra pradesh": "IN-AP",
+            "arunachal pradesh": "IN-AR",
+            "assam": "IN-AS",
+            "bihar": "IN-BR",
+            "chandigarh": "IN-CH",
+            "chhattisgarh": "IN-CT",
+            "dadra and nagar haveli": "IN-DN",
+            "daman and diu": "IN-DD",
+            "delhi": "IN-DL",
+            "goa": "IN-GA",
+            "gujarat": "IN-GJ",
+            "haryana": "IN-HR",
+            "himachal pradesh": "IN-HP",
+            "jammu and kashmir": "IN-JK",
+            "jharkhand": "IN-JH",
+            "karnataka": "IN-KA",
+            "kerala": "IN-KL",
+            "ladakh": "IN-LA",
+            "lakshadweep": "IN-LD",
+            "madhya pradesh": "IN-MP",
+            "maharashtra": "IN-MH",
+            "manipur": "IN-MN",
+            "meghalaya": "IN-ML",
+            "mizoram": "IN-MZ",
+            "nagaland": "IN-NL",
+            "odisha": "IN-OR",
+            "puducherry": "IN-PY",
+            "punjab": "IN-PB",
+            "rajasthan": "IN-RJ",
+            "sikkim": "IN-SK",
+            "tamil nadu": "IN-TN",
+            "telangana": "IN-TG",
+            "tripura": "IN-TR",
+            "uttar pradesh": "IN-UP",
+            "uttarakhand": "IN-UT",
+            "west bengal": "IN-WB"
+        };
+
+        return stateData.map(s => ({
+            ...s,
+            code: stateCodes[s.state.toLowerCase().trim()] || `IN-${s.state.substring(0, 2).toUpperCase()}`
+        }));
     }
 }
