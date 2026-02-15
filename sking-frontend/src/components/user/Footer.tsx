@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, Facebook, Instagram, MessageCircle, MapPin } from "lucide-react";
 
 export default function Footer() {
     return (
@@ -23,15 +23,35 @@ export default function Footer() {
                         <div className="space-y-4 text-sm text-gray-600">
                             <div className="flex items-center gap-3">
                                 <Phone size={18} className="text-gray-900 flex-shrink-0" />
-                                <span>+1 (555) 123-4567</span>
+                                <div className="flex flex-col">
+                                    <span>India: +91 7012747466</span>
+                                    <span>UAE: +971 553033576</span>
+                                </div>
                             </div>
                             <div className="flex items-center gap-3">
                                 <Mail size={18} className="text-gray-900 flex-shrink-0" />
-                                <span>cs@sking.com</span>
+                                <span className="break-all whitespace-pre-wrap">skingfacebeautycosmetic916@gmail.com</span>
                             </div>
                             <div className="flex items-start gap-3">
                                 <MapPin size={18} className="text-gray-900 flex-shrink-0 mt-0.5" />
-                                <span>123 Anywhere Street, Mumbai, India</span>
+                                <span>Kumbla, Kasargod, Kerala, India - 671321</span>
+                            </div>
+                            <div className="flex items-center gap-4 pt-2">
+                                <Link href="https://www.facebook.com/sking.coz/" target="_blank" className="hover:text-sking-pink transition-all">
+                                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center hover:bg-black hover:text-white transition-all shadow-sm">
+                                        <Facebook size={16} />
+                                    </div>
+                                </Link>
+                                <Link href="https://www.instagram.com/sking_cosmetic_/" target="_blank" className="hover:text-sking-pink transition-all">
+                                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center hover:bg-black hover:text-white transition-all shadow-sm">
+                                        <Instagram size={16} />
+                                    </div>
+                                </Link>
+                                <Link href="https://wa.me/918590183737" target="_blank" className="hover:text-sking-pink transition-all">
+                                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center hover:bg-black hover:text-white transition-all shadow-sm">
+                                        <MessageCircle size={16} />
+                                    </div>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -64,7 +84,7 @@ export default function Footer() {
                     <div className="space-y-6">
                         <h4 className="font-bold uppercase tracking-widest text-sm text-gray-900">Customer Services</h4>
                         <ul className="space-y-3 text-sm text-gray-600">
-                            <li><Link href="/shipping" className="hover:text-sking-pink transition-colors">Shipping & Returns</Link></li>
+                            <li><Link href="/shipping" className="hover:text-sking-pink transition-colors">Shipping Information</Link></li>
                             <li><Link href="/security" className="hover:text-sking-pink transition-colors">Secure Shopping</Link></li>
                             <li><Link href="/international" className="hover:text-sking-pink transition-colors">International Shipping</Link></li>
                             <li><Link href="/affiliates" className="hover:text-sking-pink transition-colors">Affiliates</Link></li>

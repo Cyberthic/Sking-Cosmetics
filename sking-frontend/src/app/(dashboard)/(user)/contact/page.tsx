@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
     Phone,
     Mail,
@@ -15,8 +15,44 @@ import {
     Headphones
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 const ContactPage = () => {
+    const [formData, setFormData] = useState({
+        fullName: "",
+        email: "",
+        phone: "",
+        enquiryType: "Order Status",
+        message: ""
+    });
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!formData.fullName || !formData.email || !formData.message) {
+            toast.error("Please fill in all required fields");
+            return;
+        }
+
+        const whatsappMessage = `*New Contact Enquiry - Sking Cosmetics*\n\n` +
+            `*Name:* ${formData.fullName}\n` +
+            `*Email:* ${formData.email}\n` +
+            `*Phone:* ${formData.phone || 'Not provided'}\n` +
+            `*Enquiry Type:* ${formData.enquiryType}\n\n` +
+            `*Message:*\n${formData.message}`;
+
+        const encodedMessage = encodeURIComponent(whatsappMessage);
+        const whatsappUrl = `https://wa.me/918590183737?text=${encodedMessage}`;
+
+        window.open(whatsappUrl, '_blank');
+        toast.success("Redirecting to WhatsApp...");
+    };
+
     return (
         <div className="flex-1 w-full bg-white">
             {/* --- HERO SECTION --- */}
@@ -80,7 +116,8 @@ const ContactPage = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-black uppercase tracking-widest text-xs mb-2">Customer Support</h3>
-                                    <p className="text-xl font-medium text-black">+91 99327 45678</p>
+                                    <p className="text-lg font-medium text-black">India: +91 70127 47466</p>
+                                    <p className="text-lg font-medium text-black">UAE: +971 55303 3576</p>
                                     <p className="text-sm text-gray-500 mt-1">Available 24/7 for you.</p>
                                 </div>
                             </motion.div>
@@ -95,7 +132,7 @@ const ContactPage = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-black uppercase tracking-widest text-xs mb-2">Write to Us</h3>
-                                    <p className="text-xl font-medium text-black">hello@sking.in</p>
+                                    <p className="text-base font-medium text-black break-all">skingfacebeautycosmetic916@gmail.com</p>
                                     <p className="text-sm text-gray-500 mt-1">Expect a reply within 4 hours.</p>
                                 </div>
                             </motion.div>
@@ -111,8 +148,8 @@ const ContactPage = () => {
                                 <div>
                                     <h3 className="font-bold text-black uppercase tracking-widest text-xs mb-2">Our Studio</h3>
                                     <p className="text-lg font-medium text-black leading-snug">
-                                        4th Floor, Beauty Hub Chambers,<br />
-                                        Kochi, Kerala 682001
+                                        Kumbla, Kasargod,<br />
+                                        Kerala, India - 671321
                                     </p>
                                 </div>
                             </motion.div>
@@ -124,12 +161,11 @@ const ContactPage = () => {
                             <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Follow Glow</span>
                             <div className="flex gap-4">
                                 {[
-                                    { icon: <Instagram size={20} />, color: "hover:bg-pink-600" },
-                                    { icon: <Facebook size={20} />, color: "hover:bg-blue-600" },
-                                    { icon: <Twitter size={20} />, color: "hover:bg-sky-500" },
-                                    { icon: <MessageCircle size={20} />, color: "hover:bg-green-500" }
+                                    { icon: <Instagram size={20} />, color: "hover:bg-pink-600", link: "https://www.instagram.com/sking_cosmetic_/" },
+                                    { icon: <Facebook size={20} />, color: "hover:bg-blue-600", link: "https://www.facebook.com/sking.coz/" },
+                                    { icon: <MessageCircle size={20} />, color: "hover:bg-green-500", link: "https://wa.me/918590183737" }
                                 ].map((item, idx) => (
-                                    <a key={idx} href="#" className={`w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 transition-all hover:text-white hover:border-transparent ${item.color}`}>
+                                    <a key={idx} href={item.link} target="_blank" className={`w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 transition-all hover:text-white hover:border-transparent ${item.color}`}>
                                         {item.icon}
                                     </a>
                                 ))}
@@ -143,13 +179,17 @@ const ContactPage = () => {
                             <h2 className="text-3xl font-medium text-black mb-2 italic">Send a Message</h2>
                             <p className="text-gray-500 mb-10 font-light">Fields marked with * are required to help us serve you better.</p>
 
-                            <form className="space-y-6">
+                            <form className="space-y-6" onSubmit={handleSubmit}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase tracking-widest text-black/60">Full Name *</label>
                                         <input
                                             type="text"
+                                            name="fullName"
+                                            value={formData.fullName}
+                                            onChange={handleInputChange}
                                             placeholder="John Doe"
+                                            required
                                             className="w-full h-14 px-6 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-sking-pink focus:bg-white transition-all"
                                         />
                                     </div>
@@ -157,7 +197,11 @@ const ContactPage = () => {
                                         <label className="text-xs font-bold uppercase tracking-widest text-black/60">Email Address *</label>
                                         <input
                                             type="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleInputChange}
                                             placeholder="john@example.com"
+                                            required
                                             className="w-full h-14 px-6 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-sking-pink focus:bg-white transition-all"
                                         />
                                     </div>
@@ -168,19 +212,32 @@ const ContactPage = () => {
                                         <label className="text-xs font-bold uppercase tracking-widest text-black/60">Phone Number</label>
                                         <input
                                             type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleInputChange}
                                             placeholder="+91 00000 00000"
                                             className="w-full h-14 px-6 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-sking-pink focus:bg-white transition-all"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase tracking-widest text-black/60">Enquiry Type</label>
-                                        <select className="w-full h-14 px-6 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-sking-pink focus:bg-white transition-all appearance-none cursor-pointer">
-                                            <option>Order Status</option>
-                                            <option>Product Inquiry</option>
-                                            <option>Shipping & Returns</option>
-                                            <option>Business Collaboration</option>
-                                            <option>Other</option>
-                                        </select>
+                                        <div className="relative">
+                                            <select
+                                                name="enquiryType"
+                                                value={formData.enquiryType}
+                                                onChange={handleInputChange}
+                                                className="w-full h-14 px-6 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-sking-pink focus:bg-white transition-all appearance-none cursor-pointer"
+                                            >
+                                                <option>Order Status</option>
+                                                <option>Product Inquiry</option>
+                                                <option>Shipping & Returns</option>
+                                                <option>Business Collaboration</option>
+                                                <option>Other</option>
+                                            </select>
+                                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <ChevronRight size={18} className="rotate-90" />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -188,7 +245,11 @@ const ContactPage = () => {
                                     <label className="text-xs font-bold uppercase tracking-widest text-black/60">Your Message *</label>
                                     <textarea
                                         rows={5}
+                                        name="message"
+                                        value={formData.message}
+                                        onChange={handleInputChange}
                                         placeholder="Tell us what's on your mind..."
+                                        required
                                         className="w-full p-6 rounded-2xl bg-gray-50 border border-gray-200 focus:outline-none focus:border-sking-pink focus:bg-white transition-all resize-none"
                                     />
                                 </div>
@@ -224,7 +285,7 @@ const ContactPage = () => {
                     </p>
                     <div className="pt-4">
                         <a
-                            href="https://wa.me/919932745678"
+                            href="https://wa.me/918590183737"
                             target="_blank"
                             className="inline-flex items-center gap-3 px-10 py-5 bg-green-500 text-white rounded-2xl font-bold shadow-xl shadow-green-200 hover:brightness-110 active:scale-95 transition-all text-lg"
                         >

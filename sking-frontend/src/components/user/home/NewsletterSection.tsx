@@ -1,43 +1,61 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 const NewsletterSection = () => {
     return (
         <section className="bg-transparent relative z-20 -mt-32 pointer-events-none">
             <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8 pointer-events-auto">
-                <div className="relative w-full rounded-2xl overflow-hidden bg-gradient-to-r from-pink-200 to-pink-100 flex items-center md:h-[400px]">
+                <div className="relative w-full rounded-[2.5rem] overflow-hidden bg-[#1a1c1e] flex items-center min-h-[400px] shadow-2xl">
+                    {/* Background Subtle Shine/Texture */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/5 pointer-events-none" />
 
-                    {/* Left Image (Brushes) */}
-                    <div className="hidden md:block w-1/2 h-full relative">
-                        <div className="absolute inset-0 z-10 bg-gradient-to-r from-transparent to-pink-100/50" />
+                    {/* Left Image (Model) with Seamless Blend */}
+                    <div className="hidden md:block w-[60%] h-full absolute left-0 top-0">
                         <Image
-                            src="https://images.unsplash.com/photo-1596462502278-27bfdd403348?q=80&w=800&auto=format&fit=crop"
-                            alt="Makeup Brushes"
+                            src="/sking/sking-model.webp"
+                            alt="Beauty Model"
                             fill
-                            className="object-cover object-left"
+                            className="object-cover object-center"
+                            priority
                         />
+                        {/* Complex Gradient Blend: Fades the model image into the dark container background */}
+                        <div className="absolute inset-0 z-10 bg-gradient-to-r from-transparent via-[#1a1c1e]/20 to-[#1a1c1e]" />
                     </div>
 
                     {/* Right Content */}
-                    <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center items-start">
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                            Sign up for our newsletter
-                        </h2>
-                        <p className="text-gray-600 mb-8 max-w-md">
-                            to receive the latest beauty tips, exclusive offers, and updates.
-                        </p>
+                    <div className="relative z-20 w-full md:w-[55%] md:ml-auto p-10 md:p-20 flex flex-col justify-center items-start">
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="space-y-6"
+                        >
+                            <div>
+                                <h2 className="text-4xl md:text-5xl font-black text-white mb-3 italic tracking-tighter uppercase leading-none">
+                                    Join the <span className="text-sking-pink">Glow</span> Club
+                                </h2>
+                                <p className="text-gray-400 text-lg font-medium leading-relaxed max-w-md">
+                                    Unlock exclusive rituals, early access to new collections, and beauty secrets delivered to your inbox.
+                                </p>
+                            </div>
 
-                        <div className="flex w-full max-w-md gap-2">
-                            <input
-                                type="email"
-                                placeholder="Enter your email address ..."
-                                className="flex-1 px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:border-sking-pink transition-colors text-sm"
-                            />
-                            <button className="px-6 py-3 bg-purple-700 hover:bg-purple-800 text-white font-bold text-sm rounded-md uppercase tracking-wider transition-colors shadow-lg">
-                                Subscribe
-                            </button>
-                        </div>
+                            <div className="flex flex-col sm:flex-row w-full max-w-md gap-3 pt-4">
+                                <input
+                                    type="email"
+                                    placeholder="your-email@lux.com"
+                                    className="flex-1 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-sking-pink transition-all backdrop-blur-md"
+                                />
+                                <button className="px-10 py-4 bg-white text-black hover:bg-sking-pink hover:text-white font-black text-xs rounded-2xl uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 whitespace-nowrap">
+                                    Subscribe
+                                </button>
+                            </div>
+
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest pl-2">
+                                * Privacy prioritized. Unsubscribe anytime.
+                            </p>
+                        </motion.div>
                     </div>
 
                 </div>

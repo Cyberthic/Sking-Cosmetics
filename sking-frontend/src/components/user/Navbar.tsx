@@ -259,7 +259,7 @@ export default function Navbar() {
                         <div className="flex items-center gap-3">
                             <Headphones className="w-10 h-10 text-black stroke-[1.5]" />
                             <div className="flex flex-col items-start leading-none">
-                                <span className="text-xl font-medium text-sking-pink tracking-tight">+99327456</span>
+                                <span className="text-xl font-medium text-sking-pink tracking-tight">+91 70127 47466</span>
                                 <span className="text-[11px] text-gray-400 font-medium tracking-wide mt-1">24/7 Support Center</span>
                             </div>
                         </div>

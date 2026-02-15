@@ -5,23 +5,19 @@ import { Plus, Minus } from "lucide-react";
 const faqs = [
     {
         question: "How can I track my order?",
-        answer: "Once your order is shipped, you will receive a tracking number via email. You can use this tracking number to track the progress of your shipment on our website."
+        answer: "Once shipped, you will receive a tracking ID via WhatsApp and Email. You can also track directly through our website."
     },
     {
         question: "What payment methods do you accept?",
-        answer: "We accept all major credit cards, PayPal, and Apple Pay."
+        answer: "We accept all major Credit/Debit cards, UPI (GPay, PhonePe), and NetBanking via Razorpay's secure gateway."
     },
     {
         question: "Do you offer international shipping?",
-        answer: "Yes, we ship to over 100 countries worldwide. Shipping times and costs vary by location."
+        answer: "Yes, we ship to UAE and other regions globally. Delivery times vary between 7-10 business days for international orders."
     },
     {
         question: "What is your return policy?",
-        answer: "We offer a 30-day return policy for unused items in their original packaging."
-    },
-    {
-        question: "Are your products cruelty-free?",
-        answer: "Yes! All Sking Cosmetics products are 100% cruelty-free and vegan."
+        answer: "Due to hygiene reasons, we maintain a strict no-return policy. If you receive a damaged product, please contact our support team immediately for assistance."
     }
 ];
 
@@ -40,9 +36,15 @@ const FAQSection = () => {
                     <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
                         We've Got
                     </h2>
-                    <h2 className="text-4xl md:text-5xl font-bold text-black">
+                    <h2 className="text-4xl md:text-5xl font-bold text-black mb-8">
                         Answers!
                     </h2>
+                    <a
+                        href="/help"
+                        className="inline-flex items-center gap-2 text-sking-pink font-bold uppercase tracking-widest text-xs hover:gap-4 transition-all"
+                    >
+                        View All FAQs <Plus size={14} />
+                    </a>
                 </div>
 
                 {/* Right Accordion */}
