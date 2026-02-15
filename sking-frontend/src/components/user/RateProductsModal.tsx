@@ -47,7 +47,7 @@ export const RateProductsModal: React.FC<RateProductsModalProps> = ({ isOpen, on
                             <div>
                                 <h3 className="text-2xl font-black text-black uppercase tracking-tight">Rate Products</h3>
                                 <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
-                                    Select an item from Order #{order._id.slice(-8).toUpperCase()}
+                                    Select an item from Order #{order.displayId || order._id.slice(-8).toUpperCase()}
                                 </p>
                             </div>
                             <button
@@ -64,7 +64,7 @@ export const RateProductsModal: React.FC<RateProductsModalProps> = ({ isOpen, on
                                 {items.map((item: any, idx: number) => (
                                     <Link
                                         key={idx}
-                                        href={`/product/${item.product?.slug || item.product?._id}?orderId=${order._id}&writeReview=true`}
+                                        href={`/product/${item.product?.slug || item.product?._id}?orderId=${order.displayId || order._id}&writeReview=true`}
                                         onClick={onClose}
                                         className="flex items-center gap-4 p-4 rounded-3xl group hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100"
                                     >

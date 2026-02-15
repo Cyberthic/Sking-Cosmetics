@@ -228,7 +228,7 @@ export default function OrderDetailPage() {
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Order</span>
-                                <span className="text-lg font-black text-black">#{order._id.slice(-8).toUpperCase()}</span>
+                                <span className="text-lg font-black text-black">#{order.displayId || order._id.slice(-8).toUpperCase()}</span>
                             </div>
                             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
                                 Placed on {new Date(order.createdAt).toLocaleDateString()}
@@ -470,7 +470,7 @@ export default function OrderDetailPage() {
 
                             {order.paymentMethod === 'whatsapp' ? (
                                 <Link
-                                    href={`https://wa.me/${(whatsappNumber || "918848886919").replace(/\+/g, "").replace(/\s/g, "")}?text=${encodeURIComponent(`Hi, I have a query regarding my order: #${order._id.slice(-8).toUpperCase()} (ID: ${order.displayId || ''})`)}`}
+                                    href={`https://wa.me/${(whatsappNumber || "918848886919").replace(/\+/g, "").replace(/\s/g, "")}?text=${encodeURIComponent(`Hi, I have a query regarding my order: #${order.displayId || order._id.slice(-8).toUpperCase()}`)}`}
                                     target="_blank"
                                     className="w-full inline-flex justify-center items-center gap-2 bg-green-500 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all hover:scale-105"
                                 >

@@ -35,7 +35,7 @@ import { AddressModal } from "@/components/user/modals/AddressModal";
 const generateWhatsAppMessage = (order: any, items: any[], finalTotal: number, address: any, totalAmount: number, shippingFee: number, discountAmount: number) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     let message = `*New Order from Sking Cosmetics*\n\n`;
-    message += `*Order ID:* ${order.displayId} (${order._id})\n`;
+    message += `*Order ID:* ${order.displayId}\n`;
     message += `*Customer:* ${address?.name}\n`;
     message += `*Phone:* ${address?.phoneNumber}\n`;
     message += `*Address:* ${address?.street}, ${address?.city}, ${address?.state} - ${address?.postalCode}\n\n`;
@@ -218,7 +218,7 @@ function CheckoutPageContent() {
                     window.open(whatsappUrl, '_blank');
 
                     // Redirect current tab to the order status/payment page
-                    router.push(`/checkout/payment/${order._id}`);
+                    router.push(`/checkout/payment/${order.displayId}`);
                 }
             }
         } catch (error: any) {

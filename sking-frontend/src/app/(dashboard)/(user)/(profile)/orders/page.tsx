@@ -168,7 +168,7 @@ export default function OrdersPage() {
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Order</span>
-                                            <span className="text-sm font-black text-black">#{order._id.slice(-8).toUpperCase()}</span>
+                                            <span className="text-sm font-black text-black">#{order.displayId || order._id.slice(-8).toUpperCase()}</span>
                                         </div>
                                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest">
                                             Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -223,7 +223,7 @@ export default function OrdersPage() {
                                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                                         {order.orderStatus === 'payment_pending' && order.paymentStatus !== 'completed' && order.paymentMethod !== 'whatsapp' && (
                                             <button
-                                                onClick={() => handleRetry(order._id, order)}
+                                                onClick={() => handleRetry(order.displayId || order._id, order)}
                                                 className="bg-sking-pink text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg"
                                             >
                                                 <CreditCard className="w-4 h-4" />
@@ -239,7 +239,7 @@ export default function OrdersPage() {
                                             </button>
                                         )}
                                         <Link
-                                            href={`/orders/${order._id}`}
+                                            href={`/orders/${order.displayId || order._id}`}
                                             className="bg-black text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all shadow-lg group"
                                         >
                                             Order Details
