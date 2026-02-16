@@ -9,4 +9,8 @@ export const userProductService = {
         const response = await axiosInstance.get(`/api/users/products/${id}`);
         return response.data;
     },
+    getProductsByIds: async (ids: string[]) => {
+        const response = await axiosInstance.get("/api/users/products", { params: { ids: ids.join(',') } });
+        return response.data;
+    },
 };

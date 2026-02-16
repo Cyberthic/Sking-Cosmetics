@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Navbar from "@/components/user/Navbar";
 import HeroSection from "@/components/user/home/HeroSection";
 import CategoryPromo from "@/components/user/home/CategoryPromo";
@@ -37,7 +37,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-white font-sans text-black selection:bg-sking-pink selection:text-white">
-      <Navbar />
+      <Suspense fallback={<div className="h-20 bg-white" />}>
+        <Navbar />
+      </Suspense>
 
       <main className="flex flex-col w-full">
         <HeroSection />

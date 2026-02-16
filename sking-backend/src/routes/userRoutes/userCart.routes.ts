@@ -12,5 +12,6 @@ userCartRouter.get("/", cartController.getCart.bind(cartController));
 userCartRouter.post("/add", cartController.addToCart.bind(cartController));
 userCartRouter.put("/update", cartController.updateQuantity.bind(cartController));
 userCartRouter.delete("/remove", cartController.removeFromCart.bind(cartController));
+userCartRouter.post("/merge", cartController.mergeCart.bind(cartController));
 
 export default userCartRouter;

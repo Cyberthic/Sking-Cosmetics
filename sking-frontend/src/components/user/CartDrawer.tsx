@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { updateCartLocally, fetchCart as fetchCartThunk, setDrawerOpen } from "@/redux/features/cartSlice";
+import { updateCartLocally, fetchCart as fetchCartThunk, setDrawerOpen, removeFromGuestCart, updateGuestQuantity } from "@/redux/features/cartSlice";
 
 import { createPortal } from "react-dom";
 
@@ -48,13 +48,21 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }, [isOpen]);
 
     // Fetch cart whenever drawer opens to ensure fresh state
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && isAuthenticated) {
             dispatch(fetchCartThunk() as any);
         }
-    }, [isOpen, dispatch]);
+    }, [isOpen, dispatch, isAuthenticated]);
 
     const handleRemove = async (productId: string, variantName?: string) => {
+        if (!isAuthenticated) {
+            dispatch(removeFromGuestCart({ productId, variantName }));
+            toast.success("Item removed");
+            return;
+        }
+
         try {
             const response = await userCartService.removeFromCart(productId, variantName);
             if (response.success) {
@@ -73,6 +81,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             return;
         }
 
+        if (!isAuthenticated) {
+            dispatch(updateGuestQuantity({ productId, variantName, quantity: targetQuantity }));
+            if (targetQuantity > currentQuantity) {
+                toast.success("Added to Bag");
+            }
+            return;
+        }
+
         try {
             const response = await userCartService.updateQuantity(productId, variantName, targetQuantity);
             if (response.success) {
@@ -84,6 +100,15 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to update quantity");
         }
+    };
+
+    const handleCheckout = () => {
+        if (!isAuthenticated) {
+            toast.error("You need to log in for checking out");
+            return;
+        }
+        onClose();
+        router.push('/checkout');
     };
 
     const freeShippingProgress = Math.min((totalAmount / FREE_SHIPPING_THRESHOLD) * 100, 100);
@@ -197,7 +222,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 </div>
                             ) : (
                                 items.map((item: any) => (
-                                    <div key={item._id} className="flex gap-4 group">
+                                    <div key={item._id || `${item.product._id}-${item.variantName || 'default'}`} className="flex gap-4 group">
                                         {/* Image */}
                                         <Link
                                             href={`/product/${item.product.slug || item.product._id}`}
@@ -289,13 +314,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-2.5">
-                                    <Link
-                                        href="/checkout"
-                                        onClick={onClose}
+                                    <button
+                                        onClick={handleCheckout}
                                         className="flex items-center justify-center h-13 bg-black text-white font-bold uppercase tracking-[0.15em] hover:bg-sking-red transition-all text-[10px] active:scale-[0.98]"
                                     >
                                         Secure Checkout
-                                    </Link>
+                                    </button>
                                     <Link
                                         href="/cart"
                                         onClick={onClose}

@@ -8,5 +8,9 @@ export const userWishlistService = {
     toggleWishlist: async (productId: string) => {
         const response = await axiosInstance.post("/api/users/wishlist/toggle", { productId });
         return response.data;
+    },
+    mergeWishlist: async (productIds: string[]) => {
+        const response = await axiosInstance.post("/api/users/wishlist/merge", { productIds });
+        return response.data;
     }
 };

@@ -61,7 +61,15 @@ const generateWhatsAppMessage = (order: any, items: any[], finalTotal: number, a
 function CheckoutPageContent() {
     const router = useRouter();
     const dispatch = useDispatch();
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
     const { items, totalAmount } = useSelector((state: RootState) => state.cart);
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            toast.error("Please login to proceed to checkout");
+            router.push(`/login?redirect=${encodeURIComponent('/checkout')}`);
+        }
+    }, [isAuthenticated, router]);
 
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);

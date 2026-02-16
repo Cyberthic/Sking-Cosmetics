@@ -7,22 +7,34 @@ import Footer from "@/components/user/Footer";
 import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "sonner";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchCart, updateCartLocally } from "@/redux/features/cartSlice";
+import { fetchCart, updateCartLocally, updateGuestQuantity, removeFromGuestCart } from "@/redux/features/cartSlice";
 import { RootState } from "@/redux/store";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
     const dispatch = useDispatch();
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
     const { items, loading, totalAmount } = useSelector((state: RootState) => state.cart);
 
     useEffect(() => {
-        // @ts-ignore
-        dispatch(fetchCart());
-    }, [dispatch]);
+        if (isAuthenticated) {
+            // @ts-ignore
+            dispatch(fetchCart());
+        }
+    }, [dispatch, isAuthenticated]);
 
     const handleUpdateQuantity = async (productId: string, variantName: string | undefined, currentQuantity: number, targetQuantity: number) => {
         if (targetQuantity < 1) return;
         if (targetQuantity > 10) {
             toast.error("maximum 10 per product");
+            return;
+        }
+
+        if (!isAuthenticated) {
+            dispatch(updateGuestQuantity({ productId, variantName, quantity: targetQuantity }));
+            if (targetQuantity > currentQuantity) {
+                toast.success("Added to Bag");
+            }
             return;
         }
 
@@ -40,6 +52,12 @@ export default function CartPage() {
     };
 
     const handleRemove = async (productId: string, variantName?: string) => {
+        if (!isAuthenticated) {
+            dispatch(removeFromGuestCart({ productId, variantName }));
+            toast.success("Item removed");
+            return;
+        }
+
         try {
             const response = await userCartService.removeFromCart(productId, variantName);
             if (response.success) {
@@ -51,7 +69,23 @@ export default function CartPage() {
         }
     };
 
-    if (loading) return (
+    const router = useRouter();
+
+    const handleCheckout = () => {
+        if (!isAuthenticated) {
+            toast.error("You need to log in for checking out");
+            return;
+        }
+        router.push('/checkout');
+    };
+
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted || loading) return (
         <div className="min-h-screen bg-white text-black flex items-center justify-center">
             <div className="animate-pulse flex flex-col items-center gap-4">
                 <div className="h-12 w-12 border-4 border-sking-black border-t-sking-red rounded-full animate-spin"></div>
@@ -89,7 +123,7 @@ export default function CartPage() {
                         {/* Cart Items */}
                         <div className="lg:col-span-2 space-y-8">
                             {items.map((item: any) => (
-                                <div key={item._id} className="flex gap-6 p-6 border-b border-gray-100 items-start">
+                                <div key={item._id || `${item.product._id}-${item.variantName || 'default'}`} className="flex gap-6 p-6 border-b border-gray-100 items-start">
                                     <Link href={`/product/${item.product.slug || item.product._id}`} className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gray-50 flex-shrink-0 cursor-pointer overflow-hidden group">
                                         {item.product.images?.[0] ? (
                                             <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -156,9 +190,12 @@ export default function CartPage() {
                                     </div>
                                     <p className="text-xs text-gray-400 mt-2">Tax included and shipping calculated at checkout.</p>
                                 </div>
-                                <Link href="/checkout" className="block w-full text-center py-4 bg-sking-red text-white font-bold tracking-widest uppercase hover:bg-black transition-all duration-300">
+                                <button
+                                    onClick={handleCheckout}
+                                    className="block w-full text-center py-4 bg-sking-red text-white font-bold tracking-widest uppercase hover:bg-black transition-all duration-300"
+                                >
                                     Checkout
-                                </Link>
+                                </button>
                                 <div className="mt-8 flex justify-center gap-4 text-gray-300">
                                     {/* Trust badges placeholders */}
                                     <div className="h-6 w-10 bg-gray-200/50 rounded"></div>

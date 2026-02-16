@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { userAuthService } from '@/services/user/userAuthApiService';
@@ -25,13 +25,16 @@ import {
 } from 'lucide-react';
 import { useGoogleLogin } from '@/hooks/useGoogleLogin';
 
-export default function RegisterPage() {
+function RegisterContent() {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [acceptTerms, setAcceptTerms] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { initiateGoogleLogin } = useGoogleLogin();
+
+    const redirect = searchParams.get('redirect') || '/';
 
     const {
         register,
@@ -106,7 +109,7 @@ export default function RegisterPage() {
             });
 
             toast.success('Registration initiated! Please check your email for OTP.');
-            router.push(`/verify-otp?email=${encodeURIComponent(data.email)}&username=${encodeURIComponent(data.username)}&password=${encodeURIComponent(data.password)}`);
+            router.push(`/verify-otp?email=${encodeURIComponent(data.email)}&username=${encodeURIComponent(data.username)}&password=${encodeURIComponent(data.password)}&redirect=${encodeURIComponent(redirect)}`);
         } catch (err: any) {
             const message = err.response?.data?.error || 'Registration failed';
             toast.error(message);
@@ -397,12 +400,20 @@ export default function RegisterPage() {
 
                     <div className="mt-10 text-center text-sm font-medium text-gray-600">
                         Already have an account?{' '}
-                        <Link href="/login" className="text-sking-pink hover:underline font-bold transition-colors">
+                        <Link href={`/login?redirect=${encodeURIComponent(redirect)}`} className="text-sking-pink hover:underline font-bold transition-colors">
                             Log In
                         </Link>
                     </div>
                 </motion.div>
             </div>
         </div>
+    );
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <RegisterContent />
+        </Suspense>
     );
 }

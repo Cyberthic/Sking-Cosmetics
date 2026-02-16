@@ -1,26 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginStart, loginSuccess, loginFailure } from '@/redux/features/authSlice';
+import { mergeGuestCart } from '@/redux/features/cartSlice';
+import { mergeGuestWishlist } from '@/redux/features/wishlistSlice';
 import { toast } from 'sonner';
 import { userAuthService } from '@/services/user/userAuthApiService';
 import { loginSchema, LoginFormData } from '@/validations/userAuth.validation';
-import type { RootState } from '@/redux/store';
+import type { RootState, AppDispatch } from '@/redux/store';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useGoogleLogin } from '@/hooks/useGoogleLogin';
 
-export default function LoginPage() {
+function LoginContent() {
     const [showPassword, setShowPassword] = useState(false);
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { loading, error } = useSelector((state: RootState) => state.auth);
     const { initiateGoogleLogin } = useGoogleLogin();
+
+    const redirect = searchParams.get('redirect') || '/';
 
     const {
         register,
@@ -36,8 +41,20 @@ export default function LoginPage() {
             const response = await userAuthService.login(data);
             if (response.success) {
                 dispatch(loginSuccess({ user: response.user }));
+
+                // Merge guest cart and wishlist
+                const guestCart = localStorage.getItem('guestCart');
+                if (guestCart) {
+                    dispatch(mergeGuestCart(JSON.parse(guestCart)));
+                }
+
+                const guestWishlist = localStorage.getItem('guestWishlist');
+                if (guestWishlist) {
+                    dispatch(mergeGuestWishlist(JSON.parse(guestWishlist)));
+                }
+
                 toast.success('Login successful! Welcome back.');
-                router.push('/');
+                router.push(redirect);
             } else {
                 const message = response.error || 'Login failed';
                 dispatch(loginFailure(message));
@@ -199,13 +216,21 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-10 text-center text-sm font-medium text-gray-600">
-                        Don't have an account?{' '}
-                        <Link href="/register" className="text-sking-pink hover:underline font-bold transition-colors">
-                            Signup Now
+                        Don&apos;t have an account?{' '}
+                        <Link href={`/register?redirect=${encodeURIComponent(redirect)}`} className="text-sking-pink hover:underline font-bold transition-colors">
+                            Sign Up
                         </Link>
                     </div>
                 </motion.div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <LoginContent />
+        </Suspense>
     );
 }

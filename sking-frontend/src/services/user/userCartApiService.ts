@@ -16,5 +16,9 @@ export const userCartService = {
     updateQuantity: async (productId: string, variantName: string | undefined, quantity: number) => {
         const response = await axiosInstance.put("/api/users/cart/update", { productId, variantName, quantity });
         return response.data;
+    },
+    mergeCart: async (items: any[]) => {
+        const response = await axiosInstance.post("/api/users/cart/merge", { items });
+        return response.data;
     }
 };

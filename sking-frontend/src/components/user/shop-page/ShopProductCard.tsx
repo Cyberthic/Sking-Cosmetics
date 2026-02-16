@@ -5,11 +5,11 @@ import { Heart, ShoppingBag, Star } from "lucide-react";
 import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
-import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
+import { updateCartLocally, setDrawerOpen, addToGuestCart } from "@/redux/features/cartSlice";
 import { userWishlistService } from "@/services/user/userWishlistApiService"; // Still keep for direct if needed, but we'll use thunk
 import { useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/redux/store";
-import { toggleWishlist } from "@/redux/features/wishlistSlice";
+import { toggleWishlist, toggleGuestWishlist } from "@/redux/features/wishlistSlice";
 
 export interface ShopProduct {
     id: string;
@@ -31,6 +31,7 @@ interface ShopProductCardProps {
 
 const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = 'grid' }) => {
     const dispatch = useDispatch<AppDispatch>();
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
     const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const isInWishlist = wishlistItems.includes(product.id);
 
@@ -41,6 +42,24 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
     const handleAddToCart = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (!isAuthenticated) {
+            dispatch(addToGuestCart({
+                product: {
+                    _id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    images: [product.image]
+                },
+                quantity: 1,
+                price: product.price,
+                variantName: undefined
+            }));
+            dispatch(setDrawerOpen(true));
+            toast.success("Added to Bag (Guest)");
+            return;
+        }
+
         try {
             const response = await userCartService.addToCart(product.id, undefined, 1);
             if (response.success) {
@@ -57,6 +76,13 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
     const handleToggleWishlist = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (!isAuthenticated) {
+            dispatch(toggleGuestWishlist(product.id));
+            toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
+            return;
+        }
+
         try {
             await dispatch(toggleWishlist(product.id)).unwrap();
             toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");

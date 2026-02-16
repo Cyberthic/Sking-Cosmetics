@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { KeyRound, Loader2, RefreshCw, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { mergeGuestCart } from '@/redux/features/cartSlice';
+import { mergeGuestWishlist } from '@/redux/features/wishlistSlice';
 
 function VerifyOtpContent() {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -96,9 +98,22 @@ function VerifyOtpContent() {
             });
 
             if (response.success) {
+                const redirect = searchParams.get('redirect') || '/';
                 dispatch(loginSuccess({ user: response.user }));
+
+                // Merge guest cart and wishlist
+                const guestCart = localStorage.getItem('guestCart');
+                if (guestCart) {
+                    dispatch(mergeGuestCart(JSON.parse(guestCart)) as any);
+                }
+
+                const guestWishlist = localStorage.getItem('guestWishlist');
+                if (guestWishlist) {
+                    dispatch(mergeGuestWishlist(JSON.parse(guestWishlist)) as any);
+                }
+
                 toast.success('Email verified successfully!');
-                router.push('/');
+                router.push(redirect);
             }
         } catch (err: any) {
             const message = err.response?.data?.error || 'Verification failed';

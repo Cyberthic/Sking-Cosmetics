@@ -144,4 +144,56 @@ export class CartService implements ICartService {
         await cart.save();
         return this.getCart(userId);
     }
+
+    async mergeCart(userId: string, guestItems: any[]): Promise<ICart> {
+        const cart = await this.getCart(userId);
+        const cartLimit = 10;
+        const productLimit = 10;
+
+        for (const guestItem of guestItems) {
+            const productId = guestItem.product._id || guestItem.product;
+            const variantName = guestItem.variantName;
+            const quantity = Number(guestItem.quantity) || 1;
+
+            const existingItemIndex = cart.items.findIndex(item => {
+                const itemProdId = (item.product as any)._id ? (item.product as any)._id.toString() : item.product.toString();
+                return itemProdId === productId && item.variantName === variantName;
+            });
+
+            if (existingItemIndex > -1) {
+                const newQuantity = Math.min(cart.items[existingItemIndex].quantity + quantity, productLimit);
+                cart.items[existingItemIndex].quantity = newQuantity;
+            } else {
+                if (cart.items.length < cartLimit) {
+                    const product = await this._productRepository.findById(productId);
+                    if (product) {
+                        let price = product.price;
+                        let targetVariant;
+
+                        if (variantName) {
+                            targetVariant = product.variants.find(v => v.size === variantName) || product.variants.find(v => (v as any).name === variantName);
+                        }
+
+                        if (targetVariant) {
+                            price = targetVariant.price;
+                        }
+
+                        if (product.offerPercentage > 0) {
+                            price = price - (price * (product.offerPercentage / 100));
+                        }
+
+                        cart.items.push({
+                            product: new Types.ObjectId(productId) as any,
+                            variantName,
+                            quantity: Math.min(quantity, productLimit),
+                            price
+                        });
+                    }
+                }
+            }
+        }
+
+        await cart.save();
+        return this.getCart(userId);
+    }
 }

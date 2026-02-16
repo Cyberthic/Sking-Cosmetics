@@ -5,25 +5,42 @@ import Link from "next/link";
 import { userWishlistService } from "@/services/user/userWishlistApiService";
 import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "sonner";
-import { useDispatch } from "react-redux";
-import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
-import { toggleWishlist } from "@/redux/features/wishlistSlice";
-import { AppDispatch } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { updateCartLocally, setDrawerOpen, addToGuestCart } from "@/redux/features/cartSlice";
+import { toggleWishlist, toggleGuestWishlist } from "@/redux/features/wishlistSlice";
+import { AppDispatch, RootState } from "@/redux/store";
+import { userProductService } from "@/services/user/userProductApiService";
 
 export default function WishlistPage() {
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+    const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const [wishlist, setWishlist] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    const dispatch = useDispatch<AppDispatch>();
+
     useEffect(() => {
         fetchWishlist();
-    }, []);
+    }, [isAuthenticated, wishlistItems.length]);
 
     const fetchWishlist = async () => {
         try {
             setLoading(true);
-            const data = await userWishlistService.getWishlist();
-            if (data.success) {
-                setWishlist(data.wishlist);
+            if (isAuthenticated) {
+                const data = await userWishlistService.getWishlist();
+                if (data.success) {
+                    setWishlist(data.wishlist);
+                }
+            } else {
+                // Guest mode: fetch products for IDs in localStorage/Redux
+                if (wishlistItems.length > 0) {
+                    const data = await userProductService.getProductsByIds(wishlistItems);
+                    if (data.success) {
+                        setWishlist({ products: data.products });
+                    }
+                } else {
+                    setWishlist({ products: [] });
+                }
             }
         } catch (err) {
             console.error(err);
@@ -32,9 +49,13 @@ export default function WishlistPage() {
         }
     };
 
-    const dispatch = useDispatch<AppDispatch>();
-
     const handleRemove = async (productId: string) => {
+        if (!isAuthenticated) {
+            dispatch(toggleGuestWishlist(productId));
+            toast.success("Removed from wishlist");
+            return;
+        }
+
         try {
             await dispatch(toggleWishlist(productId)).unwrap();
             toast.success("Removed from wishlist");
@@ -45,11 +66,29 @@ export default function WishlistPage() {
     };
 
     const handleMoveToCart = async (product: any) => {
+        const variantName = product.variants?.length > 0 ? product.variants[0].size : undefined;
+
+        if (!isAuthenticated) {
+            dispatch(addToGuestCart({
+                product: {
+                    _id: product._id,
+                    name: product.name,
+                    price: product.price,
+                    images: product.images
+                },
+                quantity: 1,
+                price: product.price,
+                variantName
+            }));
+            dispatch(setDrawerOpen(true));
+            toast.success("Added to Cart (Guest)");
+            return;
+        }
+
         try {
             // Defaulting to 1st variant if exists, else base
             // API shows variants use 'size' not 'name'. Let's check. 
             // In cart.service.ts: targetVariant = product.variants.find(v => v.size === variantName);
-            const variantName = product.variants?.length > 0 ? product.variants[0].size : undefined;
             const response = await userCartService.addToCart(product._id, variantName, 1);
             if (response.success) {
                 dispatch(updateCartLocally(response.cart));
@@ -61,7 +100,13 @@ export default function WishlistPage() {
         }
     };
 
-    if (loading) return (
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted || loading) return (
         <div className="min-h-screen bg-white text-black flex items-center justify-center">
             <div className="animate-pulse flex flex-col items-center gap-4">
                 <div className="h-12 w-12 border-4 border-sking-black border-t-sking-red rounded-full animate-spin"></div>

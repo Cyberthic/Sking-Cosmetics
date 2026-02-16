@@ -33,4 +33,15 @@ export class UserWishlistController implements IUserWishlistController {
             next(error);
         }
     }
+
+    async mergeWishlist(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user.id;
+            const { productIds } = req.body;
+            const wishlist = await this._wishlistService.mergeWishlist(userId, productIds);
+            res.status(StatusCode.OK).json({ success: true, wishlist });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

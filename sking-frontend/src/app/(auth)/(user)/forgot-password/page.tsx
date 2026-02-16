@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { userAuthService } from '@/services/user/userAuthApiService';
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Loader2, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [email, setEmailState] = useState('');
@@ -149,5 +149,13 @@ export default function ForgotPasswordPage() {
                 </motion.div>
             </div>
         </div>
+    );
+}
+
+export default function ForgotPasswordPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ForgotPasswordContent />
+        </Suspense>
     );
 }

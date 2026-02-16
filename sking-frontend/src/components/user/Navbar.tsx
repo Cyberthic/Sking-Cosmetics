@@ -234,7 +234,7 @@ export default function Navbar() {
                             </div>
 
                             {/* LOGIN / SIGNUP */}
-                            {isAuthenticated ? (
+                            {mounted && isAuthenticated ? (
                                 <div className="relative">
                                     <button
                                         onClick={() => setShowUserMenu(!showUserMenu)}
@@ -544,7 +544,7 @@ export default function Navbar() {
                     </div>
 
                     {/* User Section */}
-                    {isAuthenticated ? (
+                    {mounted && isAuthenticated ? (
                         <div className="mt-8 pt-8 border-t-2 border-gray-100 pb-20">
                             <div className="flex items-center gap-4 mb-10 p-5 bg-gray-50 rounded-[2rem] border border-gray-100">
                                 <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center bg-white shadow-xl">

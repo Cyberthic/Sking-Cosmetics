@@ -1,10 +1,10 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { Shield, Lock, Eye, FileText, Gavel, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function PrivacyPolicy() {
+function PrivacyPolicyContent() {
     return (
         <div className="min-h-screen bg-white">
             {/* Header Section */}
@@ -108,5 +108,13 @@ export default function PrivacyPolicy() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function PrivacyPolicyPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <PrivacyPolicyContent />
+        </Suspense>
     );
 }

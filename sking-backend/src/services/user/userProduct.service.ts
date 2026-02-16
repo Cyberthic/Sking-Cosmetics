@@ -31,6 +31,15 @@ export class UserProductService implements IUserProductService {
             }
         }
 
+        // IDs Filter
+        if (query.ids) {
+            const ids = typeof query.ids === 'string' ? query.ids.split(',') : [query.ids];
+            const validIds = ids.filter(id => id.match(/^[0-9a-fA-F]{24}$/));
+            if (validIds.length > 0) {
+                filter._id = { $in: validIds };
+            }
+        }
+
         // Advanced Search (name, description, tags, brand, category name)
         if (query.search) {
             const searchRegex = { $regex: query.search as string, $options: 'i' };

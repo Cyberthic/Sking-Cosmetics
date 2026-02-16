@@ -1,13 +1,18 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { googleLogin } from '@/redux/features/authSlice';
+import { googleLogin, loginSuccess } from '@/redux/features/authSlice';
+import { mergeGuestCart } from '@/redux/features/cartSlice';
+import { mergeGuestWishlist } from '@/redux/features/wishlistSlice';
 import { AppDispatch } from '@/redux/store';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export const useGoogleLogin = () => {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const redirect = searchParams.get('redirect') || '/';
 
     const initiateGoogleLogin = () => {
         const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -38,10 +43,22 @@ export const useGoogleLogin = () => {
 
                 dispatch(googleLogin({ code: event.data.code }))
                     .unwrap()
-                    .then(() => {
+                    .then((response) => {
                         toast.dismiss(toastId);
                         toast.success("Successfully logged in!");
-                        router.push('/');
+
+                        // Merge guest cart and wishlist
+                        const guestCart = localStorage.getItem('guestCart');
+                        if (guestCart) {
+                            dispatch(mergeGuestCart(JSON.parse(guestCart)));
+                        }
+
+                        const guestWishlist = localStorage.getItem('guestWishlist');
+                        if (guestWishlist) {
+                            dispatch(mergeGuestWishlist(JSON.parse(guestWishlist)));
+                        }
+
+                        router.push(redirect);
                     })
                     .catch((err) => {
                         toast.dismiss(toastId);
@@ -52,7 +69,7 @@ export const useGoogleLogin = () => {
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, [dispatch, router]);
+    }, [dispatch, router, redirect]);
 
     return { initiateGoogleLogin };
 };

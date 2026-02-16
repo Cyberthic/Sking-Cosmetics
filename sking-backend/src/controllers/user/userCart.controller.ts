@@ -61,4 +61,15 @@ export class UserCartController {
             next(error);
         }
     }
+
+    async mergeCart(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user.id;
+            const { items } = req.body;
+            const cart = await this._cartService.mergeCart(userId, items);
+            res.status(StatusCode.OK).json({ success: true, cart });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

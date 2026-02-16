@@ -7,7 +7,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { userProductService } from '@/services/user/userProductApiService';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-const ShopContent = () => {
+
+function ShopContent() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [products, setProducts] = useState<ShopProduct[]>([]);
     const [loading, setLoading] = useState(true);
@@ -160,7 +161,7 @@ const ShopContent = () => {
     );
 };
 
-const ShopPage = () => {
+export default function ShopPage() {
     return (
         <Suspense fallback={
             <div className="w-full max-w-[1280px] mx-auto px-4 md:px-8 pb-20 pt-10">
@@ -178,7 +179,5 @@ const ShopPage = () => {
             <ShopContent />
         </Suspense>
     );
-};
-
-export default ShopPage;
+}
 

@@ -53,4 +53,25 @@ export class WishlistService implements IWishlistService {
         // Return populated wishlist
         return (await this._wishlistRepository.findByUserId(userId))!;
     }
+
+    async mergeWishlist(userId: string, productIds: string[]): Promise<IWishlist> {
+        let wishlist = await this.getWishlist(userId);
+
+        for (const productId of productIds) {
+            const productExists = wishlist.products.some(p => {
+                const id = (p as any)._id ? (p as any)._id.toString() : p.toString();
+                return id === productId;
+            });
+
+            if (!productExists) {
+                const product = await this._productRepository.findById(productId);
+                if (product) {
+                    wishlist.products.push(new Types.ObjectId(productId) as any);
+                }
+            }
+        }
+
+        await wishlist.save();
+        return (await this._wishlistRepository.findByUserId(userId))!;
+    }
 }

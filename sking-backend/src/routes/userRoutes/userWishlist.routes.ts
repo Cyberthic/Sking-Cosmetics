@@ -10,5 +10,6 @@ const wishlistController = container.get<UserWishlistController>(TYPES.IUserWish
 userWishlistRouter.use(isAuthenticated);
 userWishlistRouter.get("/", wishlistController.getWishlist.bind(wishlistController));
 userWishlistRouter.post("/toggle", wishlistController.toggleWishlist.bind(wishlistController));
+userWishlistRouter.post("/merge", wishlistController.mergeWishlist.bind(wishlistController));
 
 export default userWishlistRouter;

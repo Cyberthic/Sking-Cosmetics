@@ -3,6 +3,11 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { addToGuestCart, setDrawerOpen, updateCartLocally } from "@/redux/features/cartSlice";
+import { RootState, AppDispatch } from "@/redux/store";
+import { userCartService } from "@/services/user/userCartApiService";
+import { toast } from "sonner";
 
 interface ProductProps {
     _id: string;
@@ -15,25 +20,63 @@ interface ProductProps {
 }
 
 const HomeProductCard = ({ product }: { product: ProductProps }) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
     const finalPrice = product.offerPercentage
         ? product.price - (product.price * (product.offerPercentage / 100))
         : product.price;
 
+    const handleAddToCart = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!isAuthenticated) {
+            dispatch(addToGuestCart({
+                product: {
+                    _id: product._id,
+                    name: product.name,
+                    price: finalPrice,
+                    images: product.images
+                },
+                quantity: 1,
+                price: finalPrice,
+                variantName: undefined
+            }));
+            dispatch(setDrawerOpen(true));
+            toast.success("Added to Bag (Guest)");
+            return;
+        }
+
+        try {
+            const response = await userCartService.addToCart(product._id, undefined, 1);
+            if (response.success) {
+                dispatch(updateCartLocally(response.cart));
+                dispatch(setDrawerOpen(true));
+                toast.success("Added to Bag");
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to add to bag");
+        }
+    };
+
     return (
         <div className="group relative w-full flex flex-col">
-            <Link href={`/product/${product._id}`} className="block relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
-                {product.images?.[0] ? (
-                    <Image
-                        src={product.images[0]}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
-                        No Image
-                    </div>
-                )}
+            <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
+                <Link href={`/product/${product._id}`} className="block h-full w-full">
+                    {product.images?.[0] ? (
+                        <Image
+                            src={product.images[0]}
+                            alt={product.name}
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                            No Image
+                        </div>
+                    )}
+                </Link>
 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
@@ -52,11 +95,14 @@ const HomeProductCard = ({ product }: { product: ProductProps }) => {
 
                 {/* Quick Add Overlay */}
                 <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                    <button className="w-full bg-black text-white font-bold py-3 uppercase tracking-widest text-sm hover:bg-sking-red hover:text-black transition-colors">
+                    <button
+                        onClick={handleAddToCart}
+                        className="w-full bg-black text-white font-bold py-3 uppercase tracking-widest text-sm hover:bg-sking-red hover:text-black transition-colors"
+                    >
                         Add to Cart
                     </button>
                 </div>
-            </Link>
+            </div>
 
             <div className="flex flex-col gap-1 items-start">
                 <div className="flex items-center gap-1 text-yellow-500">

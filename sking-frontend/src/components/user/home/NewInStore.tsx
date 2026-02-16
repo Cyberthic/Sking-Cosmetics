@@ -4,15 +4,74 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star, ChevronLeft, ChevronRight, Heart, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { addToGuestCart, setDrawerOpen, updateCartLocally } from "@/redux/features/cartSlice";
+import { toggleWishlist, toggleGuestWishlist } from "@/redux/features/wishlistSlice";
+import { RootState, AppDispatch } from "@/redux/store";
+import { userCartService } from "@/services/user/userCartApiService";
+import { toast } from "sonner";
 
 interface NewInStoreProps {
     products: any[];
 }
 
 const NewInStore = ({ products }: NewInStoreProps) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+    const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
+
+    const handleToggleWishlist = async (productId: string) => {
+        if (!isAuthenticated) {
+            dispatch(toggleGuestWishlist(productId));
+            const isInWishlistNow = wishlistItems.includes(productId);
+            toast.success(!isInWishlistNow ? "Added to wishlist" : "Removed from wishlist");
+            return;
+        }
+        try {
+            await dispatch(toggleWishlist(productId)).unwrap();
+            const isInWishlistNow = wishlistItems.includes(productId);
+            toast.success(!isInWishlistNow ? "Added to wishlist" : "Removed from wishlist");
+        } catch (error: any) {
+            toast.error("Failed to update wishlist");
+        }
+    };
+
+    const handleAddToCart = async (product: any) => {
+        const finalPrice = product.offerPercentage > 0
+            ? product.price - (product.price * (product.offerPercentage / 100))
+            : product.price;
+
+        if (!isAuthenticated) {
+            dispatch(addToGuestCart({
+                product: {
+                    _id: product._id,
+                    name: product.name,
+                    price: finalPrice,
+                    images: product.images
+                },
+                quantity: 1,
+                price: finalPrice,
+                variantName: undefined
+            }));
+            dispatch(setDrawerOpen(true));
+            toast.success("Added to Bag (Guest)");
+            return;
+        }
+
+        try {
+            const response = await userCartService.addToCart(product._id, undefined, 1);
+            if (response.success) {
+                dispatch(updateCartLocally(response.cart));
+                dispatch(setDrawerOpen(true));
+                toast.success("Added to Bag");
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to add to bag");
+        }
+    };
 
     useEffect(() => {
         // Auto-slide for mobile
@@ -152,7 +211,12 @@ const NewInStore = ({ products }: NewInStoreProps) => {
 
                             <div className="flex items-center justify-between mb-8">
                                 <span className="bg-gray-900 text-white text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest">Editor&apos;s Pick</span>
-                                <button className="text-gray-400 hover:text-sking-pink transition-colors"><Heart size={24} /></button>
+                                <button
+                                    onClick={() => handleToggleWishlist(featuredProduct._id)}
+                                    className={`transition-colors ${wishlistItems.includes(featuredProduct._id) ? 'text-sking-pink' : 'text-gray-400 hover:text-sking-pink'}`}
+                                >
+                                    <Heart size={24} fill={wishlistItems.includes(featuredProduct._id) ? "currentColor" : "none"} />
+                                </button>
                             </div>
 
                             {/* Main Image */}
@@ -183,15 +247,25 @@ const NewInStore = ({ products }: NewInStoreProps) => {
 
                                 {/* Actions */}
                                 <div className="pt-4 space-y-4">
-                                    <Link
-                                        href={`/product/${featuredProduct.slug}`}
+                                    <button
+                                        onClick={() => handleAddToCart(featuredProduct)}
                                         className="w-full py-5 bg-gray-900 text-white font-black text-sm uppercase rounded-[2rem] hover:bg-sking-pink transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95"
                                     >
-                                        <ShoppingBag size={20} /> VIEW PRODUCT DETAILS
-                                    </Link>
+                                        <ShoppingBag size={20} /> ADD TO BAG
+                                    </button>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <button className="py-4 border border-gray-100 rounded-2xl font-bold text-xs uppercase hover:bg-gray-50 transition-all">Add to Wishlist</button>
-                                        <button className="py-4 border border-gray-100 rounded-2xl font-bold text-xs uppercase hover:bg-gray-50 transition-all">Quick View</button>
+                                        <button
+                                            onClick={() => handleToggleWishlist(featuredProduct._id)}
+                                            className="py-4 border border-gray-100 rounded-2xl font-bold text-xs uppercase hover:bg-gray-50 transition-all"
+                                        >
+                                            {wishlistItems.includes(featuredProduct._id) ? 'In Wishlist' : 'Add to Wishlist'}
+                                        </button>
+                                        <Link
+                                            href={`/product/${featuredProduct.slug}`}
+                                            className="py-4 border border-gray-100 rounded-2xl font-bold text-xs uppercase hover:bg-gray-50 transition-all flex items-center justify-center"
+                                        >
+                                            View Details
+                                        </Link>
                                     </div>
                                 </div>
                             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { RootState } from '@/redux/store';
@@ -26,7 +26,9 @@ export default function AuthLayout({
 
     return (
         <div className="flex flex-col min-h-screen">
-            <Navbar />
+            <Suspense fallback={<div className="h-20 bg-white" />}>
+                <Navbar />
+            </Suspense>
             <main className="flex-grow overflow-x-hidden">
                 {children}
             </main>

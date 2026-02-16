@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/redux/store";
-import { toggleWishlist } from "@/redux/features/wishlistSlice";
+import { toggleWishlist, toggleGuestWishlist } from "@/redux/features/wishlistSlice";
 
 interface ProductCardProps {
     product: any;
@@ -14,6 +14,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const dispatch = useDispatch<AppDispatch>();
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
     const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const isInWishlist = wishlistItems.includes(product._id);
 
@@ -24,6 +25,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const handleToggleWishlist = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (!isAuthenticated) {
+            dispatch(toggleGuestWishlist(product._id));
+            toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
+            return;
+        }
+
         try {
             await dispatch(toggleWishlist(product._id)).unwrap();
             toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
