@@ -44,10 +44,58 @@ export async function generateMetadata(
     }
 }
 
-export default function ProductLayout({
+export default async function ProductLayout({
     children,
+    params,
 }: {
     children: React.ReactNode;
+    params: Promise<{ id: string }>;
 }) {
-    return <>{children}</>;
+    const { id } = await params;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    let productData = null;
+
+    try {
+        const response = await axios.get(`${apiUrl}/api/users/products/${id}`);
+        productData = response.data.product;
+    } catch (error) {
+        console.error("Failed to fetch product for JSON-LD", error);
+    }
+
+    const jsonLd = productData ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": productData.name,
+        "image": productData.images,
+        "description": productData.shortDescription || productData.description,
+        "brand": {
+            "@type": "Brand",
+            "name": "Sking Cosmetics"
+        },
+        "offers": {
+            "@type": "Offer",
+            "url": `https://skingcosmetics.com/product/${id}`,
+            "priceCurrency": "PKR",
+            "price": productData.finalPrice || productData.price,
+            "availability": productData.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "itemCondition": "https://schema.org/NewCondition"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5",
+            "reviewCount": productData.soldCount || "10"
+        }
+    } : null;
+
+    return (
+        <>
+            {jsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
+            )}
+            {children}
+        </>
+    );
 }

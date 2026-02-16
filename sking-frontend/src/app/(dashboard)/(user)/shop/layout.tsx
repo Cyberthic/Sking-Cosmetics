@@ -1,14 +1,9 @@
-import { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: 'Shop Premium Skincare',
-    description: 'Explore our curated collection of luxury skincare products. From hydrating cleansers to potent anti-aging serums, find everything you need for a radiant complexion.',
-    keywords: ['shop skincare', 'luxury beauty shop', 'buy face serums online', 'premium moisturizers', 'best cleansers for glowing skin'],
-    openGraph: {
-        title: 'Shop Sking Cosmetics | Luxury Beauty Collection',
-        description: 'Elevate your skincare routine with our professional-grade products.',
-        images: ['/shop-og.jpg'],
-    },
+    title: "Shop All Products | Luxury Skincare Collection",
+    description: "Browse our complete collection of luxury skincare and beauty products. From serums to moisturizers, find the perfect ritual for your skin health.",
+    keywords: ["shop skincare", "luxury beauty shop", "sking cosmetics collection", "premium serums", "best moisturizers online"],
 };
 
 export default function ShopLayout({

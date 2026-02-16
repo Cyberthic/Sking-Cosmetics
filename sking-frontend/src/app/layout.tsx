@@ -31,7 +31,10 @@ export const metadata: Metadata = {
     "high-end makeup", "beauty essentials", "luxury moisture products", "skin rejuvenation",
     "professional skincare", "skincare technology", "modern beauty", "elegant skincare",
     "cosmetic shop", "online beauty store", "skincare for sensitive skin", "brightening serums",
-    "hydrating creams", "luxury face oils", "skincare treatments", "beauty innovation"
+    "hydrating creams", "luxury face oils", "skincare treatments", "beauty innovation",
+    "Unisex Perfume", "Luxury Lipbalm", "Beard Growth Oil", "Papaya Face Wash", "Beauty Cream 10 days challenge",
+    "Hair Oil with Shampoo", "Moisture Cream for skin", "Hand Whitening Solution", "Sun Protection cream",
+    "Skin Whitening", "Beard Care", "Unisex Beauty Products", "Luxury Cosmetics Pakistan"
   ],
   metadataBase: new URL("https://www.skingcosmetics.com"),
   alternates: {

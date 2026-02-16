@@ -1,9 +1,9 @@
-import { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: 'Our Story & Philosophy',
-    description: 'Learn about the vision behind Sking Cosmetics. We combine pure ingredients with precise formulations to redefine modern beauty.',
-    keywords: ['sking cosmetics about us', 'clean beauty philosophy', 'skincare innovation', 'luxury grooming story'],
+    title: "About Us | Our Story & Philosophy",
+    description: "Learn about Sking Cosmetics - how we merge nature with science to create soulful skincare. Discover our mission, values, and commitment to pure beauty.",
+    keywords: ["about sking cosmetics", "skincare philosophy", "natural beauty brand", "science meets soul", "pure cosmetics mission"],
 };
 
 export default function AboutLayout({

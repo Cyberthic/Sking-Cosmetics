@@ -129,7 +129,7 @@ const HeroSection = () => {
                             ) : (
                                 <Image
                                     src={currentSlide.image}
-                                    alt="Sking Hero"
+                                    alt={`Sking Cosmetics - ${currentSlide.title} - ${currentSlide.subtitle}`}
                                     fill
                                     className="object-cover opacity-80"
                                     priority
