@@ -5,27 +5,41 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 
-const slides = [
+interface Slide {
+    video?: string;
+    image: string;
+    title: string;
+    subtitle: string;
+    buttonText: string;
+    link: string;
+    duration?: number;
+}
+
+const slides: Slide[] = [
     {
+        video: "/sking/sking-video.mp4",
         image: "/sking/sking-bg-2.webp",
         title: "Discover Your Beauty",
         subtitle: "Shop the Best Beauty Products Online",
         buttonText: "Shop Now",
-        link: "/shop"
+        link: "/shop",
+        duration: 10000 // 10 seconds for the first slide (video)
     },
     {
         image: "/sking/sking-bg-3.webp",
         title: "Redefine Your Glow",
         subtitle: "Premium Skincare for Every Skin Type",
         buttonText: "Explore More",
-        link: "/shop/skincare"
+        link: "/shop/skincare",
+        duration: 5000
     },
     {
         image: "/sking/sking-bg-4.webp",
         title: "Empower Your Style",
         subtitle: "Unleash Your Inner Confidence Today",
         buttonText: "View Collection",
-        link: "/new-arrivals"
+        link: "/new-arrivals",
+        duration: 5000
     }
 ];
 
@@ -66,14 +80,15 @@ const HeroSection = () => {
         return () => ctx.revert();
     }, [currentIndex]); // Re-run animation on slide change
 
-    // Carousel Auto-Play
+    // Carousel Auto-Play with dynamic duration
     useEffect(() => {
-        const timer = setInterval(() => {
+        const slideDuration = slides[currentIndex].duration || 5000;
+        const timer = setTimeout(() => {
             setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
-        }, 5000);
+        }, slideDuration);
 
-        return () => clearInterval(timer);
-    }, []);
+        return () => clearTimeout(timer);
+    }, [currentIndex]);
 
     // Handle Dot Click
     const handleDotClick = (index: number) => {
@@ -101,13 +116,25 @@ const HeroSection = () => {
                             transition={{ duration: 0.8, ease: "easeInOut" }}
                             className="absolute inset-0 z-0 bg-sking-black"
                         >
-                            <Image
-                                src={currentSlide.image}
-                                alt="Sking Hero"
-                                fill
-                                className="object-cover opacity-80"
-                                priority
-                            />
+                            {currentSlide.video ? (
+                                <video
+                                    src={currentSlide.video}
+                                    poster={currentSlide.image}
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                                />
+                            ) : (
+                                <Image
+                                    src={currentSlide.image}
+                                    alt="Sking Hero"
+                                    fill
+                                    className="object-cover opacity-80"
+                                    priority
+                                />
+                            )}
                             {/* Gradient Overlay for Text Visibility */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/20 to-black/60 md:to-black/40" />
                         </motion.div>
