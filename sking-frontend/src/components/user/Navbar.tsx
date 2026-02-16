@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Search, ShoppingBag, User, Menu, X, ChevronDown, Headphones, Phone, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { logout } from "@/redux/features/authSlice";
 import { fetchCart, setDrawerOpen } from "@/redux/features/cartSlice"; // Import fetchCart and setDrawerOpen
 import { fetchWishlist } from "@/redux/features/wishlistSlice";
@@ -37,8 +37,17 @@ export default function Navbar() {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
 
     const setIsCartOpen = (open: boolean) => dispatch(setDrawerOpen(open));
+
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Fetch categories on mount
     useEffect(() => {
@@ -255,9 +264,9 @@ export default function Navbar() {
                                         <User className="w-5 h-5" />
                                     </div>
                                     <div className="flex items-center gap-1 text-sm font-medium text-black">
-                                        <Link href="/login" className="hover:text-sking-pink transition-colors">Log in</Link>
+                                        <Link href={`/login?redirect=${encodeURIComponent(fullPath)}`} className="hover:text-sking-pink transition-colors">Log in</Link>
                                         <span className="text-gray-400 mx-1">/</span>
-                                        <Link href="/register" className="hover:text-sking-pink transition-colors">Sign Up</Link>
+                                        <Link href={`/register?redirect=${encodeURIComponent(fullPath)}`} className="hover:text-sking-pink transition-colors">Sign Up</Link>
                                     </div>
                                 </div>
                             )}
@@ -269,7 +278,7 @@ export default function Navbar() {
                             <Link href="/wishlist" className="p-2 text-black hover:text-sking-pink transition-colors relative group">
                                 <Heart className="w-6 h-6" />
                                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[9px] text-white font-bold group-hover:bg-sking-pink transition-colors">
-                                    {wishlistItems.length}
+                                    {mounted ? wishlistItems.length : 0}
                                 </span>
                             </Link>
 
@@ -281,13 +290,13 @@ export default function Navbar() {
                                 <div className="relative">
                                     <ShoppingBag className="w-6 h-6 text-black" />
                                     <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-sking-red text-[10px] text-white font-medium">
-                                        {totalItems}
+                                        {mounted ? totalItems : 0}
                                     </span>
                                 </div>
                                 <div className="flex flex-col items-start leading-tight">
                                     <span className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mb-0.5">My Bag</span>
                                     <span className="text-sm font-medium text-black tabular-nums">
-                                        (₹{totalAmount.toLocaleString()})
+                                        (₹{mounted ? totalAmount.toLocaleString() : 0})
                                     </span>
                                 </div>
                             </button>
@@ -302,7 +311,7 @@ export default function Navbar() {
                                 className="p-2.5 relative group text-black transition-all active:scale-90"
                             >
                                 <ShoppingBag className="w-6 h-6" />
-                                {totalItems > 0 && (
+                                {mounted && totalItems > 0 && (
                                     <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-sking-red text-[9px] text-white font-black shadow-sm">
                                         {totalItems}
                                     </span>
@@ -517,7 +526,7 @@ export default function Navbar() {
                                 <span className="text-xl font-black uppercase tracking-widest">Wishlist</span>
                                 <div className="flex items-center gap-3">
                                     <Heart className="w-6 h-6" />
-                                    <span className="bg-black text-white text-[10px] font-black px-2.5 py-1 rounded-full">{wishlistItems.length}</span>
+                                    <span className="bg-black text-white text-[10px] font-black px-2.5 py-1 rounded-full">{mounted ? wishlistItems.length : 0}</span>
                                 </div>
                             </Link>
 
@@ -528,7 +537,7 @@ export default function Navbar() {
                                 <span className="text-xl font-black uppercase tracking-widest">My Bag</span>
                                 <div className="flex items-center gap-3">
                                     <ShoppingBag className="w-6 h-6" />
-                                    <span className="bg-sking-red text-white text-[10px] font-black px-2.5 py-1 rounded-full">{totalItems}</span>
+                                    <span className="bg-sking-red text-white text-[10px] font-black px-2.5 py-1 rounded-full">{mounted ? totalItems : 0}</span>
                                 </div>
                             </button>
                         </div>
@@ -563,10 +572,10 @@ export default function Navbar() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-4 mt-12 pb-20">
-                            <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="py-5 text-center bg-black text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-sking-pink transition-all shadow-xl shadow-black/10">
+                            <Link href={`/login?redirect=${encodeURIComponent(fullPath)}`} onClick={() => setIsMobileMenuOpen(false)} className="py-5 text-center bg-black text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-sking-pink transition-all shadow-xl shadow-black/10">
                                 Login / Sign In
                             </Link>
-                            <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="py-5 text-center border-2 border-black rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-gray-50 transition-all">
+                            <Link href={`/register?redirect=${encodeURIComponent(fullPath)}`} onClick={() => setIsMobileMenuOpen(false)} className="py-5 text-center border-2 border-black rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-gray-50 transition-all">
                                 Create Account
                             </Link>
                         </div>
