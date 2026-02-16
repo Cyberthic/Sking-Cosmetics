@@ -10,14 +10,18 @@ import { userCartService } from "@/services/user/userCartApiService";
 import { userWishlistService } from "@/services/user/userWishlistApiService";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
-import { updateCartLocally, setDrawerOpen } from "@/redux/features/cartSlice";
-import { toggleWishlist } from "@/redux/features/wishlistSlice";
+import { updateCartLocally, setDrawerOpen, addToGuestCart } from "@/redux/features/cartSlice";
+import { toggleWishlist, toggleGuestWishlist } from "@/redux/features/wishlistSlice";
 import { RootState, AppDispatch } from "@/redux/store";
 import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check, Info, Ticket, ExternalLink, Loader2 } from "lucide-react";
 import { userReviewApiService } from "@/services/user/userReviewApiService";
 import { useSearchParams } from "next/navigation";
 
 function ProductDetailContent() {
+    const dispatch = useDispatch<AppDispatch>();
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+    const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
+
     const { id } = useParams();
     const [product, setProduct] = useState<any>(null);
     const [related, setRelated] = useState<any[]>([]);
@@ -49,6 +53,11 @@ function ProductDetailContent() {
     const [inlineComment, setInlineComment] = useState("");
     const [inlineSubmitting, setInlineSubmitting] = useState(false);
 
+    const currentPrice = product ? (selectedVariant ? selectedVariant.price : product.price) : 0;
+    const finalPrice = product ? (product.offerPercentage > 0
+        ? currentPrice - (currentPrice * (product.offerPercentage / 100))
+        : currentPrice) : 0;
+
     useEffect(() => {
         setOrderIdParam(searchParams.get("orderId"));
         setWriteReviewParam(searchParams.get("writeReview"));
@@ -78,7 +87,7 @@ function ProductDetailContent() {
                 setInlineComment("");
                 setInlineRating(0);
                 fetchReviews(id as string);
-                if (orderIdParam) checkUserCanReview(id as string, orderIdParam);
+                if (orderIdParam && isAuthenticated) checkUserCanReview(id as string, orderIdParam);
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to submit review");
@@ -92,13 +101,13 @@ function ProductDetailContent() {
             fetchData(id as string);
             fetchReviews(id as string);
         }
-    }, [id]);
+    }, [id, isAuthenticated]);
 
     useEffect(() => {
-        if (id) {
+        if (id && isAuthenticated) {
             checkUserCanReview(id as string, orderIdParam || undefined);
         }
-    }, [id, orderIdParam]);
+    }, [id, orderIdParam, isAuthenticated]);
 
     useEffect(() => {
         if (canReview && writeReviewParam === 'true') {
@@ -122,6 +131,7 @@ function ProductDetailContent() {
     };
 
     const checkUserCanReview = async (productId: string, orderId?: string) => {
+        if (!isAuthenticated) return;
         try {
             const res = await userReviewApiService.checkCanReview(productId, orderId);
             if (res.success) {
@@ -136,10 +146,15 @@ function ProductDetailContent() {
     const fetchData = async (productId: string) => {
         setLoading(true);
         try {
-            const [productRes, couponRes] = await Promise.all([
-                userProductService.getProductById(productId),
-                userCouponApiService.getMyCoupons()
-            ]);
+            const promises: Promise<any>[] = [userProductService.getProductById(productId)];
+
+            if (isAuthenticated) {
+                promises.push(userCouponApiService.getMyCoupons());
+            }
+
+            const results = await Promise.all(promises);
+            const productRes = results[0];
+            const couponRes = isAuthenticated ? results[1] : null;
 
             if (productRes.success) {
                 setProduct(productRes.product);
@@ -148,7 +163,7 @@ function ProductDetailContent() {
                 if (productRes.product.variants?.length > 0) setSelectedVariant(productRes.product.variants[0]);
             }
 
-            if (couponRes.success) {
+            if (couponRes && couponRes.success) {
                 const allVouchers = couponRes.data.active || [];
                 // Filter and Prioritize
                 const filtered = allVouchers.filter((v: any) => {
@@ -180,8 +195,6 @@ function ProductDetailContent() {
         setTimeout(() => setCopiedCode(null), 2000);
     };
 
-    const dispatch = useDispatch<AppDispatch>();
-    const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const isInWishlist = product ? wishlistItems.includes(product._id) : false;
 
     const handleBuyNow = async () => {
@@ -191,12 +204,30 @@ function ProductDetailContent() {
         }
 
         if (!product) return;
+
+        if (!isAuthenticated) {
+            dispatch(addToGuestCart({
+                product: {
+                    _id: product._id,
+                    name: product.name,
+                    price: finalPrice,
+                    images: product.images
+                },
+                quantity: quantity,
+                price: finalPrice,
+                variantName: selectedVariant?.size
+            }));
+            router.push('/cart');
+            return;
+        }
+
         try {
             const response = await userCartService.addToCart(product._id, selectedVariant?.size, quantity);
             if (response.success) {
                 dispatch(updateCartLocally(response.cart));
                 toast.success("Added to Cart");
                 setHasAddedToCart(true);
+                router.push('/cart');
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to add to cart");
@@ -205,6 +236,24 @@ function ProductDetailContent() {
 
     const handleAddToCart = async () => {
         if (!product) return;
+
+        if (!isAuthenticated) {
+            dispatch(addToGuestCart({
+                product: {
+                    _id: product._id,
+                    name: product.name,
+                    price: finalPrice,
+                    images: product.images
+                },
+                quantity: quantity,
+                price: finalPrice,
+                variantName: selectedVariant?.size
+            }));
+            dispatch(setDrawerOpen(true));
+            toast.success("Added to Cart (Guest)");
+            return;
+        }
+
         try {
             const response = await userCartService.addToCart(product._id, selectedVariant?.size, quantity);
             if (response.success) {
@@ -219,6 +268,13 @@ function ProductDetailContent() {
 
     const handleAddToWishlist = async () => {
         if (!product) return;
+
+        if (!isAuthenticated) {
+            dispatch(toggleGuestWishlist(product._id));
+            toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
+            return;
+        }
+
         try {
             await dispatch(toggleWishlist(product._id)).unwrap();
             toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
@@ -242,12 +298,9 @@ function ProductDetailContent() {
             </div>
         </div>
     );
+
     if (!product) return <div className="min-h-screen bg-white text-black flex items-center justify-center font-bold uppercase tracking-widest">Product not found</div>;
 
-    const currentPrice = selectedVariant ? selectedVariant.price : product.price;
-    const finalPrice = product.offerPercentage > 0
-        ? currentPrice - (currentPrice * (product.offerPercentage / 100))
-        : currentPrice;
 
     return (
         <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-8">
