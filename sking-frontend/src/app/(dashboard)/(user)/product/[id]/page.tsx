@@ -13,9 +13,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateCartLocally, setDrawerOpen, addToGuestCart } from "@/redux/features/cartSlice";
 import { toggleWishlist, toggleGuestWishlist } from "@/redux/features/wishlistSlice";
 import { RootState, AppDispatch } from "@/redux/store";
-import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check, Info, Ticket, ExternalLink, Loader2 } from "lucide-react";
+import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check, Info, Ticket, ExternalLink, Loader2, Scissors, Download, X, Plus, Trash2 } from "lucide-react";
 import { userReviewApiService } from "@/services/user/userReviewApiService";
+import { userProfileService } from "@/services/user/userProfileApiService";
 import { useSearchParams } from "next/navigation";
+import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+import { Modal } from "@/components/admin/ui/modal";
+import { adminProductService } from "@/services/admin/adminProductApiService";
+import { motion, AnimatePresence } from "framer-motion";
 
 function ProductDetailContent() {
     const dispatch = useDispatch<AppDispatch>();
@@ -57,6 +63,18 @@ function ProductDetailContent() {
     const [inlineHover, setInlineHover] = useState(0);
     const [inlineComment, setInlineComment] = useState("");
     const [inlineSubmitting, setInlineSubmitting] = useState(false);
+    const [reviewImages, setReviewImages] = useState<string[]>([]);
+
+    // Cropper State (Shared for Review Upload & Product Image Sharing)
+    const [cropModalOpen, setCropModalOpen] = useState(false);
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+    const [crop, setCrop] = useState<Crop>();
+    const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+    const [aspect, setAspect] = useState<number | undefined>(undefined);
+    const [cropMode, setCropMode] = useState<'review' | 'share'>('review');
+    const [isCropping, setIsCropping] = useState(false);
+    const imgRef = useRef<HTMLImageElement>(null);
+    const reviewFileInputRef = useRef<HTMLInputElement>(null);
 
     const currentPrice = product ? (selectedVariant ? selectedVariant.price : product.price) : 0;
     const finalPrice = product ? (product.offerPercentage > 0
@@ -85,12 +103,14 @@ function ProductDetailContent() {
                 productId: (product as any)._id,
                 orderId: activeOrderId || "",
                 rating: inlineRating,
-                comment: inlineComment
+                comment: inlineComment,
+                images: reviewImages
             });
             if (res.success) {
                 toast.success("Review submitted successfully!");
                 setInlineComment("");
                 setInlineRating(0);
+                setReviewImages([]);
                 fetchReviews(id as string);
                 if (orderIdParam && isAuthenticated) checkUserCanReview(id as string, orderIdParam);
             }
@@ -98,6 +118,110 @@ function ProductDetailContent() {
             toast.error(err.response?.data?.message || "Failed to submit review");
         } finally {
             setInlineSubmitting(false);
+        }
+    };
+
+    // --- Cropping Logic ---
+    const handleReviewImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                setCropImageSrc(reader.result as string);
+                setCropMode('review');
+                setAspect(1); // Default square for reviews
+                setCropModalOpen(true);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleProductImageCrop = (src: string) => {
+        setCropImageSrc(src);
+        setCropMode('share');
+        setAspect(4 / 5); // Default portrait for product
+        setCropModalOpen(true);
+    };
+
+    function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+        const { width, height } = e.currentTarget;
+        const newCrop = centerCrop(
+            makeAspectCrop(
+                { unit: '%', width: 90 },
+                aspect || 1,
+                width,
+                height
+            ),
+            width,
+            height
+        );
+        setCrop(newCrop);
+    }
+
+    const handleAspectChange = (newAspect: number | undefined) => {
+        setAspect(newAspect);
+        if (imgRef.current) {
+            const { width, height } = imgRef.current;
+            if (newAspect) {
+                const newCrop = centerCrop(
+                    makeAspectCrop(
+                        { unit: '%', width: 90 },
+                        newAspect,
+                        width,
+                        height
+                    ),
+                    width,
+                    height
+                );
+                setCrop(newCrop);
+            }
+        }
+    };
+
+    const getCroppedImgBlob = async (image: HTMLImageElement, crop: PixelCrop): Promise<Blob | null> => {
+        const canvas = document.createElement('canvas');
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        ctx.drawImage(image, crop.x * scaleX, crop.y * scaleY, crop.width * scaleX, crop.height * scaleY, 0, 0, crop.width, crop.height);
+        return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 1));
+    };
+
+    const handleSaveCrop = async () => {
+        if (!imgRef.current || !completedCrop) return;
+        setIsCropping(true);
+        try {
+            const blob = await getCroppedImgBlob(imgRef.current, completedCrop);
+            if (!blob) return;
+
+            if (cropMode === 'review') {
+                const file = new File([blob], "review_image.jpg", { type: "image/jpeg" });
+                const res = await userProfileService.uploadProfilePicture(file);
+                if (res.success) {
+                    setReviewImages([...reviewImages, res.imageUrl]);
+                    setCropModalOpen(false);
+                }
+            } else {
+                // Share mode: Download the image
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `sking-product-crop-${id}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                toast.success("Image cropped and downloaded!");
+                setCropModalOpen(false);
+            }
+        } catch (err) {
+            toast.error("Failed to process image");
+        } finally {
+            setIsCropping(false);
+            setCropImageSrc(null);
         }
     };
 
@@ -334,7 +458,8 @@ function ProductDetailContent() {
                 <div className="space-y-6">
                     {/* Main Image with Zoom */}
                     <div
-                        className="relative aspect-[4/5] bg-white rounded-none overflow-hidden cursor-crosshair group border border-gray-100"
+                        className="relative w-full overflow-hidden cursor-crosshair group border border-gray-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] bg-white rounded-2xl"
+                        style={{ aspectRatio: 'auto', minHeight: '500px' }}
                         onMouseEnter={() => setZoomed(true)}
                         onMouseLeave={() => setZoomed(false)}
                         onMouseMove={handleMouseMove}
@@ -343,34 +468,33 @@ function ProductDetailContent() {
                             src={mainImage}
                             alt={product.name}
                             fill
-                            className="object-contain p-8 md:p-12 transition-transform duration-200"
+                            className="object-contain transition-transform duration-300 ease-out"
                             style={{
                                 transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
                                 transform: zoomed ? "scale(2)" : "scale(1)"
                             }}
                         />
                         {product.offerPercentage > 0 && (
-                            <span className="absolute top-4 left-4 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">
+                            <span className="absolute top-6 left-6 bg-black text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg uppercase tracking-widest z-10">
                                 {product.offerPercentage}% OFF
                             </span>
                         )}
+
                     </div>
 
                     {/* Thumbnails */}
-                    <div className="flex items-center gap-2 md:gap-4 max-w-full overflow-hidden">
-                        <button className="flex-shrink-0 text-gray-400 hover:text-black transition-colors hidden sm:block"><ChevronLeft /></button>
-                        <div className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-none pb-2 px-1 snap-x snap-proximity">
+                    <div className="flex items-center gap-4 group/thumbs">
+                        <div className="flex gap-4 overflow-x-auto scrollbar-none pb-4 px-1 snap-x snap-proximity grow">
                             {product.images?.map((img: string, idx: number) => (
                                 <button
                                     key={idx}
                                     onClick={() => setMainImage(img)}
-                                    className={`relative w-16 h-16 md:w-20 md:h-20 bg-white border rounded-lg overflow-hidden p-1.5 transition-all flex-shrink-0 snap-center ${mainImage === img ? "border-sking-pink ring-1 ring-sking-pink shadow-md" : "border-gray-200 hover:border-gray-300"}`}
+                                    className={`relative w-20 h-24 md:w-24 md:h-28 bg-white border-2 rounded-xl overflow-hidden p-2 transition-all duration-300 flex-shrink-0 snap-center shadow-sm ${mainImage === img ? "border-black scale-105 shadow-md" : "border-transparent opacity-60 hover:opacity-100 hover:border-gray-200"}`}
                                 >
                                     <Image src={img} alt={`View ${idx}`} fill className="object-contain p-1" />
                                 </button>
                             ))}
                         </div>
-                        <button className="flex-shrink-0 text-gray-400 hover:text-black transition-colors hidden sm:block"><ChevronRight /></button>
                     </div>
 
                     {/* Share Icons */}
@@ -679,6 +803,41 @@ function ProductDetailContent() {
                                             </div>
                                         </div>
 
+                                        <div className="space-y-4">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Share your results (Optional)</span>
+                                            <div className="flex flex-wrap gap-4">
+                                                {reviewImages.map((img, idx) => (
+                                                    <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-gray-100 group/img shadow-sm">
+                                                        <Image src={img} alt="Review" fill className="object-cover" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setReviewImages(reviewImages.filter((_, i) => i !== idx))}
+                                                            className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                                        >
+                                                            <Trash2 size={20} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {reviewImages.length < 4 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => reviewFileInputRef.current?.click()}
+                                                        className="w-24 h-24 rounded-2xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-sking-pink hover:text-sking-pink transition-all bg-gray-50/50"
+                                                    >
+                                                        <Plus size={20} />
+                                                        <span className="text-[10px] font-black uppercase tracking-tighter">Add Photo</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <input
+                                                type="file"
+                                                ref={reviewFileInputRef}
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={handleReviewImageSelect}
+                                            />
+                                        </div>
+
                                         <div className="space-y-2">
                                             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Your Review</span>
                                             <div className="relative">
@@ -686,7 +845,7 @@ function ProductDetailContent() {
                                                     value={inlineComment}
                                                     onChange={(e) => setInlineComment(e.target.value)}
                                                     placeholder="What did you like or dislike? How does it feel on your skin?"
-                                                    className="w-full bg-white border border-gray-100 rounded-3xl p-6 text-sm text-black focus:outline-none focus:ring-2 focus:ring-sking-pink/5 focus:border-sking-pink transition-all min-h-[120px] resize-none font-medium placeholder:text-gray-300 shadow-sm"
+                                                    className="w-full bg-white border border-gray-100 rounded-3xl p-6 text-sm text-black focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all min-h-[120px] resize-none font-medium placeholder:text-gray-300 shadow-sm"
                                                 />
                                                 <div className="absolute bottom-4 right-6 flex items-center gap-2">
                                                     <span className={`text-[10px] font-black uppercase tracking-widest ${inlineComment.length < 10 ? 'text-orange-400' : 'text-green-500'}`}>
@@ -837,6 +996,76 @@ function ProductDetailContent() {
                         </div>
                     </section>
                 )}
+                {/* Enhanced Cropper Modal */}
+                <Modal isOpen={cropModalOpen} onClose={() => setCropModalOpen(false)} className="max-w-4xl w-full p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-xl font-bold text-black uppercase tracking-tight">
+                            {cropMode === 'review' ? 'Review Photo Edit' : 'Product Photo Export'}
+                        </h3>
+                        <div className="flex gap-2">
+                            {cropMode === 'share' && (
+                                <>
+                                    <button type="button" onClick={() => handleAspectChange(1)} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${aspect === 1 ? "bg-sking-pink text-white" : "bg-gray-100"}`}>Square</button>
+                                    <button type="button" onClick={() => handleAspectChange(4 / 5)} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${aspect === 4 / 5 ? "bg-sking-pink text-white" : "bg-gray-100"}`}>Portrait</button>
+                                    <button type="button" onClick={() => handleAspectChange(undefined)} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${aspect === undefined ? "bg-sking-pink text-white" : "bg-gray-100"}`}>Custom</button>
+                                </>
+                            )}
+                            {cropMode === 'review' && (
+                                <button type="button" onClick={() => handleAspectChange(1)} className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest bg-sking-pink text-white">1:1 Square</button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <div className="md:col-span-3">
+                            <div className="relative bg-black rounded-3xl overflow-hidden min-h-[400px] flex items-center justify-center border border-gray-100 shadow-inner">
+                                {cropImageSrc && (
+                                    <ReactCrop
+                                        crop={crop}
+                                        onChange={(c) => setCrop(c)}
+                                        onComplete={(c) => setCompletedCrop(c)}
+                                        aspect={aspect}
+                                        className="max-w-full max-h-[500px]"
+                                    >
+                                        <img
+                                            ref={imgRef}
+                                            src={cropImageSrc}
+                                            alt="Crop"
+                                            onLoad={onImageLoad}
+                                            style={{ maxHeight: '500px', objectFit: 'contain' }}
+                                        />
+                                    </ReactCrop>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col justify-between py-2">
+                            <div className="space-y-6">
+                                <h4 className="text-[10px] font-black text-black uppercase tracking-[0.2em] mb-3">Professional Edit</h4>
+                                <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                                    {cropMode === 'review' ? 'Make sure your skin texture is clearly visible for better review quality.' : 'Crop the product to highlight specific details for sharing.'}
+                                </p>
+                            </div>
+
+                            <div className="space-y-3 pt-8 border-t border-gray-100">
+                                <button
+                                    onClick={handleSaveCrop}
+                                    disabled={isCropping || !completedCrop}
+                                    className="w-full py-4 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-black/10"
+                                >
+                                    {isCropping ? <Loader2 className="w-4 h-4 animate-spin" /> : (cropMode === 'review' ? <Plus size={16} /> : <Download size={16} />)}
+                                    {cropMode === 'review' ? 'Add to Review' : 'Export Image'}
+                                </button>
+                                <button
+                                    onClick={() => setCropModalOpen(false)}
+                                    className="w-full py-4 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-black transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </Modal>
             </div>
         </div>
     );

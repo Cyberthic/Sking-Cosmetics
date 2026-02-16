@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Button from "../ui/button/Button";
 import { adminCategoryService } from "../../../services/admin/adminCategoryApiService";
 import { adminProductService } from "../../../services/admin/adminProductApiService";
 import { Modal } from "../ui/modal";
-import Cropper from "react-easy-crop";
-import getCroppedImg from "../../../utils/cropImage";
+import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -40,9 +40,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
     // Cropper State
     const [cropModalOpen, setCropModalOpen] = useState(false);
     const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [crop, setCrop] = useState<Crop>();
+    const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+    const [aspect, setAspect] = useState<number | undefined>(1);
+    const imgRef = useRef<HTMLImageElement>(null);
 
     useEffect(() => {
         fetchCategories();
@@ -84,30 +85,88 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
-            const imageDataUrl = await readFile(file);
-            setCropImageSrc(imageDataUrl);
-            setCropModalOpen(true);
-            e.target.value = "";
+            const reader = new FileReader();
+            reader.onload = () => {
+                setCropImageSrc(reader.result as string);
+                setCropModalOpen(true);
+                setAspect(1); // Default to square
+                e.target.value = "";
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    const readFile = (file: File): Promise<string> => {
+    function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+        const { width, height } = e.currentTarget;
+        if (aspect) {
+            const newCrop = centerCrop(
+                makeAspectCrop(
+                    { unit: '%', width: 90 },
+                    aspect,
+                    width,
+                    height
+                ),
+                width,
+                height
+            );
+            setCrop(newCrop);
+        } else {
+            setCrop({ unit: '%', width: 90, height: 90, x: 5, y: 5 });
+        }
+    }
+
+    const handleAspectChange = (newAspect: number | undefined) => {
+        setAspect(newAspect);
+        if (imgRef.current) {
+            const { width, height } = imgRef.current;
+            if (newAspect) {
+                const newCrop = centerCrop(
+                    makeAspectCrop(
+                        { unit: '%', width: 90 },
+                        newAspect,
+                        width,
+                        height
+                    ),
+                    width,
+                    height
+                );
+                setCrop(newCrop);
+            }
+        }
+    };
+
+    const getCroppedImg = async (image: HTMLImageElement, crop: PixelCrop): Promise<Blob | null> => {
+        const canvas = document.createElement('canvas');
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) return null;
+
+        ctx.drawImage(
+            image,
+            crop.x * scaleX,
+            crop.y * scaleY,
+            crop.width * scaleX,
+            crop.height * scaleY,
+            0,
+            0,
+            crop.width,
+            crop.height
+        );
+
         return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.addEventListener("load", () => resolve(reader.result as string));
-            reader.readAsDataURL(file);
+            canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
         });
     };
 
-    const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
-        setCroppedAreaPixels(croppedAreaPixels);
-    }, []);
-
     const handleCropSave = async () => {
-        if (!cropImageSrc || !croppedAreaPixels) return;
+        if (!imgRef.current || !completedCrop) return;
         setCropping(true);
         try {
-            const croppedImageBlob = await getCroppedImg(cropImageSrc, croppedAreaPixels);
+            const croppedImageBlob = await getCroppedImg(imgRef.current, completedCrop);
             if (!croppedImageBlob) {
                 setCropping(false);
                 return;
@@ -121,11 +180,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
                 setCropModalOpen(false);
                 setCropImageSrc(null);
             } else {
-                alert("Upload failed");
+                toast.error("Upload failed");
             }
-        } catch (e) {
-            console.error(e);
-            alert("Error cropping/uploading image");
+        } catch (error: any) {
+            console.error("Cropping/Upload error:", error);
+            const errorMsg = error.response?.data?.error || error.message || "Error cropping/uploading image";
+            toast.error(errorMsg);
         } finally {
             setCropping(false);
         }
@@ -162,13 +222,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
     const addHowToUse = () => setHowToUse([...howToUse, ""]);
     const removeHowToUse = (index: number) => setHowToUse(howToUse.filter((_, i) => i !== index));
 
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
         try {
             if (images.length < 4) {
-                alert("Minimum 4 images required");
+                toast.error("Minimum 4 images required");
                 setSubmitting(false);
                 return;
             }
@@ -274,12 +333,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
 
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         {images.map((img, idx) => (
-                            <div key={idx} className="relative aspect-square border rounded-lg overflow-hidden group shadow-sm bg-gray-50">
-                                <Image src={img} alt={`Product ${idx}`} fill className="object-cover" />
-                                <button type="button" onClick={() => handleRemoveImage(idx)} className="absolute top-2 right-2 bg-white/90 text-red-500 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-50">
+                            <div key={idx} className="relative h-48 border rounded-lg overflow-hidden group shadow-sm bg-gray-50 flex items-center justify-center">
+                                <Image src={img} alt={`Product ${idx}`} fill className="object-contain p-2" />
+                                <button type="button" onClick={() => handleRemoveImage(idx)} className="absolute top-2 right-2 bg-white/90 text-red-500 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-50 z-10">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
-                                {idx === 0 && <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center py-1">Cover</span>}
+                                {idx === 0 && <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-bold uppercase tracking-widest text-center py-1.5 z-10">Cover Image</span>}
                             </div>
                         ))}
                         {images.length === 0 && (
@@ -378,26 +437,56 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit })
             </form>
 
             {/* Cropper Modal */}
-            <Modal isOpen={cropModalOpen} onClose={() => setCropModalOpen(false)} className="max-w-2xl w-full p-6">
-                <h3 className="text-lg font-bold mb-4">Crop Image</h3>
-                <div className="relative h-96 w-full bg-gray-100 rounded-lg overflow-hidden mb-4">
-                    {cropImageSrc && (
-                        <Cropper
-                            image={cropImageSrc}
-                            crop={crop}
-                            zoom={zoom}
-                            aspect={1}
-                            onCropChange={setCrop}
-                            onCropComplete={onCropComplete}
-                            onZoomChange={setZoom}
-                        />
-                    )}
+            <Modal isOpen={cropModalOpen} onClose={() => setCropModalOpen(false)} className="max-w-4xl w-full p-6">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold dark:text-white">Crop Image</h3>
+                    <div className="flex gap-2">
+                        <button type="button" onClick={() => handleAspectChange(1)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${aspect === 1 ? "bg-brand-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"}`}>Square (1:1)</button>
+                        <button type="button" onClick={() => handleAspectChange(3 / 4)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${aspect === 3 / 4 ? "bg-brand-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"}`}>Portrait (3:4)</button>
+                        <button type="button" onClick={() => handleAspectChange(4 / 5)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${aspect === 4 / 5 ? "bg-brand-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"}`}>Portrait (4:5)</button>
+                        <button type="button" onClick={() => handleAspectChange(undefined)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${aspect === undefined ? "bg-brand-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400"}`}>Custom (Free)</button>
+                    </div>
                 </div>
-                <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setCropModalOpen(false)} disabled={cropping}>Cancel</Button>
-                    <Button onClick={handleCropSave} disabled={cropping}>
-                        {cropping ? "Cropping..." : "Crop & Upload"}
-                    </Button>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div className="md:col-span-3">
+                        <div className="relative bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 max-h-[600px] flex items-center justify-center">
+                            {cropImageSrc && (
+                                <ReactCrop
+                                    crop={crop}
+                                    onChange={(c) => setCrop(c)}
+                                    onComplete={(c) => setCompletedCrop(c)}
+                                    aspect={aspect}
+                                    className="max-w-full max-h-full"
+                                >
+                                    <img
+                                        ref={imgRef}
+                                        src={cropImageSrc}
+                                        alt="Crop"
+                                        onLoad={onImageLoad}
+                                        style={{ maxHeight: '600px', objectFit: 'contain' }}
+                                    />
+                                </ReactCrop>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col justify-between">
+                        <div className="space-y-4">
+                            <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Adjustments</h4>
+                            <p className="text-xs text-gray-500 leading-relaxed">
+                                {aspect ? "Aspect ratio is locked. Drag the box to position." : "Free resizing enabled. Drag the corners to adjust breadth and height."}
+                            </p>
+                        </div>
+                        <div className="space-y-3 pt-6 border-t border-gray-100 dark:border-gray-800">
+                            <Button onClick={handleCropSave} disabled={cropping || !completedCrop} className="w-full">
+                                {cropping ? "Saving..." : "Save & Upload"}
+                            </Button>
+                            <Button variant="outline" onClick={() => setCropModalOpen(false)} disabled={cropping} className="w-full">
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </Modal>
         </>
