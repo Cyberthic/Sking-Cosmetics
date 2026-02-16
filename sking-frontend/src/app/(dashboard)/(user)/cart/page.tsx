@@ -10,11 +10,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchCart, updateCartLocally, updateGuestQuantity, removeFromGuestCart } from "@/redux/features/cartSlice";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 export default function CartPage() {
     const dispatch = useDispatch();
     const { isAuthenticated } = useSelector((state: RootState) => state.auth);
     const { items, loading, totalAmount } = useSelector((state: RootState) => state.cart);
+
+    const [processingId, setProcessingId] = useState<string | null>(null);
+    const [actionType, setActionType] = useState<'update' | 'remove' | null>(null);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -30,11 +34,16 @@ export default function CartPage() {
             return;
         }
 
+        setProcessingId(`${productId}-${variantName || 'default'}`);
+        setActionType('update');
+
         if (!isAuthenticated) {
             dispatch(updateGuestQuantity({ productId, variantName, quantity: targetQuantity }));
             if (targetQuantity > currentQuantity) {
                 toast.success("Added to Bag");
             }
+            setProcessingId(null);
+            setActionType(null);
             return;
         }
 
@@ -48,13 +57,21 @@ export default function CartPage() {
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to update quantity");
+        } finally {
+            setProcessingId(null);
+            setActionType(null);
         }
     };
 
     const handleRemove = async (productId: string, variantName?: string) => {
+        setProcessingId(`${productId}-${variantName || 'default'}`);
+        setActionType('remove');
+
         if (!isAuthenticated) {
             dispatch(removeFromGuestCart({ productId, variantName }));
             toast.success("Item removed");
+            setProcessingId(null);
+            setActionType(null);
             return;
         }
 
@@ -66,6 +83,9 @@ export default function CartPage() {
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to remove item");
+        } finally {
+            setProcessingId(null);
+            setActionType(null);
         }
     };
 
@@ -140,8 +160,16 @@ export default function CartPage() {
                                                 {item.variantName && <p className="text-sm text-gray-400 mt-1 uppercase tracking-wide">{item.variantName}</p>}
                                                 <div className="mt-2 font-medium text-lg">₹{(item.price || 0).toLocaleString()}</div>
                                             </div>
-                                            <button onClick={() => handleRemove(item.product._id, item.variantName)} className="text-gray-300 hover:text-sking-red transition-colors p-1">
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                                            <button
+                                                onClick={() => handleRemove(item.product._id, item.variantName)}
+                                                disabled={processingId === `${item.product._id}-${item.variantName || 'default'}`}
+                                                className="text-gray-300 hover:text-sking-red transition-colors p-1 disabled:opacity-50"
+                                            >
+                                                {processingId === `${item.product._id}-${item.variantName || 'default'}` && actionType === 'remove' ? (
+                                                    <Loader2 size={18} className="animate-spin text-sking-red" />
+                                                ) : (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                )}
                                             </button>
                                         </div>
 
@@ -151,14 +179,22 @@ export default function CartPage() {
                                                 <div className="flex items-center border border-gray-200">
                                                     <button
                                                         onClick={() => handleUpdateQuantity(item.product._id, item.variantName, item.quantity, item.quantity - 1)}
-                                                        className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-600"
+                                                        disabled={processingId === `${item.product._id}-${item.variantName || 'default'}`}
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-600 disabled:opacity-50"
                                                     >
                                                         -
                                                     </button>
-                                                    <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                                                    <span className="w-8 text-center text-sm font-medium flex items-center justify-center">
+                                                        {processingId === `${item.product._id}-${item.variantName || 'default'}` && actionType === 'update' ? (
+                                                            <Loader2 size={12} className="animate-spin" />
+                                                        ) : (
+                                                            item.quantity
+                                                        )}
+                                                    </span>
                                                     <button
                                                         onClick={() => handleUpdateQuantity(item.product._id, item.variantName, item.quantity, item.quantity + 1)}
-                                                        className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-600"
+                                                        disabled={processingId === `${item.product._id}-${item.variantName || 'default'}`}
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-600 disabled:opacity-50"
                                                     >
                                                         +
                                                     </button>

@@ -22,25 +22,50 @@ interface CartState {
     isDrawerOpen: boolean;
 }
 
-const getGuestCart = (): CartItem[] => {
+const getStoredCart = (): CartItem[] => {
     if (typeof window !== 'undefined') {
         try {
             const saved = localStorage.getItem('guestCart');
             return saved ? JSON.parse(saved) : [];
         } catch (e) {
-            console.error("Failed to parse guest cart from local storage", e);
+            console.error("Failed to parse cart from local storage", e);
             return [];
         }
     }
     return [];
 };
 
-const guestItemsInitial = getGuestCart();
+const deduplicateCartItems = (items: CartItem[]) => {
+    const map = new Map();
+    items.forEach(item => {
+        const key = `${item.product._id}-${item.variantName || 'default'}`;
+        if (map.has(key)) {
+            // merge quantities if we found duplicate keys
+            const existing = map.get(key);
+            existing.quantity = (existing.quantity || 0) + (item.quantity || 0);
+        } else {
+            map.set(key, JSON.parse(JSON.stringify(item)));
+        }
+    });
+    return Array.from(map.values());
+};
+
+const saveCartToStorage = (items: CartItem[]) => {
+    if (typeof window !== 'undefined') {
+        try {
+            localStorage.setItem('guestCart', JSON.stringify(items));
+        } catch (e) {
+            console.error("Failed to save cart to local storage", e);
+        }
+    }
+};
+
+const initialItems = getStoredCart();
 
 const initialState: CartState = {
-    items: guestItemsInitial,
-    totalAmount: guestItemsInitial.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0),
-    totalItems: guestItemsInitial.reduce((acc: number, item: any) => acc + item.quantity, 0),
+    items: initialItems,
+    totalAmount: initialItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0),
+    totalItems: initialItems.reduce((acc: number, item: any) => acc + item.quantity, 0),
     loading: false,
     error: null,
     isDrawerOpen: false,
@@ -72,8 +97,6 @@ export const mergeGuestCart = createAsyncThunk(
             }));
             const response = await userCartService.mergeCart(itemsToMerge);
             if (response.success) {
-                localStorage.removeItem('guestCart');
-                dispatch(fetchCart());
                 return response.cart;
             }
             return rejectWithValue('Failed to merge cart');
@@ -88,14 +111,14 @@ const cartSlice = createSlice({
     initialState,
     reducers: {
         updateCartLocally: (state, action: PayloadAction<any>) => {
-            // Helper to update state from a cart object directly (e.g. after add/remove)
             const cart = action.payload;
             state.loading = false;
             if (cart && cart.items) {
-                state.items = cart.items;
-                state.totalItems = cart.items.reduce((acc: number, item: any) => acc + item.quantity, 0);
-                // Calculate total price
-                state.totalAmount = cart.items.reduce((acc: number, item: any) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
+                const uniqueItems = deduplicateCartItems(cart.items);
+                state.items = uniqueItems;
+                state.totalItems = uniqueItems.reduce((acc: number, item: any) => acc + item.quantity, 0);
+                state.totalAmount = uniqueItems.reduce((acc: number, item: any) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
+                saveCartToStorage(state.items);
             }
         },
         addToGuestCart: (state, action: PayloadAction<CartItem>) => {
@@ -112,11 +135,7 @@ const cartSlice = createSlice({
 
             state.totalItems = state.items.reduce((acc, item) => acc + item.quantity, 0);
             state.totalAmount = state.items.reduce((acc, item) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
-            try {
-                localStorage.setItem('guestCart', JSON.stringify(current(state).items));
-            } catch (e) {
-                console.error("Failed to save guest cart", e);
-            }
+            saveCartToStorage(state.items);
         },
         removeFromGuestCart: (state, action: PayloadAction<{ productId: string, variantName?: string }>) => {
             state.items = state.items.filter(
@@ -124,11 +143,7 @@ const cartSlice = createSlice({
             );
             state.totalItems = state.items.reduce((acc, item) => acc + item.quantity, 0);
             state.totalAmount = state.items.reduce((acc, item) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
-            try {
-                localStorage.setItem('guestCart', JSON.stringify(current(state).items));
-            } catch (e) {
-                console.error("Failed to save guest cart", e);
-            }
+            saveCartToStorage(state.items);
         },
         updateGuestQuantity: (state, action: PayloadAction<{ productId: string, variantName?: string, quantity: number }>) => {
             const { productId, variantName, quantity } = action.payload;
@@ -140,11 +155,7 @@ const cartSlice = createSlice({
             }
             state.totalItems = state.items.reduce((acc, item) => acc + item.quantity, 0);
             state.totalAmount = state.items.reduce((acc, item) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
-            try {
-                localStorage.setItem('guestCart', JSON.stringify(current(state).items));
-            } catch (e) {
-                console.error("Failed to save guest cart", e);
-            }
+            saveCartToStorage(state.items);
         },
         setDrawerOpen: (state, action: PayloadAction<boolean>) => {
             state.isDrawerOpen = action.payload;
@@ -158,7 +169,7 @@ const cartSlice = createSlice({
             localStorage.removeItem('guestCart');
         },
         initializeGuestCart: (state) => {
-            const guestItems = getGuestCart();
+            const guestItems = getStoredCart();
             state.items = guestItems;
             state.totalItems = guestItems.reduce((acc: number, item: any) => acc + item.quantity, 0);
             state.totalAmount = guestItems.reduce((acc: number, item: any) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
@@ -174,25 +185,45 @@ const cartSlice = createSlice({
                 state.loading = false;
                 const cart = action.payload;
                 if (cart && cart.items) {
-                    state.items = cart.items;
-                    state.totalItems = cart.items.reduce((acc: number, item: any) => acc + item.quantity, 0);
-                    state.totalAmount = cart.items.reduce((acc: number, item: any) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
-                } else {
-                    state.items = [];
-                    state.totalItems = 0;
-                    state.totalAmount = 0;
+                    // If server returns an empty cart but we have local items, 
+                    // we assume they are guest items waiting to be merged.
+                    // We only overwrite if server cart is NOT empty OR if our state is already empty.
+                    if (cart.items.length > 0 || state.items.length === 0) {
+                        const uniqueItems = deduplicateCartItems(cart.items);
+                        state.items = uniqueItems;
+                        state.totalItems = uniqueItems.reduce((acc: number, item: any) => acc + item.quantity, 0);
+                        state.totalAmount = uniqueItems.reduce((acc: number, item: any) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
+                        saveCartToStorage(state.items);
+                    }
                 }
             })
             .addCase(fetchCart.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
+            .addCase(mergeGuestCart.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(mergeGuestCart.fulfilled, (state, action) => {
+                state.loading = false;
+                const cart = action.payload;
+                if (cart && cart.items) {
+                    const uniqueItems = deduplicateCartItems(cart.items);
+                    state.items = uniqueItems;
+                    state.totalItems = uniqueItems.reduce((acc: number, item: any) => acc + item.quantity, 0);
+                    state.totalAmount = uniqueItems.reduce((acc: number, item: any) => acc + ((item.price || item.product?.price || 0) * item.quantity), 0);
+                    saveCartToStorage(state.items);
+                }
+            })
+            .addCase(mergeGuestCart.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
             .addMatcher(
                 (action) => action.type === 'auth/logout',
                 (state) => {
-                    state.items = [];
-                    state.totalItems = 0;
-                    state.totalAmount = 0;
+                    // Persistence across logout
                     state.loading = false;
                     state.error = null;
                 }

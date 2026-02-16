@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { checkSession } from '../../../redux/features/authSlice';
 import { checkAdminSession } from '../../../redux/features/adminAuthSlice';
-import { initializeGuestCart } from '@/redux/features/cartSlice';
-import { initializeGuestWishlist } from '@/redux/features/wishlistSlice';
+import { initializeGuestCart, mergeGuestCart } from '@/redux/features/cartSlice';
+import { initializeGuestWishlist, mergeGuestWishlist } from '@/redux/features/wishlistSlice';
 
 export default function AuthInitializer() {
     const dispatch = useDispatch<AppDispatch>();
@@ -35,6 +35,36 @@ export default function AuthInitializer() {
             }
         }
     }, [dispatch, pathname, isAdminAuth, isUserAuth]);
+
+    useEffect(() => {
+        if (isUserAuth) {
+            // Check and merge cart
+            const guestCart = localStorage.getItem('guestCart');
+            if (guestCart) {
+                try {
+                    const items = JSON.parse(guestCart);
+                    if (items.length > 0) {
+                        dispatch(mergeGuestCart(items));
+                    }
+                } catch (e) {
+                    console.error("Failed to merge guest cart", e);
+                }
+            }
+
+            // Check and merge wishlist
+            const guestWishlist = localStorage.getItem('guestWishlist');
+            if (guestWishlist) {
+                try {
+                    const items = JSON.parse(guestWishlist);
+                    if (items.length > 0) {
+                        dispatch(mergeGuestWishlist(items));
+                    }
+                } catch (e) {
+                    console.error("Failed to merge guest wishlist", e);
+                }
+            }
+        }
+    }, [isUserAuth, dispatch]);
 
     return null;
 }

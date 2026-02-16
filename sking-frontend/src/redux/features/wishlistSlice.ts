@@ -7,21 +7,31 @@ interface WishlistState {
     error: string | null;
 }
 
-const getGuestWishlist = (): string[] => {
+const getStoredWishlist = (): string[] => {
     if (typeof window !== 'undefined') {
         try {
             const saved = localStorage.getItem('guestWishlist');
             return saved ? JSON.parse(saved) : [];
         } catch (e) {
-            console.error("Failed to parse guest wishlist from local storage", e);
+            console.error("Failed to parse wishlist from local storage", e);
             return [];
         }
     }
     return [];
 };
 
+const saveWishlistToStorage = (items: string[]) => {
+    if (typeof window !== 'undefined') {
+        try {
+            localStorage.setItem('guestWishlist', JSON.stringify(items));
+        } catch (e) {
+            console.error("Failed to save wishlist to local storage", e);
+        }
+    }
+};
+
 const initialState: WishlistState = {
-    items: getGuestWishlist(),
+    items: getStoredWishlist(),
     loading: false,
     error: null,
 };
@@ -63,8 +73,6 @@ export const mergeGuestWishlist = createAsyncThunk(
         try {
             const response = await userWishlistService.mergeWishlist(productIds);
             if (response.success) {
-                localStorage.removeItem('guestWishlist');
-                dispatch(fetchWishlist());
                 return response.wishlist.products.map((p: any) => p._id || p);
             }
             return rejectWithValue('Failed to merge wishlist');
@@ -89,14 +97,10 @@ const wishlistSlice = createSlice({
             } else {
                 state.items.push(productId);
             }
-            try {
-                localStorage.setItem('guestWishlist', JSON.stringify(current(state).items));
-            } catch (e) {
-                console.error("Failed to save guest wishlist", e);
-            }
+            saveWishlistToStorage(state.items);
         },
         initializeGuestWishlist: (state) => {
-            state.items = getGuestWishlist();
+            state.items = getStoredWishlist();
         }
     },
     extraReducers: (builder) => {
@@ -106,19 +110,37 @@ const wishlistSlice = createSlice({
             })
             .addCase(fetchWishlist.fulfilled, (state, action) => {
                 state.loading = false;
-                state.items = action.payload;
+                // Only overwrite if server list is not empty or our state is already empty.
+                if (action.payload.length > 0 || state.items.length === 0) {
+                    state.items = Array.from(new Set(action.payload));
+                    saveWishlistToStorage(state.items);
+                }
             })
             .addCase(fetchWishlist.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
             .addCase(toggleWishlist.fulfilled, (state, action) => {
-                state.items = action.payload;
+                state.items = Array.from(new Set(action.payload));
+                saveWishlistToStorage(state.items);
+            })
+            .addCase(mergeGuestWishlist.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(mergeGuestWishlist.fulfilled, (state, action) => {
+                state.loading = false;
+                state.items = Array.from(new Set(action.payload));
+                saveWishlistToStorage(state.items);
+            })
+            .addCase(mergeGuestWishlist.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
             })
             .addMatcher(
                 (action) => action.type === 'auth/logout',
                 (state) => {
-                    state.items = [];
+                    // Do NOT clear items on logout to ensure persistence as per user req
                     state.loading = false;
                     state.error = null;
                 }

@@ -1,7 +1,8 @@
+import { useState } from "react";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingBag, Star } from "lucide-react";
+import { Heart, ShoppingBag, Star, Loader2 } from "lucide-react";
 import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
@@ -35,6 +36,9 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
     const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const isInWishlist = wishlistItems.includes(product.id);
 
+    const [isCartLoading, setIsCartLoading] = useState(false);
+    const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+
     const discountPercentage = product.originalPrice
         ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
         : 0;
@@ -42,6 +46,8 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
     const handleAddToCart = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (isCartLoading) return;
 
         if (!isAuthenticated) {
             dispatch(addToGuestCart({
@@ -60,6 +66,7 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
             return;
         }
 
+        setIsCartLoading(true);
         try {
             const response = await userCartService.addToCart(product.id, undefined, 1);
             if (response.success) {
@@ -70,6 +77,8 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
         } catch (error: any) {
             const message = error.response?.data?.message || "Failed to add to bag";
             toast.error(message);
+        } finally {
+            setIsCartLoading(false);
         }
     };
 
@@ -77,17 +86,22 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
         e.preventDefault();
         e.stopPropagation();
 
+        if (isWishlistLoading) return;
+
         if (!isAuthenticated) {
             dispatch(toggleGuestWishlist(product.id));
             toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
             return;
         }
 
+        setIsWishlistLoading(true);
         try {
             await dispatch(toggleWishlist(product.id)).unwrap();
             toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
         } catch (error: any) {
             toast.error("Failed to update wishlist");
+        } finally {
+            setIsWishlistLoading(false);
         }
     };
 
@@ -163,16 +177,26 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
                     <div className="flex gap-2">
                         <button
                             onClick={handleAddToCart}
-                            className="bg-black text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center gap-2"
+                            disabled={isCartLoading}
+                            className="bg-black text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center gap-2 disabled:opacity-50"
                         >
-                            <ShoppingBag size={14} />
-                            Add to Bag
+                            {isCartLoading ? (
+                                <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                                <ShoppingBag size={14} />
+                            )}
+                            {isCartLoading ? "Adding..." : "Add to Bag"}
                         </button>
                         <button
                             onClick={handleToggleWishlist}
-                            className={`p-2 border transition-colors ${isInWishlist ? 'bg-sking-pink text-white border-sking-pink' : 'bg-white text-gray-400 border-gray-200 hover:text-sking-pink hover:border-sking-pink'}`}
+                            disabled={isWishlistLoading}
+                            className={`p-2 border transition-colors disabled:opacity-50 ${isInWishlist ? 'bg-sking-pink text-white border-sking-pink' : 'bg-white text-gray-400 border-gray-200 hover:text-sking-pink hover:border-sking-pink'}`}
                         >
-                            <Heart size={16} fill={isInWishlist ? "currentColor" : "none"} />
+                            {isWishlistLoading ? (
+                                <Loader2 size={16} className="animate-spin" />
+                            ) : (
+                                <Heart size={16} fill={isInWishlist ? "currentColor" : "none"} />
+                            )}
                         </button>
                     </div>
                 </div>
@@ -211,19 +235,29 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
                 )}
 
                 {/* Wishlist Button */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full transition-transform duration-300 group-hover:translate-y-0 flex gap-2 z-10">
+                <div className={`absolute bottom-0 left-0 right-0 p-4 transition-transform duration-300 flex gap-2 z-10 ${isCartLoading || isWishlistLoading ? 'translate-y-0' : 'translate-y-full group-hover:translate-y-0'}`}>
                     <button
                         onClick={handleAddToCart}
-                        className="flex-1 bg-sking-pink text-white hover:bg-pink-700 h-10 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest shadow-md transition-colors"
+                        disabled={isCartLoading}
+                        className="flex-1 bg-sking-pink text-white hover:bg-pink-700 h-10 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest shadow-md transition-colors disabled:opacity-50"
                     >
-                        <ShoppingBag size={14} className="mb-0.5" />
-                        Add to Bag
+                        {isCartLoading ? (
+                            <Loader2 size={14} className="animate-spin mb-0.5" />
+                        ) : (
+                            <ShoppingBag size={14} className="mb-0.5" />
+                        )}
+                        {isCartLoading ? "Adding..." : "Add to Bag"}
                     </button>
                     <button
                         onClick={handleToggleWishlist}
-                        className={`h-10 w-10 flex items-center justify-center shadow-md transition-all border border-gray-100 ${isInWishlist ? 'bg-sking-pink text-white border-sking-pink' : 'bg-white text-gray-800 hover:text-sking-pink'}`}
+                        disabled={isWishlistLoading}
+                        className={`h-10 w-10 flex items-center justify-center shadow-md transition-all border border-gray-100 disabled:opacity-50 ${isInWishlist ? 'bg-sking-pink text-white border-sking-pink' : 'bg-white text-gray-800 hover:text-sking-pink'}`}
                     >
-                        <Heart size={18} fill={isInWishlist ? "currentColor" : "none"} />
+                        {isWishlistLoading ? (
+                            <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                            <Heart size={18} fill={isInWishlist ? "currentColor" : "none"} />
+                        )}
                     </button>
                 </div>
             </div>

@@ -1,6 +1,7 @@
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Heart, Loader2 } from "lucide-react";
 import { userWishlistService } from "@/services/user/userWishlistApiService";
 import { toast } from "sonner";
 
@@ -22,9 +23,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         ? product.price - (product.price * (product.offerPercentage / 100))
         : product.price;
 
+    const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+
     const handleToggleWishlist = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (isWishlistLoading) return;
 
         if (!isAuthenticated) {
             dispatch(toggleGuestWishlist(product._id));
@@ -32,11 +37,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             return;
         }
 
+        setIsWishlistLoading(true);
         try {
             await dispatch(toggleWishlist(product._id)).unwrap();
             toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
         } catch (error: any) {
             toast.error("Failed to update wishlist");
+        } finally {
+            setIsWishlistLoading(false);
         }
     };
 
@@ -64,9 +72,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     {/* Wishlist Button Overlay */}
                     <button
                         onClick={handleToggleWishlist}
-                        className={`absolute top-3 right-3 h-9 w-9 backdrop-blur-sm rounded-full flex items-center justify-center transition-all transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 shadow-sm ${isInWishlist ? 'bg-sking-pink text-white' : 'bg-white/80 text-gray-400 hover:text-sking-red'}`}
+                        disabled={isWishlistLoading}
+                        className={`absolute top-3 right-3 h-9 w-9 backdrop-blur-sm rounded-full flex items-center justify-center transition-all transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 shadow-sm ${isInWishlist ? 'bg-sking-pink text-white' : 'bg-white/80 text-gray-400 hover:text-sking-red'} ${isWishlistLoading ? 'cursor-not-allowed opacity-100 translate-y-0' : ''}`}
                     >
-                        <Heart size={18} fill={isInWishlist ? "currentColor" : "none"} />
+                        {isWishlistLoading ? (
+                            <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                            <Heart size={18} fill={isInWishlist ? "currentColor" : "none"} />
+                        )}
                     </button>
                 </div>
                 <div className="mt-4 space-y-1">

@@ -10,12 +10,16 @@ import { updateCartLocally, setDrawerOpen, addToGuestCart } from "@/redux/featur
 import { toggleWishlist, toggleGuestWishlist } from "@/redux/features/wishlistSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { userProductService } from "@/services/user/userProductApiService";
+import { Loader2 } from "lucide-react";
 
 export default function WishlistPage() {
     const { isAuthenticated } = useSelector((state: RootState) => state.auth);
     const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
     const [wishlist, setWishlist] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+
+    const [processingId, setProcessingId] = useState<string | null>(null);
+    const [actionType, setActionType] = useState<'cart' | 'remove' | null>(null);
 
     const dispatch = useDispatch<AppDispatch>();
 
@@ -28,15 +32,23 @@ export default function WishlistPage() {
             setLoading(true);
             if (isAuthenticated) {
                 const data = await userWishlistService.getWishlist();
-                if (data.success) {
-                    setWishlist(data.wishlist);
+                if (data.success && data.wishlist) {
+                    // Deduplicate products by _id
+                    const uniqueProducts = Array.from(
+                        new Map(data.wishlist.products.map((p: any) => [p._id, p])).values()
+                    );
+                    setWishlist({ ...data.wishlist, products: uniqueProducts });
                 }
             } else {
                 // Guest mode: fetch products for IDs in localStorage/Redux
                 if (wishlistItems.length > 0) {
                     const data = await userProductService.getProductsByIds(wishlistItems);
                     if (data.success) {
-                        setWishlist({ products: data.products });
+                        // Deduplicate products by _id
+                        const uniqueProducts = Array.from(
+                            new Map(data.products.map((p: any) => [p._id, p])).values()
+                        );
+                        setWishlist({ products: uniqueProducts });
                     }
                 } else {
                     setWishlist({ products: [] });
@@ -50,9 +62,13 @@ export default function WishlistPage() {
     };
 
     const handleRemove = async (productId: string) => {
+        setProcessingId(productId);
+        setActionType('remove');
         if (!isAuthenticated) {
             dispatch(toggleGuestWishlist(productId));
             toast.success("Removed from wishlist");
+            setProcessingId(null);
+            setActionType(null);
             return;
         }
 
@@ -62,11 +78,16 @@ export default function WishlistPage() {
             fetchWishlist();
         } catch (err) {
             toast.error("Failed to update wishlist");
+        } finally {
+            setProcessingId(null);
+            setActionType(null);
         }
     };
 
     const handleMoveToCart = async (product: any) => {
         const variantName = product.variants?.length > 0 ? product.variants[0].size : undefined;
+        setProcessingId(product._id);
+        setActionType('cart');
 
         if (!isAuthenticated) {
             dispatch(addToGuestCart({
@@ -82,13 +103,13 @@ export default function WishlistPage() {
             }));
             dispatch(setDrawerOpen(true));
             toast.success("Added to Cart (Guest)");
+            setProcessingId(null);
+            setActionType(null);
             return;
         }
 
         try {
             // Defaulting to 1st variant if exists, else base
-            // API shows variants use 'size' not 'name'. Let's check. 
-            // In cart.service.ts: targetVariant = product.variants.find(v => v.size === variantName);
             const response = await userCartService.addToCart(product._id, variantName, 1);
             if (response.success) {
                 dispatch(updateCartLocally(response.cart));
@@ -97,6 +118,9 @@ export default function WishlistPage() {
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to add to cart");
+        } finally {
+            setProcessingId(null);
+            setActionType(null);
         }
     };
 
@@ -152,9 +176,14 @@ export default function WishlistPage() {
                                     {/* Quick action - Remove */}
                                     <button
                                         onClick={(e) => { e.preventDefault(); handleRemove(product._id); }}
-                                        className="absolute top-4 right-4 h-8 w-8 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-sking-red hover:text-white transition-colors"
+                                        disabled={processingId === product._id && actionType === 'remove'}
+                                        className="absolute top-4 right-4 h-8 w-8 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-sking-red hover:text-white transition-colors disabled:opacity-50"
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                        {processingId === product._id && actionType === 'remove' ? (
+                                            <Loader2 size={16} className="animate-spin" />
+                                        ) : (
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                        )}
                                     </button>
                                 </Link>
 
@@ -164,8 +193,15 @@ export default function WishlistPage() {
                                         <span className="font-medium">₹{product.price}</span>
                                     </div>
 
-                                    <button onClick={() => handleMoveToCart(product)} className="w-full mt-auto py-3 bg-black text-white font-bold tracking-widest uppercase hover:bg-sking-red transition-all text-sm">
-                                        Add to Cart
+                                    <button
+                                        onClick={() => handleMoveToCart(product)}
+                                        disabled={processingId === product._id && actionType === 'cart'}
+                                        className="w-full mt-auto py-3 bg-black text-white font-bold tracking-widest uppercase hover:bg-sking-red transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {processingId === product._id && actionType === 'cart' ? (
+                                            <Loader2 size={16} className="animate-spin" />
+                                        ) : null}
+                                        {processingId === product._id && actionType === 'cart' ? "Adding..." : "Add to Cart"}
                                     </button>
                                 </div>
                             </div>

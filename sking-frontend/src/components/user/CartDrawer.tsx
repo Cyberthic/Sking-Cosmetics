@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShoppingBag, Trash2, Plus, Minus, Truck, ArrowRight, Zap } from "lucide-react";
+import { X, ShoppingBag, Trash2, Plus, Minus, Truck, ArrowRight, Zap, Loader2 } from "lucide-react";
 import { userCartService } from "@/services/user/userCartApiService";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     const { items, totalAmount, loading } = useSelector((state: RootState) => state.cart);
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
+
+    const [processingId, setProcessingId] = useState<string | null>(null);
+    const [actionType, setActionType] = useState<'update' | 'remove' | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -57,9 +60,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }, [isOpen, dispatch, isAuthenticated]);
 
     const handleRemove = async (productId: string, variantName?: string) => {
+        setProcessingId(`${productId}-${variantName || 'default'}`);
+        setActionType('remove');
+
         if (!isAuthenticated) {
             dispatch(removeFromGuestCart({ productId, variantName }));
             toast.success("Item removed");
+            setProcessingId(null);
+            setActionType(null);
             return;
         }
 
@@ -71,6 +79,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to remove item");
+        } finally {
+            setProcessingId(null);
+            setActionType(null);
         }
     };
 
@@ -81,11 +92,16 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             return;
         }
 
+        setProcessingId(`${productId}-${variantName || 'default'}`);
+        setActionType('update');
+
         if (!isAuthenticated) {
             dispatch(updateGuestQuantity({ productId, variantName, quantity: targetQuantity }));
             if (targetQuantity > currentQuantity) {
                 toast.success("Added to Bag");
             }
+            setProcessingId(null);
+            setActionType(null);
             return;
         }
 
@@ -99,6 +115,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to update quantity");
+        } finally {
+            setProcessingId(null);
+            setActionType(null);
         }
     };
 
@@ -254,9 +273,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                     </Link>
                                                     <button
                                                         onClick={() => handleRemove(item.product._id, item.variantName)}
-                                                        className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 mt-0.5"
+                                                        disabled={processingId === `${item.product._id}-${item.variantName || 'default'}`}
+                                                        className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 mt-0.5 disabled:opacity-50"
                                                     >
-                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                        {processingId === `${item.product._id}-${item.variantName || 'default'}` && actionType === 'remove' ? (
+                                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        )}
                                                     </button>
                                                 </div>
                                                 <div className="flex items-center gap-3">
@@ -271,14 +295,22 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                 <div className="flex items-center border border-gray-100 rounded-[4px] bg-white">
                                                     <button
                                                         onClick={() => handleUpdateQuantity(item.product._id, item.variantName, item.quantity, item.quantity - 1)}
-                                                        className="w-7 h-7 flex items-center justify-center hover:bg-gray-50 text-gray-400 transition-colors"
+                                                        disabled={processingId === `${item.product._id}-${item.variantName || 'default'}`}
+                                                        className="w-7 h-7 flex items-center justify-center hover:bg-gray-50 text-gray-400 transition-colors disabled:opacity-50"
                                                     >
                                                         <Minus className="w-2.5 h-2.5" />
                                                     </button>
-                                                    <span className="w-7 text-center text-[11px] font-bold tabular-nums">{item.quantity}</span>
+                                                    <span className="w-7 text-center text-[11px] font-bold tabular-nums flex items-center justify-center">
+                                                        {processingId === `${item.product._id}-${item.variantName || 'default'}` && actionType === 'update' ? (
+                                                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                                        ) : (
+                                                            item.quantity
+                                                        )}
+                                                    </span>
                                                     <button
                                                         onClick={() => handleUpdateQuantity(item.product._id, item.variantName, item.quantity, item.quantity + 1)}
-                                                        className="w-7 h-7 flex items-center justify-center hover:bg-gray-50 text-gray-400 transition-colors"
+                                                        disabled={processingId === `${item.product._id}-${item.variantName || 'default'}`}
+                                                        className="w-7 h-7 flex items-center justify-center hover:bg-gray-50 text-gray-400 transition-colors disabled:opacity-50"
                                                     >
                                                         <Plus className="w-2.5 h-2.5" />
                                                     </button>

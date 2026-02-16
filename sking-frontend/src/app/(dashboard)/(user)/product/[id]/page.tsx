@@ -42,6 +42,11 @@ function ProductDetailContent() {
     const [canReview, setCanReview] = useState(false);
     const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
+    // Activity Loading States
+    const [isCartLoading, setIsCartLoading] = useState(false);
+    const [isBuyNowLoading, setIsBuyNowLoading] = useState(false);
+    const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+
     const router = useRouter();
     const searchParams = useSearchParams();
     const [orderIdParam, setOrderIdParam] = useState<string | null>(null);
@@ -203,7 +208,7 @@ function ProductDetailContent() {
             return;
         }
 
-        if (!product) return;
+        if (!product || isBuyNowLoading) return;
 
         if (!isAuthenticated) {
             dispatch(addToGuestCart({
@@ -221,6 +226,7 @@ function ProductDetailContent() {
             return;
         }
 
+        setIsBuyNowLoading(true);
         try {
             const response = await userCartService.addToCart(product._id, selectedVariant?.size, quantity);
             if (response.success) {
@@ -231,11 +237,13 @@ function ProductDetailContent() {
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to add to cart");
+        } finally {
+            setIsBuyNowLoading(false);
         }
     };
 
     const handleAddToCart = async () => {
-        if (!product) return;
+        if (!product || isCartLoading) return;
 
         if (!isAuthenticated) {
             dispatch(addToGuestCart({
@@ -254,6 +262,7 @@ function ProductDetailContent() {
             return;
         }
 
+        setIsCartLoading(true);
         try {
             const response = await userCartService.addToCart(product._id, selectedVariant?.size, quantity);
             if (response.success) {
@@ -263,11 +272,13 @@ function ProductDetailContent() {
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to add to cart");
+        } finally {
+            setIsCartLoading(false);
         }
     };
 
     const handleAddToWishlist = async () => {
-        if (!product) return;
+        if (!product || isWishlistLoading) return;
 
         if (!isAuthenticated) {
             dispatch(toggleGuestWishlist(product._id));
@@ -275,11 +286,14 @@ function ProductDetailContent() {
             return;
         }
 
+        setIsWishlistLoading(true);
         try {
             await dispatch(toggleWishlist(product._id)).unwrap();
             toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
         } catch (err: any) {
             toast.error("Failed to update wishlist");
+        } finally {
+            setIsWishlistLoading(false);
         }
     };
 
@@ -536,23 +550,32 @@ function ProductDetailContent() {
                         <div className="flex gap-3 h-12">
                             <button
                                 onClick={handleAddToCart}
-                                className="flex-1 border border-sking-pink text-sking-pink font-bold uppercase tracking-widest text-sm rounded hover:bg-pink-50 transition-colors flex items-center justify-center gap-2"
+                                disabled={isCartLoading}
+                                className="flex-1 border border-sking-pink text-sking-pink font-bold uppercase tracking-widest text-sm rounded hover:bg-pink-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                             >
-                                Add to Bag
+                                {isCartLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+                                {isCartLoading ? "Adding..." : "Add to Bag"}
                             </button>
                             <button
                                 onClick={handleBuyNow}
-                                className={`flex-1 font-bold uppercase tracking-widest text-sm rounded transition-all shadow-lg ${hasAddedToCart
+                                disabled={isBuyNowLoading}
+                                className={`flex-1 font-bold uppercase tracking-widest text-sm rounded transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 ${hasAddedToCart
                                     ? "bg-black text-white hover:bg-gray-900 shadow-gray-200"
                                     : "bg-sking-pink text-white hover:bg-pink-600 shadow-pink-200"}`}
                             >
-                                {hasAddedToCart ? "View In Cart" : "Buy Now"}
+                                {isBuyNowLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+                                {hasAddedToCart ? "View In Cart" : (isBuyNowLoading ? "Processing..." : "Buy Now")}
                             </button>
                             <button
                                 onClick={handleAddToWishlist}
-                                className={`w-12 h-12 border rounded flex items-center justify-center transition-all ${isInWishlist ? 'bg-sking-pink border-sking-pink text-white' : 'border-sking-pink text-sking-pink hover:bg-pink-50'}`}
+                                disabled={isWishlistLoading}
+                                className={`w-12 h-12 border rounded flex items-center justify-center transition-all disabled:opacity-50 ${isInWishlist ? 'bg-sking-pink border-sking-pink text-white' : 'border-sking-pink text-sking-pink hover:bg-pink-50'}`}
                             >
-                                <Heart size={20} fill={isInWishlist ? "currentColor" : "none"} />
+                                {isWishlistLoading ? (
+                                    <Loader2 size={20} className="animate-spin" />
+                                ) : (
+                                    <Heart size={20} fill={isInWishlist ? "currentColor" : "none"} />
+                                )}
                             </button>
                         </div>
                     </div>
