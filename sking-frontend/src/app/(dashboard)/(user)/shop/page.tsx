@@ -48,12 +48,16 @@ function ShopContent() {
                     slug: p.slug,
                     name: p.name,
                     brand: p.brand || 'Sking Cosmetics',
-                    price: p.finalPrice || p.offerPrice || p.price, // Updated to use offerPrice virtual from backend
-                    originalPrice: (p.offerPercentage > 0) ? p.price : undefined,
+                    price: p.discountedPrice || p.price,
+                    originalPrice: (p.maxOffer > 0) ? p.price : undefined,
                     rating: 5.0,
                     reviewCount: p.soldCount || 0,
                     image: p.images?.[0] || '',
-                    offerPercentage: p.offerPercentage || 0
+                    offerPercentage: p.maxOffer || 0,
+                    isFlashSale: p.isFlashSale,
+                    isFeatured: p.isFeatured,
+                    isCombo: p.isCombo,
+                    isNew: p.isNew
                 }));
 
                 setProducts(mappedProducts);

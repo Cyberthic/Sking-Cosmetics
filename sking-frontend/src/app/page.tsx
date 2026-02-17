@@ -44,7 +44,9 @@ export default function Home() {
       <main className="flex flex-col w-full">
         <HeroSection />
         <CategoryPromo />
-        <FlashSale data={flashSale} />
+        {flashSale && typeof flashSale === 'object' && flashSale.isActive === true && flashSale.products?.length > 0 && (
+          <FlashSale data={flashSale} />
+        )}
         <FeaturedProducts data={featured} />
         <TrendingBanner />
         <NewInStore products={products} />

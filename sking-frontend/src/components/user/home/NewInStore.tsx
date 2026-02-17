@@ -40,8 +40,9 @@ const NewInStore = ({ products }: NewInStoreProps) => {
     };
 
     const handleAddToCart = async (product: any) => {
-        const finalPrice = product.offerPercentage > 0
-            ? product.price - (product.price * (product.offerPercentage / 100))
+        const productOffer = product.maxOffer || product.offerPercentage || 0;
+        const finalPrice = productOffer > 0
+            ? product.price - (product.price * (productOffer / 100))
             : product.price;
 
         if (!isAuthenticated) {
@@ -177,9 +178,15 @@ const NewInStore = ({ products }: NewInStoreProps) => {
                                             fill
                                             className="object-contain p-6 group-hover:scale-110 transition-transform duration-700"
                                         />
-                                        {product.offerPercentage > 0 && (
+                                        {product.isFlashSale && (
+                                            <div className="absolute top-4 right-4 bg-gray-900 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase z-10">Flash Sale</div>
+                                        )}
+                                        {product.isNew && !product.isFlashSale && (
+                                            <div className="absolute top-4 right-4 bg-green-600 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase z-10">New</div>
+                                        )}
+                                        {product.maxOffer > 0 && (
                                             <div className="absolute top-4 left-4 bg-sking-pink text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg">
-                                                -{product.offerPercentage}%
+                                                -{product.maxOffer}%
                                             </div>
                                         )}
                                     </div>
@@ -188,8 +195,8 @@ const NewInStore = ({ products }: NewInStoreProps) => {
                                         <h3 className="font-bold text-base text-gray-900 line-clamp-2 leading-tight h-10 group-hover:text-sking-pink transition-colors">{product.name}</h3>
                                         <div className="flex items-center justify-between mt-2">
                                             <div className="flex flex-col">
-                                                <span className="font-black text-xl text-gray-900">₹{product.offerPercentage > 0 ? Math.round(product.price * (1 - product.offerPercentage / 100)) : product.price}</span>
-                                                {product.offerPercentage > 0 && <span className="text-xs text-gray-400 line-through font-medium">₹{product.price}</span>}
+                                                <span className="font-black text-xl text-gray-900">₹{product.discountedPrice || product.price}</span>
+                                                {product.maxOffer > 0 && <span className="text-xs text-gray-400 line-through font-medium">₹{product.price}</span>}
                                             </div>
                                             <div className="flex text-sking-pink">
                                                 <Star size={10} fill="currentColor" />
@@ -235,8 +242,8 @@ const NewInStore = ({ products }: NewInStoreProps) => {
                                     <span className="text-xs font-black text-sking-pink uppercase tracking-[0.2em]">{featuredProduct.category?.name || "PREMIUM"}</span>
                                     <h3 className="text-3xl font-black text-gray-900 leading-tight">{featuredProduct.name}</h3>
                                     <div className="flex items-center gap-4 pt-2">
-                                        <span className="text-4xl font-black text-gray-900">₹{featuredProduct.offerPercentage > 0 ? Math.round(featuredProduct.price * (1 - featuredProduct.offerPercentage / 100)) : featuredProduct.price}</span>
-                                        {featuredProduct.offerPercentage > 0 && <span className="text-lg text-gray-400 line-through font-bold">₹{featuredProduct.price}</span>}
+                                        <span className="text-4xl font-black text-gray-900">₹{featuredProduct.discountedPrice || featuredProduct.price}</span>
+                                        {featuredProduct.maxOffer > 0 && <span className="text-lg text-gray-400 line-through font-bold">₹{featuredProduct.price}</span>}
                                     </div>
                                 </div>
 

@@ -2,12 +2,14 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../core/types";
 import { IUserHomeService } from "../../core/interfaces/services/user/IUserHome.service";
 import { IUserProductRepository } from "../../core/interfaces/repositories/user/IUserProduct.repository";
+import { IUserProductService } from "../../core/interfaces/services/user/IUserProduct.service";
 import { IProduct } from "../../models/product.model";
 
 @injectable()
 export class UserHomeService implements IUserHomeService {
     constructor(
         @inject(TYPES.IUserProductRepository) private _productRepository: IUserProductRepository,
+        @inject(TYPES.IUserProductService) private _productService: IUserProductService,
         @inject(TYPES.IFlashSaleService) private _flashSaleService: any,
         @inject(TYPES.IFeaturedProductService) private _featuredProductService: any
     ) { }
@@ -18,39 +20,7 @@ export class UserHomeService implements IUserHomeService {
 
         // Fetch official Flash Sale data
         let flashSale = await this._flashSaleService.getFlashSale();
-
-        // Fallback for Flash Sale: If no flash sale, use latest 5 products with auto-generated discounts
-        if (!flashSale || !flashSale.products || flashSale.products.length === 0) {
-            const latestForFlash = await this._productRepository.findActive({}, { createdAt: -1 }, 0, 5);
-
-            // Format fallback products to look like flash sale
-            const products = latestForFlash.map((product: any) => {
-                let offerPercentage = product.offerPercentage;
-                if (!offerPercentage || offerPercentage === 0) {
-                    const hash = product._id.toString().split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-                    offerPercentage = 5 + (hash % 36); // 5 to 40
-                }
-                return {
-                    ...product.toObject(),
-                    flashSalePercentage: offerPercentage
-                };
-            });
-
-            // Default 24 hour rebooting timer for fallback
-            const duration = 24 * 60 * 60 * 1000;
-            const now = new Date();
-            const startOfTheDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-            const timePassed = now.getTime() - startOfTheDay;
-            const cycles = Math.floor(timePassed / duration);
-            const currentEndTime = new Date(startOfTheDay + (cycles + 1) * duration);
-
-            flashSale = {
-                products,
-                currentEndTime,
-                isActive: true,
-                isFallback: true
-            };
-        }
+        // Fallback or secondary logic removed as per user request to hide entirely when inactive.
 
         // Fetch official Featured Products data
         const featuredData = await this._featuredProductService.getFeaturedProduct();
@@ -61,10 +31,29 @@ export class UserHomeService implements IUserHomeService {
             featured = newArrivals.slice(0, 5);
         }
 
+        // Apply offers and tags
+        const newArrivalsWithOffers = await this._productService.applyOffers(newArrivals);
+        const featuredWithOffers = await this._productService.applyOffers(featured);
+
+        // Flash sale logic: If active but empty, show new arrivals as fallback
+        let isFallback = false;
+        if (flashSale) {
+            if (!flashSale.isActive) {
+                flashSale = null;
+            } else if (!flashSale.products || flashSale.products.length === 0) {
+                // Populate with new arrivals but no extra offer
+                flashSale.products = newArrivalsWithOffers.slice(0, 5).map(p => ({
+                    ...p,
+                    flashSalePercentage: 0
+                }));
+                isFallback = true;
+            }
+        }
+
         return {
-            newArrivals,
-            featured,
-            flashSale
+            newArrivals: newArrivalsWithOffers,
+            featured: featuredWithOffers,
+            flashSale: flashSale ? { ...flashSale, isFallback } : null
         };
     }
 }

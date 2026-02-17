@@ -7,6 +7,8 @@ import { CustomError } from "../../utils/customError";
 import { StatusCode } from "../../enums/statusCode.enums";
 
 import { CategoryModel } from "../../models/category.model";
+import { FlashSaleModel } from "../../models/flashSale.model";
+import { FeaturedProductModel } from "../../models/featuredProduct.model";
 
 @injectable()
 export class UserProductService implements IUserProductService {
@@ -93,8 +95,10 @@ export class UserProductService implements IUserProductService {
         const products = await this._productRepository.findActive(filter, sort, skip, limit);
         const total = await this._productRepository.countActive(filter);
 
+        const productsWithOffers = await this.applyOffers(products);
+
         return {
-            products,
+            products: productsWithOffers,
             total,
             page,
             pages: Math.ceil(total / limit)
@@ -115,7 +119,64 @@ export class UserProductService implements IUserProductService {
         if (!product) {
             throw new CustomError("Product not found", StatusCode.NOT_FOUND);
         }
-        return product;
+
+        const [productWithOffer] = await this.applyOffers([product]);
+        return productWithOffer;
+    }
+
+    async applyOffers(products: any[]): Promise<any[]> {
+        const flashSale = await FlashSaleModel.findOne({ isActive: true });
+        const featuredProducts = await FeaturedProductModel.findOne();
+        const featuredIds = featuredProducts ? featuredProducts.products.map(p => p.toString()) : [];
+
+        return products.map(product => {
+            const productObj = product.toObject ? product.toObject() : product;
+
+            const productOffer = productObj.offerPercentage || 0;
+            const categoryOffer = productObj.category?.offer || 0;
+
+            let flashSaleOffer = 0;
+            let isFlashSale = false;
+
+            if (flashSale && flashSale.products) {
+                const fsProduct = flashSale.products.find((p: any) =>
+                    p.product.toString() === productObj._id.toString()
+                );
+                if (fsProduct) {
+                    flashSaleOffer = fsProduct.offerPercentage || 0;
+                    isFlashSale = true;
+                }
+            }
+
+            const maxOffer = Math.max(productOffer, categoryOffer, flashSaleOffer);
+
+            // Determine label
+            let offerType = 'product';
+            if (maxOffer > 0) {
+                if (maxOffer === flashSaleOffer && isFlashSale) offerType = 'flash_sale';
+                else if (maxOffer === categoryOffer) offerType = 'category';
+            }
+
+            // Tag Logic
+            const isFeatured = featuredIds.includes(productObj._id.toString());
+            const isCombo = productObj.tags?.some((t: string) => t.toLowerCase() === 'combo') ||
+                productObj.category?.name?.toLowerCase() === 'combo';
+
+            const now = new Date();
+            const createdAt = new Date(productObj.createdAt);
+            const isNew = (now.getTime() - createdAt.getTime()) < (24 * 60 * 60 * 1000);
+
+            return {
+                ...productObj,
+                maxOffer,
+                offerType,
+                isFlashSale,
+                isFeatured,
+                isCombo,
+                isNew,
+                discountedPrice: Math.round(productObj.price * (1 - maxOffer / 100))
+            };
+        });
     }
 
     async getRelatedProducts(id: string, limit: number): Promise<IProduct[]> {

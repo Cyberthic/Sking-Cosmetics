@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateCartLocally, setDrawerOpen, addToGuestCart } from "@/redux/features/cartSlice";
 import { toggleWishlist, toggleGuestWishlist } from "@/redux/features/wishlistSlice";
 import { RootState, AppDispatch } from "@/redux/store";
-import { Star, Heart, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check, Info, Ticket, ExternalLink, Loader2, Scissors, Download, X, Plus, Trash2 } from "lucide-react";
+import { Star, Heart, Zap, ChevronLeft, ChevronRight, Share2, MessageCircle, Copy, Check, Info, Ticket, ExternalLink, Loader2, Scissors, Download, X, Plus, Trash2 } from "lucide-react";
 import { userReviewApiService } from "@/services/user/userReviewApiService";
 import { userProfileService } from "@/services/user/userProfileApiService";
 import { useSearchParams } from "next/navigation";
@@ -77,8 +77,9 @@ function ProductDetailContent() {
     const reviewFileInputRef = useRef<HTMLInputElement>(null);
 
     const currentPrice = product ? (selectedVariant ? selectedVariant.price : product.price) : 0;
-    const finalPrice = product ? (product.offerPercentage > 0
-        ? currentPrice - (currentPrice * (product.offerPercentage / 100))
+    const productOffer = product?.maxOffer || product?.offerPercentage || 0;
+    const finalPrice = product ? (productOffer > 0
+        ? currentPrice - (currentPrice * (productOffer / 100))
         : currentPrice) : 0;
 
     useEffect(() => {
@@ -474,10 +475,17 @@ function ProductDetailContent() {
                                 transform: zoomed ? "scale(2)" : "scale(1)"
                             }}
                         />
-                        {product.offerPercentage > 0 && (
-                            <span className="absolute top-6 left-6 bg-black text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg uppercase tracking-widest z-10">
-                                {product.offerPercentage}% OFF
-                            </span>
+                        {productOffer > 0 && (
+                            <div className="absolute top-6 left-6 flex flex-col gap-2 z-10">
+                                <span className="bg-black text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg uppercase tracking-widest text-center">
+                                    {productOffer}% OFF
+                                </span>
+                                {product.offerType === 'flash_sale' && (
+                                    <span className="bg-orange-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg uppercase tracking-widest flex items-center gap-1">
+                                        <Zap size={10} fill="currentColor" /> Flash Deal
+                                    </span>
+                                )}
+                            </div>
                         )}
 
                     </div>
@@ -540,10 +548,10 @@ function ProductDetailContent() {
                         <span className="text-4xl font-bold text-sking-pink">
                             ₹{finalPrice.toFixed(2)}
                         </span>
-                        {product.offerPercentage > 0 && (
+                        {productOffer > 0 && (
                             <>
-                                <span className="bg-purple-600 text-white text-xs font-bold px-1 py-0.5 rounded mb-2">
-                                    {product.offerPercentage}%
+                                <span className={`text-white text-xs font-bold px-2 py-0.5 rounded mb-2 ${product.offerType === 'flash_sale' ? 'bg-orange-500' : 'bg-purple-600'}`}>
+                                    {product.offerType === 'flash_sale' ? 'Flash Sale' : (product.offerType === 'category' ? 'Category Offer' : 'Offer')} {productOffer}%
                                 </span>
                                 <span className="text-gray-400 line-through text-lg mb-1">
                                     ₹{currentPrice.toFixed(2)}

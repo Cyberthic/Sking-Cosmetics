@@ -23,6 +23,10 @@ export interface ShopProduct {
     reviewCount: number;
     image: string;
     isNew?: boolean;
+    isFlashSale?: boolean;
+    isFeatured?: boolean;
+    isCombo?: boolean;
+    offerPercentage?: number;
 }
 
 interface ShopProductCardProps {
@@ -39,9 +43,17 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
     const [isCartLoading, setIsCartLoading] = useState(false);
     const [isWishlistLoading, setIsWishlistLoading] = useState(false);
 
-    const discountPercentage = product.originalPrice
+    const discountPercentage = product.offerPercentage || (product.originalPrice
         ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-        : 0;
+        : 0);
+
+    const renderTag = () => {
+        if (product.isFlashSale) return <div className="absolute top-3 right-3 bg-sking-pink text-white text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-wider z-20 shadow-sm shadow-sking-pink/30">Flash Sale</div>;
+        if (product.isFeatured) return <div className="absolute top-3 right-3 bg-gray-900 text-white text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-wider z-20 shadow-sm">Featured</div>;
+        if (product.isCombo) return <div className="absolute top-3 right-3 bg-purple-600 text-white text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-wider z-20 shadow-sm">Includes in Combo</div>;
+        if (product.isNew) return <div className="absolute top-3 right-3 bg-green-600 text-white text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-wider z-20 shadow-sm">New</div>;
+        return null;
+    };
 
     const handleAddToCart = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -126,9 +138,12 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
                         )}
                     </Link>
 
+                    {/* Tags */}
+                    {renderTag()}
+
                     {/* Discount Badge */}
                     {discountPercentage > 0 && (
-                        <div className="absolute top-3 left-3 bg-sking-pink px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm rounded-full">
+                        <div className="absolute top-3 left-3 bg-sking-pink px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm rounded-full z-20">
                             -{discountPercentage}%
                         </div>
                     )}
@@ -227,9 +242,12 @@ const ShopProductCard: React.FC<ShopProductCardProps> = ({ product, viewMode = '
                     </div>
                 </Link>
 
+                {/* Tags */}
+                {renderTag()}
+
                 {/* Discount Badge */}
                 {discountPercentage > 0 && (
-                    <div className="absolute top-3 left-3 bg-white px-2 py-1 text-xs font-bold uppercase tracking-widest text-black shadow-sm">
+                    <div className="absolute top-3 left-3 bg-white px-2 py-1 text-xs font-bold uppercase tracking-widest text-black shadow-sm z-20">
                         -{discountPercentage}%
                     </div>
                 )}

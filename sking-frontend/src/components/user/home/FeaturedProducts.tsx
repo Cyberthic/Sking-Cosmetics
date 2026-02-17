@@ -111,6 +111,9 @@ const FeaturedProducts = ({ data }: FeaturedProductsProps) => {
                                         fill
                                         className="object-contain p-6 group-hover:scale-110 transition-transform duration-700"
                                     />
+                                    {product.isFlashSale && (
+                                        <div className="absolute top-4 left-4 bg-sking-pink text-white text-[8px] font-black px-2 py-1 rounded-full uppercase z-10">Flash Sale</div>
+                                    )}
                                 </div>
 
                                 {/* Info */}
@@ -118,8 +121,11 @@ const FeaturedProducts = ({ data }: FeaturedProductsProps) => {
                                     <span className="text-[10px] text-sking-pink font-black uppercase tracking-[0.2em]">{product.category?.name || "SKINCARE"}</span>
                                     <h3 className="font-bold text-sm truncate text-black group-hover:text-sking-pink transition-colors">{product.name}</h3>
 
-                                    <div className="mt-1">
-                                        <span className="font-black text-lg text-black">₹{product.price}</span>
+                                    <div className="mt-1 flex items-baseline gap-2">
+                                        <span className="font-black text-lg text-black">₹{product.discountedPrice || product.price}</span>
+                                        {product.maxOffer > 0 && (
+                                            <span className="text-[10px] text-gray-400 line-through">₹{product.price}</span>
+                                        )}
                                     </div>
 
                                     {/* Rating */}

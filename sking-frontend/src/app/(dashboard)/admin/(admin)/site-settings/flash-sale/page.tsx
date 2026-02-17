@@ -29,7 +29,15 @@ export default function FlashSalePage() {
             const res = await adminFlashSaleApiService.getFlashSale();
             if (res.success && res.data) {
                 setFlashSale(res.data);
-                setSelectedProducts(res.data.products || []);
+                // Map the data from backend to our local state structure
+                const mappedProducts = (res.data.products || []).map((p: any) => ({
+                    _id: p._id,
+                    name: p.name,
+                    price: p.price,
+                    images: p.images,
+                    offerPercentage: p.flashSalePercentage || 0
+                }));
+                setSelectedProducts(mappedProducts);
                 setDuration(res.data.durationHours || 24);
                 setIsActive(res.data.isActive !== false);
             }
@@ -64,7 +72,7 @@ export default function FlashSalePage() {
             toast.error("Product already added");
             return;
         }
-        setSelectedProducts([...selectedProducts, product]);
+        setSelectedProducts([...selectedProducts, { ...product, offerPercentage: 0 }]);
         setSearchResults([]);
         setSearchQuery("");
     };
@@ -81,7 +89,10 @@ export default function FlashSalePage() {
         setSaving(true);
         try {
             const data = {
-                products: selectedProducts.map((p) => p._id),
+                products: selectedProducts.map((p) => ({
+                    product: p._id,
+                    offerPercentage: p.offerPercentage || 0
+                })),
                 durationHours: duration,
                 isActive,
                 startTime: new Date(), // Reset start time when updating
@@ -89,12 +100,7 @@ export default function FlashSalePage() {
             const res = await adminFlashSaleApiService.updateFlashSale(data);
             if (res.success) {
                 toast.success("Flash sale updated successfully");
-                if (res.data) {
-                    setFlashSale(res.data);
-                    setSelectedProducts(res.data.products || []);
-                    setDuration(res.data.durationHours || 24);
-                    setIsActive(res.data.isActive !== false);
-                }
+                fetchFlashSale(); // Re-fetch to get consistent data
             } else {
                 toast.error(res.error || "Failed to update flash sale");
             }
@@ -175,11 +181,13 @@ export default function FlashSalePage() {
                     <div className="bg-orange-50 dark:bg-orange-900/20 rounded-3xl p-6 border border-orange-100 dark:border-orange-500/10">
                         <h4 className="font-bold text-orange-800 dark:text-orange-400 flex items-center gap-2 mb-2">
                             <AlertCircle size={18} />
-                            Important Note
+                            Flash Sale Rules
                         </h4>
-                        <p className="text-sm text-orange-700 dark:text-orange-500/80 leading-relaxed">
-                            Max 7 products. Products without an active offer will display a random discount (5-40%) to create urgency.
-                        </p>
+                        <ul className="text-sm text-orange-700 dark:text-orange-500/80 space-y-2 list-disc pl-4">
+                            <li>Maximum 7 products allowed.</li>
+                            <li>The specified offer percentage will be applied to each product.</li>
+                            <li>When Active Status is OFF, the flash sale disappears from the home page.</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -265,7 +273,24 @@ export default function FlashSalePage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="font-bold text-gray-900 dark:text-white truncate">{product.name}</p>
-                                            <p className="text-sm text-brand-500 font-bold">₹{product.price}</p>
+                                            <div className="flex items-center gap-4 mt-2">
+                                                <div className="flex-1">
+                                                    <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Offer %</label>
+                                                    <input
+                                                        type="number"
+                                                        value={product.offerPercentage}
+                                                        onChange={(e) => {
+                                                            const val = Math.min(99, Math.max(0, parseInt(e.target.value) || 0));
+                                                            setSelectedProducts(selectedProducts.map(p => p._id === product._id ? { ...p, offerPercentage: val } : p));
+                                                        }}
+                                                        className="w-full bg-white dark:bg-gray-900 border-none rounded-lg px-2 py-1 text-sm font-bold text-orange-500 focus:ring-1 focus:ring-orange-500"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Price</label>
+                                                    <p className="text-sm text-gray-500 font-bold">₹{product.price}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                         <button
                                             onClick={() => removeProduct(product._id)}

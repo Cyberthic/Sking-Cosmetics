@@ -1,8 +1,10 @@
 import { inject, injectable } from "inversify";
+import mongoose from "mongoose";
 import { TYPES } from "../../core/types";
 import { IFlashSaleService } from "../../core/interfaces/services/admin/IFlashSale.service";
 import { IFlashSaleRepository } from "../../core/interfaces/repositories/admin/IFlashSale.repository";
 import { IFlashSale } from "../../models/flashSale.model";
+import logger from "../../utils/logger";
 
 @injectable()
 export class FlashSaleService implements IFlashSaleService {
@@ -14,7 +16,8 @@ export class FlashSaleService implements IFlashSaleService {
         const flashSale = await this._repository.getFlashSale();
         if (!flashSale) return null;
 
-        if (!isAdmin && (!flashSale.isActive || flashSale.products.length === 0)) {
+        const isActive = flashSale.isActive === true;
+        if (!isAdmin && !isActive) {
             return null;
         }
 
@@ -36,19 +39,19 @@ export class FlashSaleService implements IFlashSaleService {
         const cycles = Math.floor(timePassed / duration);
         const currentEndTime = new Date(start + (cycles + 1) * duration);
 
-        // Add random percentage logic to products
-        const products = (flashSale.products as any[]).map((product: any) => {
-            let offerPercentage = product.offerPercentage;
-            if (!offerPercentage || offerPercentage === 0) {
-                // Return a consistent "random" percentage based on product ID
-                const hash = product._id.toString().split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-                offerPercentage = 5 + (hash % 36); // 5 to 40
-            }
+        // Map products with their flash sale specific offer percentage
+        const products = (flashSale.products as any[]).map((item: any) => {
+            const product = item.product;
+            if (!product) return null;
+
+            // Handle both Mongoose document and plain object
+            const productData = typeof product.toObject === 'function' ? product.toObject() : product;
+
             return {
-                ...product.toObject(),
-                flashSalePercentage: offerPercentage
+                ...productData,
+                flashSalePercentage: item.offerPercentage || 0
             };
-        });
+        }).filter(Boolean);
 
         return {
             ...flashSale.toObject(),
@@ -58,10 +61,71 @@ export class FlashSaleService implements IFlashSaleService {
     }
 
     async updateFlashSale(data: any): Promise<IFlashSale> {
-        // Ensure max 7 products
-        if (data.products && data.products.length > 7) {
-            data.products = data.products.slice(0, 7);
+        // 1. Recursive parsing to handle double/triple stringified data
+        let pData = data.products;
+        let attempts = 0;
+        while (typeof pData === 'string' && attempts < 5) {
+            try {
+                // Clean common single quote issues before parsing
+                let sanitized = pData.trim();
+                if (sanitized.startsWith("'") && sanitized.endsWith("'")) sanitized = sanitized.slice(1, -1);
+                pData = JSON.parse(sanitized.replace(/'/g, '"'));
+            } catch (e) {
+                break;
+            }
+            attempts++;
         }
-        return await this._repository.updateFlashSale(data);
+
+        // 2. Handle array of strings case ["[...]"]
+        if (Array.isArray(pData) && pData.length === 1 && typeof pData[0] === 'string' && pData[0].trim().startsWith('[')) {
+            try {
+                pData = JSON.parse(pData[0].replace(/'/g, '"'));
+            } catch (e) { }
+        }
+
+        // 3. Clean and Validate
+        const cleanProducts: any[] = [];
+        if (Array.isArray(pData)) {
+            for (let item of pData) {
+                // If item itself is a stringized object
+                if (typeof item === 'string' && item.trim().startsWith('{')) {
+                    try { item = JSON.parse(item.replace(/'/g, '"')); } catch (e) { }
+                }
+
+                let pid = null;
+                let pct = 0;
+
+                if (item && typeof item === 'object') {
+                    pid = item.product || item._id || item.id || item.productId;
+                    pct = Number(item.offerPercentage) || 0;
+
+                    // Handle populated object
+                    if (pid && typeof pid === 'object') {
+                        pid = pid._id || pid.id || pid.toString();
+                    }
+                } else if (typeof item === 'string' && mongoose.Types.ObjectId.isValid(item)) {
+                    pid = item;
+                }
+
+                if (pid && mongoose.Types.ObjectId.isValid(String(pid))) {
+                    cleanProducts.push({
+                        product: new mongoose.Types.ObjectId(String(pid)),
+                        offerPercentage: Math.max(0, Math.min(99, pct))
+                    });
+                }
+            }
+        }
+
+        // 4. Construct Final Command
+        const updateObject = {
+            products: cleanProducts.slice(0, 7),
+            isActive: String(data.isActive) === 'true' || data.isActive === true,
+            durationHours: Number(data.durationHours) || 24,
+            startTime: new Date()
+        };
+
+        // 5. Direct safety check: if products exists, it MUST be a real array of objects
+        // Mongoose 9+ can be strict about schema casting
+        return await this._repository.updateFlashSale(updateObject);
     }
 }

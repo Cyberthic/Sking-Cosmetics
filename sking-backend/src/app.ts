@@ -51,7 +51,7 @@ if (process.env.NODE_ENV === "development") {
 app.get("/health", (_req, res) => {
   res.status(200).json({
     success: true,
-    message: "Sking Cosmetics API is healthy 🚀",
+    message: "Sking Cosmetics API is healthy 🚀"
   });
 });
 

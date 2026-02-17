@@ -75,14 +75,14 @@ const navItems: NavItem[] = [
 ];
 
 const othersItems: NavItem[] = [
-  {
-    icon: <ShieldCheck size={20} />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/admin/signin", pro: false },
-      { name: "Sign Up", path: "/admin/signup", pro: false },
-    ],
-  },
+  // {
+  //   icon: <ShieldCheck size={20} />,
+  //   name: "Authentication",
+  //   subItems: [
+  //     { name: "Sign In", path: "/admin/signin", pro: false },
+  //     { name: "Sign Up", path: "/admin/signup", pro: false },
+  //   ],
+  // },
 ];
 
 const AppSidebar: React.FC = () => {
