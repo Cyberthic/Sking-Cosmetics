@@ -146,8 +146,7 @@ export default function Navbar() {
     const mainLinks = [
         { name: "Home", href: "/" },
         { name: "Shop", href: "/shop", hasDropdown: true },
-        // { name: "Product", href: "/products", hasDropdown: true },
-        // { name: "Blog", href: "/blog", hasDropdown: true },
+        { name: "Blog", href: "/blogs", hasDropdown: false },
         { name: "Contact", href: "/contact", hasDropdown: false },
         { name: "About", href: "/about", hasDropdown: false },
     ];

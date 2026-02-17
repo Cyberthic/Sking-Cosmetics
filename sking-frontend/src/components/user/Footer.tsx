@@ -223,6 +223,7 @@ export default function Footer() {
                             <li><Link href="/cart" className="hover:text-sking-pink inline-flex items-center gap-2 group"><ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -ml-4 group-hover:ml-0 transition-all" /> View Bag</Link></li>
                             <li><Link href="/wishlist" className="hover:text-sking-pink inline-flex items-center gap-2 group"><ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -ml-4 group-hover:ml-0 transition-all" /> My Wishlist</Link></li>
                             <li><Link href="/orders" className="hover:text-sking-pink inline-flex items-center gap-2 group"><ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -ml-4 group-hover:ml-0 transition-all" /> Tracking</Link></li>
+                            <li><Link href="/blogs" className="hover:text-sking-pink inline-flex items-center gap-2 group"><ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -ml-4 group-hover:ml-0 transition-all" /> Beauty Journal</Link></li>
                         </ul>
                     </div>
 
