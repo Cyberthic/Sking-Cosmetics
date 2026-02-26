@@ -127,9 +127,9 @@ export class UserProductService implements IUserProductService {
     async applyOffers(products: any[]): Promise<any[]> {
         const flashSale = await FlashSaleModel.findOne({ isActive: true });
         const featuredProducts = await FeaturedProductModel.findOne();
-        const featuredIds = featuredProducts ? featuredProducts.products.map(p => p.toString()) : [];
+        const featuredIds = featuredProducts ? featuredProducts.products.filter(Boolean).map(p => p.toString()) : [];
 
-        return products.map(product => {
+        return products.filter(Boolean).map(product => {
             const productObj = product.toObject ? product.toObject() : product;
 
             const productOffer = productObj.offerPercentage || 0;

@@ -124,6 +124,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     const handleCheckout = () => {
         if (!isAuthenticated) {
             toast.error("You need to log in for checking out");
+            router.push('/login?redirect=checkout');
+            onClose();
             return;
         }
         onClose();

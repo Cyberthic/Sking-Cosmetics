@@ -70,7 +70,7 @@ export class CartService implements ICartService {
         }
 
         const existingItemIndex = cart.items.findIndex(item => {
-            const itemProdId = (item.product as any)._id ? (item.product as any)._id.toString() : item.product.toString();
+            const itemProdId = (item.product as any)?._id?.toString() || item.product?.toString();
             return itemProdId === productId && item.variantName === variantName;
         });
 
@@ -105,7 +105,7 @@ export class CartService implements ICartService {
         if (!cart) throw new CustomError("Cart not found", StatusCode.NOT_FOUND);
 
         cart.items = cart.items.filter(item => {
-            const itemProdId = (item.product as any)._id ? (item.product as any)._id.toString() : item.product.toString();
+            const itemProdId = (item.product as any)?._id?.toString() || item.product?.toString();
             return !(itemProdId === productId && item.variantName === variantName);
         });
 
@@ -122,7 +122,7 @@ export class CartService implements ICartService {
         }
 
         const itemIndex = cart.items.findIndex(item => {
-            const itemProdId = (item.product as any)._id ? (item.product as any)._id.toString() : item.product.toString();
+            const itemProdId = (item.product as any)?._id?.toString() || item.product?.toString();
             return itemProdId === productId && item.variantName === variantName;
         });
 
@@ -156,7 +156,7 @@ export class CartService implements ICartService {
             const quantity = Number(guestItem.quantity) || 1;
 
             const existingItemIndex = cart.items.findIndex(item => {
-                const itemProdId = (item.product as any)._id ? (item.product as any)._id.toString() : item.product.toString();
+                const itemProdId = (item.product as any)?._id?.toString() || item.product?.toString();
                 return itemProdId === productId && item.variantName === variantName;
             });
 

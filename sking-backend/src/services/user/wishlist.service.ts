@@ -33,7 +33,7 @@ export class WishlistService implements IWishlistService {
 
         // Handle case where items might be populated or not
         const productIndex = wishlist.products.findIndex(p => {
-            const id = (p as any)._id ? (p as any)._id.toString() : p.toString();
+            const id = (p as any)?._id?.toString() || p?.toString();
             return id === productId;
         });
 
@@ -42,7 +42,7 @@ export class WishlistService implements IWishlistService {
         } else {
             // Remove any potential duplicates that might have slipped in
             wishlist.products = wishlist.products.filter(p => {
-                const id = (p as any)._id ? (p as any)._id.toString() : p.toString();
+                const id = (p as any)?._id?.toString() || p?.toString();
                 return id !== productId;
             }) as any;
             wishlist.products.push(new Types.ObjectId(productId) as any);
@@ -59,7 +59,7 @@ export class WishlistService implements IWishlistService {
 
         for (const productId of productIds) {
             const productExists = wishlist.products.some(p => {
-                const id = (p as any)._id ? (p as any)._id.toString() : p.toString();
+                const id = (p as any)?._id?.toString() || p?.toString();
                 return id === productId;
             });
 

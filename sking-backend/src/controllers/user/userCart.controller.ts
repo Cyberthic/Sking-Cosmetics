@@ -69,7 +69,15 @@ export class UserCartController {
             const cart = await this._cartService.mergeCart(userId, items);
             res.status(StatusCode.OK).json({ success: true, cart });
         } catch (error) {
-            next(error);
+            console.error("Cart Merge Failed (Graceful Error Handle):", error);
+            // On merge failure, try to just return the regular cart
+            try {
+                const cart = await this._cartService.getCart(req.user.id);
+                res.status(StatusCode.OK).json({ success: true, cart });
+            } catch (innerError) {
+                // If even getCart fails, only then propagate the original error
+                next(error);
+            }
         }
     }
 }

@@ -118,7 +118,12 @@ axiosInstance.interceptors.response.use(
         if (error.response?.status === 429) {
             toast.error('Too many requests. Please try again later.');
         } else if (error.response?.status >= 500) {
-            toast.error('Server error. Please try again later.');
+            // Silent failure for background non-critical requests
+            const url = error.config?.url || '';
+            const quietEndpoints = ['/api/users/home', '/api/users/cart/merge'];
+            if (!quietEndpoints.some(e => url.includes(e))) {
+                toast.error('Server error. Please try again later.');
+            }
         } else if (error.code === 'ECONNABORTED') {
             toast.error('Request timeout. Please check your connection.');
         }

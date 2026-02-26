@@ -94,6 +94,7 @@ export default function CartPage() {
     const handleCheckout = () => {
         if (!isAuthenticated) {
             toast.error("You need to log in for checking out");
+            router.push('/login?redirect=checkout');
             return;
         }
         router.push('/checkout');
