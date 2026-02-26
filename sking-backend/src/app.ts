@@ -11,6 +11,7 @@ const app: Application = express();
 
 app.use(helmet());
 
+
 const allowedOrigins = [
   "https://skingcosmetics.com",
   "https://www.skingcosmetics.com",
