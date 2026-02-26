@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { blogs } from "@/data/blogs";
 import Navbar from "@/components/user/Navbar";
 import Footer from "@/components/user/Footer";
@@ -27,7 +27,9 @@ const BlogDetailPage = async ({ params }: { params: Promise<{ slug: string }> })
 
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
+            <Suspense fallback={<div className="h-20 bg-black/5 animate-pulse" />}>
+                <Navbar />
+            </Suspense>
 
             <article className="pt-24 pb-20">
                 {/* Hero Header */}

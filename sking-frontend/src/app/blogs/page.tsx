@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { blogs } from "@/data/blogs";
@@ -13,7 +13,9 @@ export const metadata = {
 const BlogPage = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
-            <Navbar />
+            <Suspense fallback={<div className="h-20 bg-black/5 animate-pulse" />}>
+                <Navbar />
+            </Suspense>
 
             <main className="pt-24 pb-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
