@@ -1,6 +1,5 @@
 "use client";
 import { ThemeToggleButton } from "@/components/admin/common/ThemeToggleButton";
-import NotificationDropdown from "@/components/admin/header/NotificationDropdown";
 import UserDropdown from "@/components/admin/header/UserDropdown";
 import { useSidebar } from "@/context/admin/SidebarContext";
 import Link from "next/link";
@@ -150,8 +149,6 @@ const AppHeader: React.FC = () => {
             <ThemeToggleButton />
             {/* <!-- Dark Mode Toggler --> */}
 
-            <NotificationDropdown />
-            {/* <!-- Notification Menu Area --> */}
           </div>
           {/* <!-- User Area --> */}
           <UserDropdown />
