@@ -34,6 +34,7 @@ const pros = [
 
 const CategoryPromo = () => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
 
     useEffect(() => {
         const ctx = gsap.context(() => {
@@ -61,42 +62,52 @@ const CategoryPromo = () => {
     }, []);
 
     return (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white overflow-hidden">
             <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8">
-                <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div ref={containerRef} className="grid grid-cols-3 gap-2 md:gap-8">
                     {pros.map((item, idx) => (
                         <div
                             key={idx}
-                            className={`group relative h-[500px] rounded-[2rem] overflow-hidden flex flex-col items-center justify-start text-center p-8 transition-transform duration-500 hover:-translate-y-2`}
+                            onClick={() => setActiveIndex(activeIndex === idx ? null : idx)}
+                            className={`group relative h-[220px] sm:h-[350px] md:h-[500px] rounded-2xl md:rounded-[2rem] overflow-hidden flex flex-col items-center justify-start text-center p-3 md:p-8 transition-transform duration-500 cursor-pointer overflow-hidden ${activeIndex === idx ? "-translate-y-2 shadow-2xl" : "hover:-translate-y-2"
+                                }`}
                         >
                             {/* Full Background Image */}
-                            <div className="absolute inset-0 z-0">
+                            <div className="absolute inset-0 z-0 scale-100 group-hover:scale-110 transition-transform duration-700 ease-out">
                                 <Image
                                     src={item.image}
                                     alt={item.title}
                                     fill
-                                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                                    className={`object-cover ${activeIndex === idx ? "scale-110" : ""}`}
                                 />
-                                {/* Overlay removed as per user request for full clear image */}
                             </div>
 
-                            {/* Text Content - Shifts Up on Hover */}
-                            <div className="relative z-20 mt-12 transform transition-transform duration-500 ease-out group-hover:-translate-y-4">
-                                <h3 className="text-4xl font-bold tracking-tight mb-3 text-black">
+                            {/* Text Content - Shifts Up on Hover/Tap */}
+                            <div className={`relative z-20 mt-4 md:mt-12 transform transition-all duration-500 ease-out ${activeIndex === idx
+                                    ? "-translate-y-2 md:-translate-y-4"
+                                    : "group-hover:-translate-y-2 md:group-hover:-translate-y-4"
+                                }`}>
+                                <h3 className="text-xs sm:text-xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-1 md:mb-3 text-black leading-tight">
                                     {item.title}
                                 </h3>
-                                <p className="text-gray-700 font-medium text-sm max-w-xs mx-auto leading-relaxed">
+                                <p className="text-gray-700 font-medium text-[8px] sm:text-xs md:text-sm max-w-[90%] mx-auto leading-tight md:leading-relaxed">
                                     {item.desc}
                                 </p>
                             </div>
 
-                            {/* Button - Pops Up from Bottom on Hover */}
-                            <div className="absolute bottom-12 left-0 w-full flex justify-center opacity-0 translate-y-10 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0 z-30">
+                            {/* Button - Pops Up from Bottom on Hover/Tap */}
+                            <div className={`absolute bottom-4 md:bottom-12 left-0 w-full flex justify-center transition-all duration-500 z-30 ${activeIndex === idx
+                                    ? "opacity-100 translate-y-0"
+                                    : "opacity-0 translate-y-4 md:translate-y-10 group-hover:opacity-100 group-hover:translate-y-0"
+                                }`}>
                                 <Link
                                     href={item.link}
-                                    className="px-8 py-3 bg-black text-white font-bold uppercase tracking-widest text-xs rounded-full shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.6)] flex items-center gap-2"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="px-3 py-1.5 md:px-8 md:py-3 bg-black text-white font-bold uppercase tracking-widest text-[7px] md:text-xs rounded-full shadow-lg transition-all duration-300 hover:scale-105 flex items-center gap-1 md:gap-2 whitespace-nowrap"
                                 >
-                                    Shop Now <ArrowRight size={14} />
+                                    <span className="hidden sm:inline">Shop Now</span>
+                                    <span className="sm:hidden">Shop</span>
+                                    <ArrowRight size={10} className="md:w-3.5 md:h-3.5 w-2 h-2" />
                                 </Link>
                             </div>
                         </div>

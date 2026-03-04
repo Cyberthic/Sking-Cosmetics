@@ -12,8 +12,8 @@ import InstagramSection from "@/components/user/home/InstagramSection";
 import FAQSection from "@/components/user/home/FAQSection";
 import NewsletterSection from "@/components/user/home/NewsletterSection";
 import Footer from "@/components/user/Footer";
+import BottomNavbar from "@/components/user/BottomNavbar";
 import { userHomeService } from "@/services/user/userHomeApiService";
-
 
 export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
@@ -37,7 +37,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-white font-sans text-black selection:bg-sking-pink selection:text-white">
+    <div className="min-h-screen w-full bg-white font-sans text-black selection:bg-sking-pink selection:text-white pb-20 lg:pb-0">
       <Suspense fallback={<div className="h-20 bg-white" />}>
         <Navbar />
       </Suspense>
@@ -57,6 +57,7 @@ export default function Home() {
       </main>
 
       <Footer />
+      <BottomNavbar />
     </div>
   );
 }

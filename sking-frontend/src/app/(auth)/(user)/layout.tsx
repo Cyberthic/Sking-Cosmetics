@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { RootState } from '@/redux/store';
 import Navbar from '@/components/user/Navbar';
+import BottomNavbar from '@/components/user/BottomNavbar';
 
 export default function AuthLayout({
     children,
@@ -29,9 +30,10 @@ export default function AuthLayout({
             <Suspense fallback={<div className="h-20 bg-white" />}>
                 <Navbar />
             </Suspense>
-            <main className="flex-grow overflow-x-hidden">
+            <main className="flex-grow overflow-x-hidden pb-20 lg:pb-0">
                 {children}
             </main>
+            <BottomNavbar />
         </div>
     );
 }

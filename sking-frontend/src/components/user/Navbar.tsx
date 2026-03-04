@@ -120,6 +120,9 @@ export default function Navbar() {
 
     // Body scroll lock for mobile menu
     useEffect(() => {
+        const handleToggleMenu = () => setIsMobileMenuOpen(prev => !prev);
+        window.addEventListener('toggleMobileMenu', handleToggleMenu);
+
         if (isMobileMenuOpen) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -127,6 +130,7 @@ export default function Navbar() {
         }
         return () => {
             document.body.style.overflow = 'auto';
+            window.removeEventListener('toggleMobileMenu', handleToggleMenu);
         };
     }, [isMobileMenuOpen]);
 
@@ -304,26 +308,21 @@ export default function Navbar() {
 
                         {/* MOBILE ACTIONS */}
                         <div className="flex lg:hidden items-center gap-1">
-                            {/* MINI CART MOBILE */}
+                            {/* SEARCH MOBILE */}
                             <button
-                                onClick={() => setIsCartOpen(true)}
-                                className="p-2.5 relative group text-black transition-all active:scale-90"
+                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                className="p-2 text-black hover:text-sking-pink transition-all active:scale-90"
                             >
-                                <ShoppingBag className="w-6 h-6" />
-                                {mounted && totalItems > 0 && (
-                                    <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-sking-red text-[9px] text-white font-black shadow-sm">
-                                        {totalItems}
-                                    </span>
-                                )}
+                                <Search className="w-6 h-6" />
                             </button>
 
-                            {/* MOBILE MENU TOGGLE */}
-                            <button
-                                className="p-2.5 text-black transition-all active:scale-90"
-                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            {/* ACCOUNT MOBILE */}
+                            <Link
+                                href={mounted && isAuthenticated ? "/profile" : "/login"}
+                                className="p-2 text-black hover:text-sking-pink transition-all active:scale-90"
                             >
-                                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                            </button>
+                                <User className="w-6 h-6" />
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -403,7 +402,14 @@ export default function Navbar() {
             <div
                 className={`fixed inset-0 top-20 bg-white z-[1001] lg:hidden overflow-y-auto transition-transform duration-500 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
-                <div className="flex flex-col p-6 pt-10 gap-2 min-h-full">
+                <div className="flex flex-col p-6 pt-6 gap-2 min-h-full relative">
+                    {/* CLOSE BUTTON WITHIN DRAWER */}
+                    <button
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="absolute top-4 right-6 p-2 bg-gray-50 rounded-full text-black active:scale-90 transition-all border border-gray-100 shadow-sm"
+                    >
+                        <X size={20} />
+                    </button>
                     {/* Search Mobile */}
                     <div className="relative mb-8">
                         <form onSubmit={handleSearchSubmit} className="relative">
@@ -525,7 +531,9 @@ export default function Navbar() {
                                 <span className="text-xl font-black uppercase tracking-widest">Wishlist</span>
                                 <div className="flex items-center gap-3">
                                     <Heart className="w-6 h-6" />
-                                    <span className="bg-black text-white text-[10px] font-black px-2.5 py-1 rounded-full">{mounted ? wishlistItems.length : 0}</span>
+                                    {mounted && wishlistItems.length > 0 && (
+                                        <span className="bg-black text-white text-[10px] font-black px-2.5 py-1 rounded-full">{wishlistItems.length}</span>
+                                    )}
                                 </div>
                             </Link>
 
@@ -536,7 +544,9 @@ export default function Navbar() {
                                 <span className="text-xl font-black uppercase tracking-widest">My Bag</span>
                                 <div className="flex items-center gap-3">
                                     <ShoppingBag className="w-6 h-6" />
-                                    <span className="bg-sking-red text-white text-[10px] font-black px-2.5 py-1 rounded-full">{mounted ? totalItems : 0}</span>
+                                    {mounted && totalItems > 0 && (
+                                        <span className="bg-sking-red text-white text-[10px] font-black px-2.5 py-1 rounded-full">{totalItems}</span>
+                                    )}
                                 </div>
                             </button>
                         </div>
