@@ -9,7 +9,7 @@ import DemographicCard from "@/components/admin/ecommerce/DemographicCard";
 
 export const metadata: Metadata = {
   title:
-    "Sking Cosmetics E-commerce Dashboard | Coding Aashan",
+    "Sking Cosmetics E-commerce Dashboard | Sking Cosmetics",
   description: "Sking Cosmetics E-commerce Dashboard Page",
 };
 
