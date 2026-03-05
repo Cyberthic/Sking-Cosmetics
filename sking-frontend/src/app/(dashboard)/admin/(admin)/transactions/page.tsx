@@ -19,6 +19,7 @@ import {
 } from "@/components/admin/ui/table";
 import Link from "next/link";
 import Image from "next/image";
+import { formatDate, formatTime } from "@/utils/date";
 
 function TransactionsContent() {
     const router = useRouter();
@@ -218,9 +219,9 @@ function TransactionsContent() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-xs font-bold text-gray-500">
-                                            {new Date(transaction.createdAt).toLocaleDateString()}
+                                            {formatDate(transaction.createdAt)}
                                             <div className="text-[10px] font-normal opacity-70">
-                                                {new Date(transaction.createdAt).toLocaleTimeString()}
+                                                {formatTime(transaction.createdAt)}
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right">

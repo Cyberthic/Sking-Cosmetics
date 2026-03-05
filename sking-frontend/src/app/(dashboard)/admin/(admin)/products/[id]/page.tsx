@@ -21,6 +21,7 @@ import {
     TableRow,
 } from "@/components/admin/ui/table";
 import Pagination from "@/components/admin/tables/Pagination";
+import { formatDate } from "@/utils/date";
 
 export default function ProductDetailPage() {
     const params = useParams();
@@ -400,7 +401,7 @@ export default function ProductDetailPage() {
                                         {orders.map((order: any) => (
                                             <TableRow key={order._id}>
                                                 <TableCell className="font-mono text-xs dark:text-gray-300">{order._id.slice(-6).toUpperCase()}</TableCell>
-                                                <TableCell className="text-xs font-bold dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                                                <TableCell className="text-xs font-bold dark:text-gray-300">{formatDate(order.createdAt)}</TableCell>
                                                 <TableCell className="text-sm font-bold dark:text-white">
                                                     {order.shippingAddress?.name || 'Unknown'}
                                                 </TableCell>
@@ -583,7 +584,7 @@ export default function ProductDetailPage() {
                                                     <p className="text-[11px] text-gray-600 dark:text-gray-400 line-clamp-1 max-w-[200px]">{review.comment}</p>
                                                 </TableCell>
                                                 <TableCell className="text-[11px] font-bold text-gray-500 dark:text-gray-500">
-                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                    {formatDate(review.createdAt)}
                                                 </TableCell>
                                                 <TableCell>
                                                     {review.isBlocked ? (

@@ -18,6 +18,7 @@ import Image from "next/image";
 import { Search, Filter, ArrowUpDown, User, MoreHorizontal, Eye, Ban, CheckCircle } from "lucide-react";
 import Button from "@/components/admin/ui/button/Button";
 import FormSelect from "@/components/admin/form/FormSelect";
+import { formatDate, formatTime } from "@/utils/date";
 
 interface IUser {
     _id: string;
@@ -210,10 +211,10 @@ function CustomersContent() {
                                         </TableCell>
                                         <TableCell className="px-8 py-4">
                                             <div className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                                                {new Date(user.createdAt).toLocaleDateString()}
+                                                {formatDate(user.createdAt)}
                                             </div>
                                             <div className="text-[10px] text-gray-400 mt-0.5">
-                                                {new Date(user.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {formatTime(user.createdAt)}
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-8 py-4 text-end">

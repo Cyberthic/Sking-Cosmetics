@@ -22,6 +22,7 @@ import 'react-image-crop/dist/ReactCrop.css';
 import { Modal } from "@/components/admin/ui/modal";
 import { adminProductService } from "@/services/admin/adminProductApiService";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatDate } from "@/utils/date";
 
 function ProductDetailContent() {
     const dispatch = useDispatch<AppDispatch>();
@@ -954,7 +955,7 @@ function ProductDetailContent() {
                                                                 <span className="px-1.5 py-0.5 bg-green-50 text-green-600 text-[7px] font-black uppercase tracking-tighter rounded-full border border-green-100">Verified Buyer</span>
                                                             )}
                                                         </h4>
-                                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{new Date(review.createdAt).toLocaleDateString()}</span>
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{formatDate(review.createdAt)}</span>
                                                     </div>
                                                     <div className="flex text-sking-pink mb-2">
                                                         {[...Array(5)].map((_, i) => (

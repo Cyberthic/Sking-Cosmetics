@@ -26,6 +26,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 import { ManualPaymentModal } from "@/components/admin/orders/ManualPaymentModal";
+import { formatDate, formatTime, formatDateTime } from "@/utils/date";
 
 export default function OrderDetailPage() {
     const { id } = useParams();
@@ -173,7 +174,7 @@ export default function OrderDetailPage() {
                                 <div className="mt-4 flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-2xl w-fit">
                                     <Clock size={14} className="text-amber-600 animate-pulse" />
                                     <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest whitespace-nowrap">
-                                        Expiring: {new Date(order.paymentExpiresAt).toLocaleString()}
+                                        Expiring: {formatDateTime(order.paymentExpiresAt)}
                                     </span>
                                 </div>
                             )}
@@ -182,12 +183,12 @@ export default function OrderDetailPage() {
                             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Last Update Received</span>
                             <span className="text-xl font-black dark:text-white">
                                 {order.statusHistory?.length > 0
-                                    ? new Date(order.statusHistory[order.statusHistory.length - 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                    : new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    ? formatTime(order.statusHistory[order.statusHistory.length - 1].timestamp)
+                                    : formatTime(order.updatedAt)
                                 }
                             </span>
                             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                                {new Date(order.updatedAt).toLocaleDateString()}
+                                {formatDate(order.updatedAt)}
                             </span>
                         </div>
                     </div>
@@ -216,7 +217,7 @@ export default function OrderDetailPage() {
                                 {order.orderStatus.replace('_', ' ')}
                             </Badge>
                             <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-                                {new Date(order.createdAt).toLocaleString()}
+                                {formatDateTime(order.createdAt)}
                             </span>
                         </div>
                     </div>
@@ -317,10 +318,10 @@ export default function OrderDetailPage() {
                                             </div>
                                             <div className="text-right">
                                                 <div className="text-[10px] font-black text-black dark:text-white uppercase tracking-widest leading-none">
-                                                    {new Date(history.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                    {formatTime(history.timestamp)}
                                                 </div>
                                                 <div className="text-[9px] text-gray-400 font-bold uppercase mt-1">
-                                                    {new Date(history.timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    {formatDate(history.timestamp)}
                                                 </div>
                                             </div>
                                         </div>
@@ -538,7 +539,7 @@ export default function OrderDetailPage() {
                                 {order.paymentDetails?.paidAt && (
                                     <div>
                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Settlement Time</h4>
-                                        <p className="text-[10px] font-bold text-success-500 uppercase">{new Date(order.paymentDetails.paidAt).toLocaleString()}</p>
+                                        <p className="text-[10px] font-bold text-success-500 uppercase">{formatDateTime(order.paymentDetails.paidAt)}</p>
                                     </div>
                                 )}
                             </div>

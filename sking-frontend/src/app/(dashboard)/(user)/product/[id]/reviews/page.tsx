@@ -8,6 +8,7 @@ import { Star, ChevronLeft, ArrowLeft, Filter } from "lucide-react";
 import { userReviewApiService } from "@/services/user/userReviewApiService";
 import { userProductService } from "@/services/user/userProductApiService";
 import { toast } from "sonner";
+import { formatDate } from "@/utils/date";
 
 export default function AllReviewsPage() {
     const { id } = useParams();
@@ -177,7 +178,7 @@ export default function AllReviewsPage() {
                                                     ))}
                                                 </div>
                                             </div>
-                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{new Date(review.createdAt).toLocaleDateString()}</span>
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{formatDate(review.createdAt)}</span>
                                         </div>
                                         <p className="text-gray-600 leading-relaxed text-sm mb-4">{review.comment}</p>
 

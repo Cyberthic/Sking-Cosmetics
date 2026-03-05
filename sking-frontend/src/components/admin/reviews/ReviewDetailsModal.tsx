@@ -4,6 +4,7 @@ import { X, Star, Calendar, User, ShoppingBag, ShieldAlert, CheckCircle, Trash2,
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { formatDate, formatDateTime } from "@/utils/date";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 
 interface ReviewDetailsModalProps {
@@ -121,7 +122,7 @@ const ReviewDetailsModal: React.FC<ReviewDetailsModalProps> = ({ isOpen, onClose
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Date</p>
                                                 <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                                                     <Calendar size={14} className="text-gray-400 dark:text-gray-500" />
-                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                    {formatDate(review.createdAt)}
                                                 </div>
                                             </div>
                                         </div>
@@ -171,7 +172,7 @@ const ReviewDetailsModal: React.FC<ReviewDetailsModalProps> = ({ isOpen, onClose
                                                 </div>
                                                 {review.blockedUntil && (
                                                     <p className="text-[11px] text-red-500 dark:text-red-400/80">
-                                                        Until: {new Date(review.blockedUntil).toLocaleDateString()} {new Date(review.blockedUntil).toLocaleTimeString()}
+                                                        Until: {formatDateTime(review.blockedUntil)}
                                                     </p>
                                                 )}
                                                 {review.blockReason && (

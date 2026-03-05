@@ -25,6 +25,8 @@ import Pagination from "@/components/admin/tables/Pagination";
 import { toast } from "sonner";
 import FormSelect from "@/components/admin/form/FormSelect";
 
+import { formatDate } from "@/utils/date";
+
 function OrdersContent() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -276,7 +278,7 @@ function OrdersContent() {
                                         <div>
                                             <h4 className="font-bold text-gray-500 text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1"><Calendar size={10} /> Ordered</h4>
                                             <p className="font-black dark:text-white text-xs truncate">
-                                                {new Date(order.createdAt).toLocaleDateString()}
+                                                {formatDate(order.createdAt)}
                                             </p>
                                         </div>
                                     </div>
@@ -343,7 +345,7 @@ function OrdersContent() {
                                                     <div>
                                                         <div className="font-black text-xs uppercase tracking-tight dark:text-white">#{order.displayId || order._id.slice(-8).toUpperCase()}</div>
                                                         <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1 mt-0.5">
-                                                            <Calendar size={10} /> {new Date(order.createdAt).toLocaleDateString()}
+                                                            <Calendar size={10} /> {formatDate(order.createdAt)}
                                                         </div>
                                                     </div>
                                                 </div>

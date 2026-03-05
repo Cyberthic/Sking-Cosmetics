@@ -14,6 +14,7 @@ import { Plus, Search, Filter, Ticket, Trash2, Edit2, Copy, BarChart3, Users, Cl
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 import SkingSwitch from "@/components/admin/form/switch/SkingSwitch";
+import { formatDate } from "@/utils/date";
 
 function CouponsContent() {
     const router = useRouter();
@@ -223,7 +224,7 @@ function CouponsContent() {
                                         <div>
                                             <h4 className="font-bold text-gray-500 text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1"><Clock size={10} /> Expires</h4>
                                             <p className="font-black dark:text-white text-sm truncate">
-                                                {new Date(coupon.endDate).toLocaleDateString()}
+                                                {formatDate(coupon.endDate)}
                                             </p>
                                         </div>
                                     </div>

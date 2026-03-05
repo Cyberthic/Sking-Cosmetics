@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowUpRight, ArrowDownLeft, User, Package, Calendar, Credit
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
+import { formatDate, formatTime } from "@/utils/date";
 
 export default function TransactionDetailPage() {
     const params = useParams();
@@ -159,7 +160,7 @@ export default function TransactionDetailPage() {
                                     </div>
                                     <div>
                                         <div className="text-sm font-bold text-black dark:text-white">Created</div>
-                                        <div className="text-xs text-gray-500">{new Date(transaction.createdAt).toLocaleDateString()} at {new Date(transaction.createdAt).toLocaleTimeString()}</div>
+                                        <div className="text-xs text-gray-500">{formatDate(transaction.createdAt)} at {formatTime(transaction.createdAt)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">

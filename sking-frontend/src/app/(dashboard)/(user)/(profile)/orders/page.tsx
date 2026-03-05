@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { clearCartLocally } from '@/redux/features/cartSlice';
 import { RateProductsModal } from '@/components/user/RateProductsModal';
+import { formatDate } from '@/utils/date';
 
 export default function OrdersPage() {
     const router = useRouter();
@@ -171,7 +172,7 @@ export default function OrdersPage() {
                                             <span className="text-sm font-black text-black">#{order.displayId || order._id.slice(-8).toUpperCase()}</span>
                                         </div>
                                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest">
-                                            Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            Placed on {formatDate(order.createdAt)}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-3 self-start sm:self-center">

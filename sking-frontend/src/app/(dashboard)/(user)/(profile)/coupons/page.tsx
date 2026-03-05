@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { userCouponApiService } from '@/services/user/userCouponApiService';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { formatDate } from '@/utils/date';
 
 interface Product {
     _id: string;
@@ -195,7 +196,7 @@ export default function CouponsPage() {
                                         <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
                                             <div className="flex items-center gap-1.5 text-gray-500">
                                                 <Clock className="w-3.5 h-3.5" />
-                                                {activeTab === 'active' ? "Expires" : "Ended"}: {new Date(coupon.endDate).toLocaleDateString()}
+                                                {activeTab === 'active' ? "Expires" : "Ended"}: {formatDate(coupon.endDate)}
                                             </div>
                                             {coupon.minOrderAmount > 0 && (
                                                 <div className="flex items-center gap-1 text-sking-pink">

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Tag, Calendar, Users, DollarSign, Package, ArrowRight, Trash2, Edit, Copy } from "lucide-react";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 import Link from "next/link";
+import { formatDate } from "@/utils/date";
 import {
     Table,
     TableBody,
@@ -154,7 +155,7 @@ export default function CouponDetailPage() {
                                 {isActive ? "Active" : isExpired ? "Expired" : "Inactive"}
                             </Badge>
                             <div className="h-4 w-[1px] bg-gray-300 dark:bg-gray-700"></div>
-                            <span className="text-xs font-mono text-gray-400">Created: {new Date(coupon.createdAt).toLocaleDateString()}</span>
+                            <span className="text-xs font-mono text-gray-400">Created: {formatDate(coupon.createdAt)}</span>
                         </div>
                     </div>
                 </div>
@@ -290,9 +291,9 @@ export default function CouponDetailPage() {
                                     <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                         <span className="text-sm text-gray-500 font-bold">Validity Period</span>
                                         <div className="text-right">
-                                            <div className="text-sm font-bold text-black dark:text-white">{new Date(coupon.startDate).toLocaleDateString()}</div>
+                                            <div className="text-sm font-bold text-black dark:text-white">{formatDate(coupon.startDate)}</div>
                                             <div className="text-xs text-gray-400 text-center font-bold">to</div>
-                                            <div className="text-sm font-bold text-black dark:text-white">{new Date(coupon.endDate).toLocaleDateString()}</div>
+                                            <div className="text-sm font-bold text-black dark:text-white">{formatDate(coupon.endDate)}</div>
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
@@ -341,7 +342,7 @@ export default function CouponDetailPage() {
                                         {orders.map((order: any) => (
                                             <TableRow key={order._id}>
                                                 <TableCell className="font-mono text-xs dark:text-gray-300">{order._id.slice(-6).toUpperCase()}</TableCell>
-                                                <TableCell className="text-xs font-bold dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                                                <TableCell className="text-xs font-bold dark:text-gray-300">{formatDate(order.createdAt)}</TableCell>
                                                 <TableCell className="text-sm font-bold dark:text-white">
                                                     {order.shippingAddress?.name || 'Unknown'}
                                                 </TableCell>

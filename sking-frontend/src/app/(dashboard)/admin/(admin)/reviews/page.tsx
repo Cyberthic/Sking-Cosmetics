@@ -25,6 +25,7 @@ import Image from "next/image";
 import ReviewDetailsModal from "@/components/admin/reviews/ReviewDetailsModal";
 import AddReviewModal from "@/components/admin/reviews/AddReviewModal";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatDate, formatTime } from "@/utils/date";
 
 const ReviewsPage = () => {
     const [reviews, setReviews] = useState<any[]>([]);
@@ -263,8 +264,8 @@ const ReviewsPage = () => {
                                         </td>
                                         <td className="px-6 py-5">
                                             <div className="flex flex-col">
-                                                <span className="text-[11px] font-bold text-gray-700 dark:text-gray-200">{new Date(review.createdAt).toLocaleDateString()}</span>
-                                                <span className="text-[9px] text-gray-400 dark:text-gray-500">{new Date(review.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span className="text-[11px] font-bold text-gray-700 dark:text-gray-200">{formatDate(review.createdAt)}</span>
+                                                <span className="text-[9px] text-gray-400 dark:text-gray-500">{formatTime(review.createdAt)}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-5">

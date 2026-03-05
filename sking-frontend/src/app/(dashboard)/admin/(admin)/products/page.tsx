@@ -17,6 +17,7 @@ import { adminProductService } from "../../../../../services/admin/adminProductA
 import { adminCategoryService } from "../../../../../services/admin/adminCategoryApiService";
 import Pagination from "../../../../../components/admin/tables/Pagination";
 import Button from "../../../../../components/admin/ui/button/Button";
+import { formatDate } from "@/utils/date";
 import { ConfirmationModal } from "../../../../../components/common/ConfirmationModal";
 import { toast } from "sonner";
 import { Eye, EyeOff, Search } from "lucide-react";
@@ -219,7 +220,7 @@ function ProductsContent() {
                                             {typeof product.category === 'object' ? product.category.name : 'Unknown'}
                                         </TableCell>
                                         <TableCell className="px-5 py-4 text-gray-500 text-xs text-nowrap">
-                                            Created: {new Date().toLocaleDateString()}
+                                            Created: {formatDate((product as any).createdAt || new Date())}
                                         </TableCell>
                                         <TableCell className="px-5 py-4">
                                             <div className="flex flex-col">

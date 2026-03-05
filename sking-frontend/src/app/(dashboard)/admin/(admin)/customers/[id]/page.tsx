@@ -18,6 +18,7 @@ import {
 } from "@/components/admin/ui/table";
 import Pagination from "@/components/admin/tables/Pagination";
 import ReviewDetailsModal from "@/components/admin/reviews/ReviewDetailsModal";
+import { formatDate, formatTime, formatDateTime } from "@/utils/date";
 import { toast } from "sonner";
 
 export default function CustomerDetailPage() {
@@ -269,7 +270,7 @@ export default function CustomerDetailPage() {
                                 <Phone size={16} /> {user.phoneNumber || 'N/A'}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Calendar size={16} /> Joined {new Date(user.createdAt).toLocaleDateString()}
+                                <Calendar size={16} /> Joined {formatDate(user.createdAt)}
                             </div>
                         </div>
                     </div>
@@ -331,7 +332,7 @@ export default function CustomerDetailPage() {
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Last Order</span>
                     </div>
                     <div className="text-lg font-black text-gray-900 dark:text-white md:truncate">
-                        {stats.lastOrderDate ? new Date(stats.lastOrderDate).toLocaleDateString() : 'Never'}
+                        {stats.lastOrderDate ? formatDate(stats.lastOrderDate) : 'Never'}
                     </div>
                 </div>
             </div>
@@ -391,11 +392,11 @@ export default function CustomerDetailPage() {
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Registered On</span>
-                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{new Date(user.createdAt).toLocaleString()}</span>
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{formatDateTime(user.createdAt)}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Last Updated</span>
-                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{new Date(user.updatedAt).toLocaleString()}</span>
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{formatDateTime(user.updatedAt)}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-4 border-b border-gray-50 dark:border-white/5">
                                     <span className="text-sm text-gray-500 font-bold">Marketing Emails</span>
@@ -435,7 +436,7 @@ export default function CustomerDetailPage() {
                                         {orders.map((order: any) => (
                                             <TableRow key={order._id}>
                                                 <TableCell className="font-mono text-xs dark:text-gray-300">{order._id.slice(-6).toUpperCase()}</TableCell>
-                                                <TableCell className="text-xs font-bold dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                                                <TableCell className="text-xs font-bold dark:text-gray-300">{formatDate(order.createdAt)}</TableCell>
                                                 <TableCell>
                                                     <Badge size="sm" color={order.orderStatus === 'active' || order.orderStatus === 'delivered' ? 'success' : order.orderStatus === 'cancelled' ? 'error' : 'warning'}>{order.orderStatus}</Badge>
                                                 </TableCell>
@@ -503,7 +504,7 @@ export default function CustomerDetailPage() {
                                                 <TableCell className="font-bold dark:text-white">{c.code}</TableCell>
                                                 <TableCell className="text-green-600 font-bold">₹{c.discountAmount}</TableCell>
                                                 <TableCell className="font-mono text-xs text-gray-400">{c.orderId.slice(-6).toUpperCase()}</TableCell>
-                                                <TableCell className="text-xs text-gray-500">{new Date(c.date).toLocaleDateString()}</TableCell>
+                                                <TableCell className="text-xs text-gray-500">{formatDate(c.date)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -625,7 +626,7 @@ export default function CustomerDetailPage() {
                                                     <p className="text-[11px] text-gray-600 dark:text-gray-400 line-clamp-1 max-w-[200px]">{review.comment}</p>
                                                 </TableCell>
                                                 <TableCell className="text-[11px] font-bold text-gray-500 dark:text-gray-500">
-                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                    {formatDate(review.createdAt)}
                                                 </TableCell>
                                                 <TableCell>
                                                     {review.isBlocked ? (

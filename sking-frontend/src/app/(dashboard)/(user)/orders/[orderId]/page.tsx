@@ -21,6 +21,7 @@ import { userOrderSettingsService, OrderSettings } from "@/services/admin/adminO
 import { userOrderService } from "@/services/user/userOrderApiService";
 import Link from "next/link";
 import { toast } from "sonner";
+import { formatDate } from "@/utils/date";
 import { useDispatch } from "react-redux";
 import { clearCartLocally } from "@/redux/features/cartSlice";
 import { RateProductsModal } from "@/components/user/RateProductsModal";
@@ -309,7 +310,7 @@ export default function OrderDetailPage() {
                                 <span className="text-lg font-black text-black">#{order.displayId || order._id.slice(-8).toUpperCase()}</span>
                             </div>
                             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-                                Placed on {new Date(order.createdAt).toLocaleDateString()}
+                                Placed on {formatDate(order.createdAt)}
                             </p>
                         </div>
                     </div>

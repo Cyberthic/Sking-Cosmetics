@@ -14,11 +14,12 @@ export const ReportPrintView = React.forwardRef<HTMLDivElement, ReportPrintViewP
 
         const formatDate = (dateString: string | null) => {
             if (!dateString) return "N/A";
-            return new Date(dateString).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-            });
+            const d = new Date(dateString);
+            if (isNaN(d.getTime())) return "N/A";
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
         };
 
         return (
@@ -126,7 +127,7 @@ export const ReportPrintView = React.forwardRef<HTMLDivElement, ReportPrintViewP
                                         <tr key={order._id}>
                                             <td className="px-4 py-3 text-sm text-gray-900">#{order.displayId}</td>
                                             <td className="px-4 py-3 text-sm text-gray-500">{order.customerName}</td>
-                                            <td className="px-4 py-3 text-sm text-gray-500">{new Date(order.date).toLocaleDateString()}</td>
+                                            <td className="px-4 py-3 text-sm text-gray-500">{formatDate(order.date)}</td>
                                             <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">₹{order.amount.toLocaleString()}</td>
                                             <td className="px-4 py-3 text-center">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
