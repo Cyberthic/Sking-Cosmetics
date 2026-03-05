@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef } from "react";
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
-  const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const { isMobileOpen, toggleSidebar, toggleMobileSidebar, setIsMobileOpen } = useSidebar();
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -81,7 +81,7 @@ const AppHeader: React.FC = () => {
             {/* Cross Icon */}
           </button>
 
-          <Link href="/" className="lg:hidden">
+          <Link href="/" className="lg:hidden" onClick={() => setIsMobileOpen(false)}>
             <span className="text-2xl font-bold text-gray-900 dark:text-white">SK</span>
           </Link>
 

@@ -86,7 +86,7 @@ const othersItems: NavItem[] = [
 ];
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered, setIsMobileOpen } = useSidebar();
   const pathname = usePathname();
 
   const renderMenuItems = (
@@ -132,6 +132,7 @@ const AppSidebar: React.FC = () => {
             nav.path && (
               <Link
                 href={nav.path}
+                onClick={() => setIsMobileOpen(false)}
                 className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                   }`}
               >
@@ -167,6 +168,7 @@ const AppSidebar: React.FC = () => {
                   <li key={subItem.name}>
                     <Link
                       href={subItem.path}
+                      onClick={() => setIsMobileOpen(false)}
                       className={`menu-dropdown-item ${isActive(subItem.path)
                         ? "menu-dropdown-item-active"
                         : "menu-dropdown-item-inactive"
@@ -288,7 +290,7 @@ const AppSidebar: React.FC = () => {
         className={`py-8 flex  ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
           }`}
       >
-        <Link href="/">
+        <Link href="/" onClick={() => setIsMobileOpen(false)}>
           {isExpanded || isHovered || isMobileOpen ? (
             <span className="text-2xl font-bold text-gray-900 dark:text-white truncate">SKING Cosmetics</span>
           ) : (
