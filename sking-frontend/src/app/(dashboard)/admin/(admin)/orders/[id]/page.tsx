@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { adminOrderService } from "@/services/admin/adminOrderApiService";
 import Badge from "@/components/admin/ui/badge/Badge";
@@ -20,8 +20,12 @@ import {
     Copy,
     ArrowRight,
     MessageSquare,
-    ShieldCheck
+    ShieldCheck,
+    Download,
+    Loader2
 } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
+import { OrderInvoice } from "@/components/admin/orders/OrderInvoice";
 import Image from "next/image";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
@@ -40,6 +44,19 @@ export default function OrderDetailPage() {
     const [pendingStatus, setPendingStatus] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
     const [isCriticalUpdate, setIsCriticalUpdate] = useState(false);
+    const [isPrinting, setIsPrinting] = useState(false);
+
+    const invoiceRef = useRef<HTMLDivElement>(null);
+    const handlePrint = useReactToPrint({
+        contentRef: invoiceRef,
+        documentTitle: `Sking_Invoice_${order?._id.toUpperCase() || 'Order'}`,
+        onBeforePrint: async () => {
+            setIsPrinting(true);
+        },
+        onAfterPrint: () => {
+            setIsPrinting(false);
+        }
+    });
 
     const CANCELLATION_TEMPLATES = [
         { label: "Payment Not Done", message: "Order cancelled because payment was not received within the required timeframe." },
@@ -223,8 +240,14 @@ export default function OrderDetailPage() {
                     </div>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
-                    <Button variant="outline" className="flex-1 md:flex-none flex items-center gap-2">
-                        <Printer size={16} /> Print
+                    <Button
+                        variant="outline"
+                        className="flex-1 md:flex-none flex items-center gap-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        onClick={() => handlePrint()}
+                        disabled={isPrinting}
+                    >
+                        {isPrinting ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
+                        {isPrinting ? 'Preparing...' : 'Print / Download PDF'}
                     </Button>
 
                     {order.paymentMethod === 'whatsapp' && order.paymentStatus === 'pending' && (
@@ -629,6 +652,11 @@ export default function OrderDetailPage() {
                 isLoading={statusLoading}
                 orderAmount={order.finalAmount}
             />
+
+            {/* Hidden Invoice for Printing */}
+            <div style={{ display: "none" }}>
+                <OrderInvoice ref={invoiceRef} order={order} />
+            </div>
         </div >
     );
 }
